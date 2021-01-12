@@ -1,0 +1,9 @@
+# ===================================================
+# images
+# ===================================================
+image=image-kyt-cli-builder:
+  image: "{env.DOCKER_NAMESPACE}/kyt-cli-builder"
+  context: docker
+  tags: ["{env.GitVersion_BranchVersion}"]
+  annotations:
+    description: "-> build ky-cli builder image"
