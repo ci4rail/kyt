@@ -15,7 +15,7 @@ mount=mount-kyt-bin:
 # jobs
 # ===================================================
 job=build-kyt-cli:
-  use: image-kyt-cli-builder
+  use: image-kyt-go-builder
   command: bash -c 'cd src && make clean && make'
   mounts:
     - mount-kyt-src
