@@ -1,0 +1,33 @@
+# ===================================================
+# mounts
+# ===================================================
+mount=mount-kyt-src:
+  bind: "kyt-api-server/"
+  path: "/home/user/src"
+  read-only: true
+
+mount=mount-kyt-bin:
+  bind: "bin/"
+  path: "/home/user/bin"
+  read-only: false
+
+# ===================================================
+# jobs
+# ===================================================
+job=build-kyt-cli:
+  use: image-kyt-go-builder
+  command: bash -c 'cd src && make clean && make'
+  mounts:
+    - mount-kyt-src
+    - mount-kyt-bin
+  sources:
+    - kyt
+  artifact:
+    - bin
+  env:
+    - USERID={user.uid}
+    - GROUPID={user.gid}
+  annotations:
+    description: "-> build kyt-server"
+    tags:
+      - build
