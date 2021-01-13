@@ -1,0 +1,9 @@
+# ===================================================
+# images
+# ===================================================
+image=image-kyt-go-builder:
+  image: "{env.DOCKER_NAMESPACE}/kyt-go-builder"
+  context: docker
+  tags: ["{env.GitVersion_BranchVersion}"]
+  annotations:
+    description: "-> build kyt-go builder image"

@@ -1,0 +1,21 @@
+# ===================================================
+# meta infos
+# ===================================================
+meta:
+  project: kyt-cli
+  include:
+    - version.yaml
+    - docker/dobi.yaml
+    - kyt/dobi.yaml
+
+# ===================================================
+# alias
+# ===================================================
+
+alias=build:
+  tasks:
+    - build-kyt-cli
+  annotations:
+    description: "[alias] build all"
+    tags:
+      - alias

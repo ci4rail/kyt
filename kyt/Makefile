@@ -5,6 +5,6 @@ build:
 	GOOS=windows GOARCH=386 go build -o ${BIN_DIR}/kyt.exe main.go
 
 clean:
-	rm -rf bin/*
+	rm -rf ${BIN_DIR}/*
 
 .PHONY: clean
