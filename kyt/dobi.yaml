@@ -16,10 +16,7 @@ mount=mount-kyt-bin:
 # ===================================================
 job=build-kyt-cli:
   use: image-kyt-cli-builder
-  command: |
-    cd src; \
-    make clean; \
-    make;
+  command: bash -c 'cd src && make clean && make'
   mounts:
     - mount-kyt-src
     - mount-kyt-bin
@@ -32,20 +29,5 @@ job=build-kyt-cli:
     - GROUPID={user.gid}
   annotations:
     description: "-> build kyt-cli"
-    tags:
-      - build
-
-job=test:
-  use: image-kyt-cli-builder
-  command: bash
-  interactive: true
-  mounts:
-    - mount-kyt-src
-    - mount-kyt-bin
-  env:
-    - USERID={user.uid}
-    - GROUPID={user.gid}
-  annotations:
-    description: "-> run interactive bash"
     tags:
       - build
