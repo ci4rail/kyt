@@ -6,7 +6,8 @@ meta:
   include:
     - version.yaml
     - docker/dobi.yaml
-    - kyt/dobi.yaml
+    - kyt-cli/dobi.yaml
+    - kyt-api-server/dobi.yaml
 
 # ===================================================
 # alias
@@ -15,6 +16,7 @@ meta:
 alias=build:
   tasks:
     - build-kyt-cli
+    - build-kyt-api-server
   annotations:
     description: "[alias] build all"
     tags:

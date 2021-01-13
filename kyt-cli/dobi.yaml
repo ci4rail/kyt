@@ -1,12 +1,12 @@
 # ===================================================
 # mounts
 # ===================================================
-mount=mount-kyt-src:
-  bind: "kyt/"
+mount=mount-kyt-cli-src:
+  bind: "kyt-cli/"
   path: "/home/user/src"
   read-only: true
 
-mount=mount-kyt-bin:
+mount=mount-kyt-cli-bin:
   bind: "bin/"
   path: "/home/user/bin"
   read-only: false
@@ -18,10 +18,10 @@ job=build-kyt-cli:
   use: image-kyt-go-builder
   command: bash -c 'cd src && make clean && make'
   mounts:
-    - mount-kyt-src
-    - mount-kyt-bin
+    - mount-kyt-cli-src
+    - mount-kyt-cli-bin
   sources:
-    - kyt
+    - kyt-cli
   artifact:
     - bin
   env:
