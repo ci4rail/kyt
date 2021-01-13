@@ -17,6 +17,10 @@ After each fresh checkout of this repository it is required to setup pre-commit 
 pre-commit install
 ```
 
+## Install golang (required for pre-commit hooks for golang)
+
+See [install instructions](https://golang.org/doc/install#install).
+
 ## Install docker
 
 See [install instructions](https://docs.docker.com/engine/install/).

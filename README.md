@@ -3,6 +3,7 @@ This repository contains kyt-cli sources, build environment and ci/cd pipeline.
 
 Dependencies:
 * git pre-commit hook
+* golang (required for pre-commit hooks for golang)
 * docker
 
 [Setup dependencies.](SetupDependencies.md)
@@ -18,6 +19,10 @@ The configured pre-commit hooks are:
 * Check yaml syntax
 * Prevent from committing a large files
 * Check python code style with flake8
+* Autoformat go code
+* Check go code style with golint
+* Update go import lines (adding missing ones and removing unreferenced ones)
+* Clean up unused dependencies in go.mod
 
 ## docker
 
