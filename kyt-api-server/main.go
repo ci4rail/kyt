@@ -11,21 +11,21 @@ package main
 
 import (
 	"log"
-	"net/http"
 
-	openapi "github.com/GIT_USER_ID/GIT_REPO_ID/go"
+	// WARNING!
+	// Change this to a fully-qualified import path
+	// once you place this file into your project.
+	// For example,
+	//
+	//    sw "github.com/myname/myrepo/go"
+	//
+	sw "./go"
 )
 
 func main() {
 	log.Printf("Server started")
 
-	DeviceApiService := openapi.NewDeviceApiService()
-	DeviceApiController := openapi.NewDeviceApiController(DeviceApiService)
+	router := sw.NewRouter()
 
-	UserApiService := openapi.NewUserApiService()
-	UserApiController := openapi.NewUserApiController(UserApiService)
-
-	router := openapi.NewRouter(DeviceApiController, UserApiController)
-
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(router.Run(":8080"))
 }

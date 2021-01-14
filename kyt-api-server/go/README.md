@@ -13,14 +13,10 @@ To see how to make this your own, look here:
 [README](https://openapi-generator.tech)
 
 - API version: 0.0.1
-- Build date: 2021-01-13T15:37:23.273Z[GMT]
-
-### Hacks necessary on generated code:
-
-go/routers.go: Missing import "mime/multipart"
-several unused imports: Run `goimports -w kyt-api-server
+- Build date: 2021-01-14T07:03:00.850Z[GMT]
 
 ### Running the server
+
 To run the server, follow these simple steps:
 
 ```
@@ -32,11 +28,13 @@ To run the server in a docker container
 docker build --network=host -t openapi .
 ```
 
-Once image is built use
+Once the image is built, just run
 ```
 docker run --rm -it openapi
 ```
 
-### Quick test with browser
+### Known Issue
 
-Navigate to `http://localhost:8080/v1/devices`, you should see "GetDevices method not implemented"
+Endpoints sharing a common path may result in issues. For example, `/v2/pet/findByTags` and `/v2/pet/:petId` will result in an issue with the Gin framework. For more information about this known limitation, please refer to [gin-gonic/gin#388](https://github.com/gin-gonic/gin/issues/388) for more information.
+
+A workaround is to manually update the path and handler. Please refer to [gin-gonic/gin/issues/205#issuecomment-296155497](https://github.com/gin-gonic/gin/issues/205#issuecomment-296155497) for more information.
