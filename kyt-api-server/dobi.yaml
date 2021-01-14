@@ -48,7 +48,7 @@ job=build-server-sources:
 
 job=build-kyt-api-server:
   use: image-kyt-go-builder
-  command: bash -c 'cd src && GOOS=linux GOARCH=386 go build -o bin/kyt-api-server main.go'
+  command: bash -c 'cd src && GOOS=linux GOARCH=386 go build -o ../bin/kyt-api-server main.go'
   mounts:
     - mount-kyt-api-server-src
     - mount-kyt-api-server-bin
