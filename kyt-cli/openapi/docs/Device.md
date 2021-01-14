@@ -4,13 +4,13 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Id** | **int32** |  |
+**Id** | **string** |  |
 
 ## Methods
 
 ### NewDevice
 
-`func NewDevice(id int32, ) *Device`
+`func NewDevice(id string, ) *Device`
 
 NewDevice instantiates a new Device object
 This constructor will assign default values to properties that have it defined,
@@ -27,20 +27,20 @@ but it doesn't guarantee that properties required by API are set
 
 ### GetId
 
-`func (o *Device) GetId() int32`
+`func (o *Device) GetId() string`
 
 GetId returns the Id field if non-nil, zero value otherwise.
 
 ### GetIdOk
 
-`func (o *Device) GetIdOk() (*int32, bool)`
+`func (o *Device) GetIdOk() (*string, bool)`
 
 GetIdOk returns a tuple with the Id field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetId
 
-`func (o *Device) SetId(v int32)`
+`func (o *Device) SetId(v string)`
 
 SetId sets Id field to given value.
 

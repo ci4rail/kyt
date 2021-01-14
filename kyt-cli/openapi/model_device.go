@@ -16,14 +16,14 @@ import (
 
 // Device A Device
 type Device struct {
-	Id int32 `json:"id"`
+	Id string `json:"id"`
 }
 
 // NewDevice instantiates a new Device object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewDevice(id int32) *Device {
+func NewDevice(id string) *Device {
 	this := Device{}
 	this.Id = id
 	return &this
@@ -38,9 +38,9 @@ func NewDeviceWithDefaults() *Device {
 }
 
 // GetId returns the Id field value
-func (o *Device) GetId() int32 {
+func (o *Device) GetId() string {
 	if o == nil {
-		var ret int32
+		var ret string
 		return ret
 	}
 
@@ -49,7 +49,7 @@ func (o *Device) GetId() int32 {
 
 // GetIdOk returns a tuple with the Id field value
 // and a boolean to check if the value has been set.
-func (o *Device) GetIdOk() (*int32, bool) {
+func (o *Device) GetIdOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -57,7 +57,7 @@ func (o *Device) GetIdOk() (*int32, bool) {
 }
 
 // SetId sets field value
-func (o *Device) SetId(v int32) {
+func (o *Device) SetId(v string) {
 	o.Id = v
 }
 
