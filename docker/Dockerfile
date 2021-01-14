@@ -4,6 +4,8 @@ FROM golang:1.15.6-buster
 RUN apt-get update && \
     apt-get install -y gosu
 
+RUN go get -u github.com/gin-gonic/gin
+
 # add entrypoint script to switch from root-user
 # to user (with current userid)
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
