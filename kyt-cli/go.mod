@@ -1,4 +1,4 @@
-module github.com/ci4rail/kyt-cli
+module github.com/ci4rail/kyt-cli/kyt-cli
 
 go 1.15
 
