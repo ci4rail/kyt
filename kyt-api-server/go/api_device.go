@@ -11,11 +11,33 @@ package openapi
 
 import (
 	"net/http"
+	"os"
 
+	"github.com/ci4rail/kyt-cli/kyt-api-server/controller"
 	"github.com/gin-gonic/gin"
 )
 
 // GetDevices - List devices for a tenant
 func GetDevices(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{})
+	client, err := controller.NewIOTHubServiceClient(os.Getenv("IOTHUB_SERVICE_CONNECTION_STRING"))
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	deviceIDs, err := client.ListDeviceIDs()
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	var deviceList []Device
+	for _, deviceID := range *deviceIDs {
+		deviceList = append(deviceList, Device{ID: deviceID})
+	}
+
+	c.JSON(http.StatusOK, deviceList)
+
 }
