@@ -14,8 +14,6 @@ servers:
 tags:
 - description: A connected device
   name: device
-- description: Operations about user
-  name: user
 paths:
   /devices:
     get:
@@ -37,79 +35,8 @@ paths:
       summary: List devices for a tenant
       tags:
       - device
-  /user/login:
-    get:
-      operationId: loginUser
-      parameters:
-      - description: The user name for login
-        explode: true
-        in: query
-        name: username
-        required: true
-        schema:
-          pattern: ^[a-zA-Z0-9]+[a-zA-Z0-9\.\-_]*[a-zA-Z0-9]+$
-          type: string
-        style: form
-      responses:
-        "200":
-          content:
-            application/xml:
-              schema:
-                type: string
-            application/json:
-              schema:
-                type: string
-          description: successful operation
-          headers:
-            Set-Cookie:
-              description: Cookie authentication key for use with the `api_key` apiKey
-                authentication.
-              explode: false
-              schema:
-                example: AUTH_KEY=abcde12345; Path=/; HttpOnly
-                type: string
-              style: simple
-            X-Rate-Limit:
-              description: calls per hour allowed by the user
-              explode: false
-              schema:
-                format: int32
-                type: integer
-              style: simple
-            X-Expires-After:
-              description: date in UTC when token expires
-              explode: false
-              schema:
-                format: date-time
-                type: string
-              style: simple
-        "400":
-          description: Invalid username supplied
-      summary: Logs user into the system
-      tags:
-      - user
-  /user/logout:
-    get:
-      operationId: logoutUser
-      responses:
-        default:
-          description: successful operation
-      security:
-      - api_key: []
-      summary: Logs out current logged in user session
-      tags:
-      - user
 components:
   requestBodies:
-    UserArray:
-      content:
-        application/json:
-          schema:
-            items:
-              $ref: '#/components/schemas/User'
-            type: array
-      description: List of user object
-      required: true
     Device:
       content:
         application/json:
@@ -121,25 +48,13 @@ components:
       description: Device object
       required: true
   schemas:
-    User:
-      description: A KYT User
-      properties:
-        id:
-          format: int64
-          type: integer
-        username:
-          type: string
-      title: a User
-      type: object
-      xml:
-        name: User
     Device:
       description: A Device
       example:
         id: 0
       properties:
         id:
-          format: int64
+          format: string
           type: integer
       required:
       - id

@@ -11,5 +11,5 @@ package openapi
 
 // Device - A Device
 type Device struct {
-	ID int64 `json:"id"`
+	ID int32 `json:"id"`
 }

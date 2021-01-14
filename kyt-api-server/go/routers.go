@@ -68,18 +68,4 @@ var routes = Routes{
 		"/v1/devices",
 		GetDevices,
 	},
-
-	{
-		"LoginUser",
-		http.MethodGet,
-		"/v1/user/login",
-		LoginUser,
-	},
-
-	{
-		"LogoutUser",
-		http.MethodGet,
-		"/v1/user/logout",
-		LogoutUser,
-	},
 }
