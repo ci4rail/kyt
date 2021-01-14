@@ -53,3 +53,9 @@ Related dobi-tasks:
 
 * build
 * build-kyt-cli
+
+## kyt-cli
+
+Available commands:
+* kyt login
+* kyt d(lm) get dev(ice(s))

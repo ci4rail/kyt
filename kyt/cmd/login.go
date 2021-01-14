@@ -25,15 +25,16 @@ import (
 // loginCmd represents the login command
 var loginCmd = &cobra.Command{
 	Use:   "login",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Login to Ci4Rail services",
+	Long: `Login to Ci4Rail services
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+Log in with user name and password.
+
+Log in interactively.
+
+Not implemented yet.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("login called")
+		fmt.Println("Login successful.")
 	},
 }
 
