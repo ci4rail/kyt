@@ -4,7 +4,7 @@
 mount=mount-kyt-api-server-src:
   bind: "kyt-api-server/"
   path: "/home/user/src"
-  read-only: true
+  read-only: false
 
 mount=mount-kyt-api-server-bin:
   bind: "bin/"

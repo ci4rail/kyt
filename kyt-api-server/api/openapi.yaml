@@ -51,11 +51,10 @@ components:
     Device:
       description: A Device
       example:
-        id: 0
+        id: id
       properties:
         id:
-          format: string
-          type: integer
+          type: string
       required:
       - id
       title: a Device
