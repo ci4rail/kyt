@@ -1,41 +1,40 @@
 openapi: 3.0.0
-servers:
-  - url: 'https://kyt.ci4rail.com/v1'
-    description: Production Server
-  - url: 'http://localhost:9091/v1'
-    description: Local Environment
 info:
-  description: >-
-    This is the KYT API Server
-  version: 0.0.1
-  title: KYT API Server
+  description: This is the KYT API Server
   license:
     name: Apache-2.0
-    url: 'https://www.apache.org/licenses/LICENSE-2.0.html'
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  title: KYT API Server
+  version: 0.0.1
+servers:
+- description: Production Server
+  url: https://kyt.ci4rail.com/v1
+- description: Local Environment
+  url: http://localhost:9091/v1
 tags:
-  - name: device
-    description: A connected device
+- description: A connected device
+  name: device
 paths:
-  '/devices':
+  /devices:
     get:
-      tags:
-        - device
-      summary: List devices for a tenant
       description: Returns a list of devices
       operationId: getDevices
       responses:
-        '200':
-          description: successful operation
+        "200":
           content:
             application/json:
               schema:
-                type: array
                 items:
                   $ref: '#/components/schemas/Device'
-        '400':
+                type: array
+          description: successful operation
+        "400":
           description: Invalid ID supplied
       security:
-        - api_key: []
+      - api_key: []
+      summary: List devices for a tenant
+      tags:
+      - device
 components:
   requestBodies:
     Device:
@@ -48,21 +47,23 @@ components:
             $ref: '#/components/schemas/Device'
       description: Device object
       required: true
-  securitySchemes:
-    api_key:
-      type: apiKey
-      name: api_key
-      in: header
   schemas:
     Device:
-      title: a Device
       description: A Device
-      type: object
-      required:
-        - id
+      example:
+        id: 0
       properties:
         id:
-          type: integer
           format: string
+          type: integer
+      required:
+      - id
+      title: a Device
+      type: object
       xml:
         name: Device
+  securitySchemes:
+    api_key:
+      in: header
+      name: api_key
+      type: apiKey
