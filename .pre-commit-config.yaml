@@ -15,6 +15,6 @@ repos:
     rev: master
     hooks:
       - id: go-fmt
-#     - id: go-lint
+      - id: go-lint
       - id: go-imports
       - id: go-mod-tidy
