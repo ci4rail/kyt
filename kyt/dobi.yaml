@@ -4,7 +4,7 @@
 mount=mount-kyt-src:
   bind: "kyt/"
   path: "/home/user/src"
-  read-only: true
+  read-only: false
 
 mount=mount-kyt-bin:
   bind: "bin/"
