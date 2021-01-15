@@ -27,9 +27,10 @@ var (
 type DeviceApiService service
 
 type ApiGetDevicesRequest struct {
-	ctx        _context.Context
+	ctx _context.Context
 	ApiService *DeviceApiService
 }
+
 
 func (r ApiGetDevicesRequest) Execute() ([]Device, *_nethttp.Response, GenericOpenAPIError) {
 	return r.ApiService.GetDevicesExecute(r)
@@ -44,7 +45,7 @@ func (r ApiGetDevicesRequest) Execute() ([]Device, *_nethttp.Response, GenericOp
 func (a *DeviceApiService) GetDevices(ctx _context.Context) ApiGetDevicesRequest {
 	return ApiGetDevicesRequest{
 		ApiService: a,
-		ctx:        ctx,
+		ctx: ctx,
 	}
 }
 

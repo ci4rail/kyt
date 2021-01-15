@@ -22,3 +22,7 @@ _testmain.go
 *.exe
 *.test
 *.prof
+
+go.mod
+go.sum
+git_push.sh

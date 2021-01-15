@@ -16,9 +16,9 @@ mount=mount-kyt-api-server-src-gen:
   path: "/local"
   read-only: false
 
-mount=mount-api-spec:
-  bind: "kyt-api-spec/"
-  path: "/spec"
+mount=mount-project-root:
+  bind: "."
+  path: "/in"
   read-only: true
 
 
@@ -33,9 +33,9 @@ image=image-openapi-generator:
 # ===================================================
 job=build-server-sources:
   use: image-openapi-generator
-  command: generate -i /spec/kytapi.yaml -g go-gin-server -o /local
+  command: generate -i /in/kyt-api-spec/kytapi.yaml -g go-gin-server -o /local -t /in/openapi-generator/templates/go-gin-server
   mounts:
-    - mount-api-spec
+    - mount-project-root
     - mount-kyt-api-server-src-gen
   sources:
     - kyt-api-spec/kytapi.yaml

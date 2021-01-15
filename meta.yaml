@@ -8,7 +8,7 @@ meta:
     - docker/dobi.yaml
     - kyt-cli/dobi.yaml
     - kyt-api-server/dobi.yaml
-    - kyt-api-client/dobi.yaml
+    - kyt-cli/openapi/dobi.yaml
 
 # ===================================================
 # alias

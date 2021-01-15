@@ -35,7 +35,7 @@ func GetDevices(c *gin.Context) {
 
 	var deviceList []Device
 	for _, deviceID := range *deviceIDs {
-		deviceList = append(deviceList, Device{ID: deviceID})
+		deviceList = append(deviceList, Device{Id: deviceID})
 	}
 
 	c.JSON(http.StatusOK, deviceList)

@@ -15,7 +15,7 @@ tags:
 - description: A connected device
   name: device
 paths:
-  /devices:
+  /dlm/devices:
     get:
       description: Returns a list of devices
       operationId: getDevices
@@ -66,3 +66,4 @@ components:
       in: header
       name: api_key
       type: apiKey
+

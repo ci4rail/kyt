@@ -4,7 +4,7 @@ All URIs are relative to *https://kyt.ci4rail.com/v1*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**GetDevices**](DeviceApi.md#GetDevices) | **Get** /devices | List devices for a tenant
+[**GetDevices**](DeviceApi.md#GetDevices) | **Get** /dlm/devices | List devices for a tenant
 
 
 
@@ -67,3 +67,4 @@ Other parameters are passed through a pointer to a apiGetDevicesRequest struct v
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
 [[Back to Model list]](../README.md#documentation-for-models)
 [[Back to README]](../README.md)
+

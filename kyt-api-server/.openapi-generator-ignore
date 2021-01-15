@@ -22,4 +22,7 @@
 # Then explicitly reverse the ignore rule for a single file:
 #!docs/README.md
 
-go/api_device.go
+main.go
+go/api*.go
+Dockerfile
+README.md

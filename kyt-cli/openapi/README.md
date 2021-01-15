@@ -78,7 +78,7 @@ All URIs are relative to *https://kyt.ci4rail.com/v1*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*DeviceApi* | [**GetDevices**](docs/DeviceApi.md#getdevices) | **Get** /devices | List devices for a tenant
+*DeviceApi* | [**GetDevices**](docs/DeviceApi.md#getdevices) | **Get** /dlm/devices | List devices for a tenant
 
 
 ## Documentation For Models
@@ -116,3 +116,6 @@ Each of these functions takes a value of the given basic type and returns a poin
 * `PtrTime`
 
 ## Author
+
+
+
