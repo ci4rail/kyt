@@ -65,7 +65,7 @@ var routes = Routes{
 	{
 		"GetDevices",
 		http.MethodGet,
-		"/v1/devices",
+		"/v1/dlm/devices",
 		GetDevices,
 	},
 }

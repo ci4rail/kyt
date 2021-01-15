@@ -69,7 +69,7 @@ func (a *DeviceApiService) GetDevicesExecute(r ApiGetDevicesRequest) ([]Device, 
 		return localVarReturnValue, nil, executionError
 	}
 
-	localVarPath := localBasePath + "/devices"
+	localVarPath := localBasePath + "/dlm/devices"
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := _neturl.Values{}

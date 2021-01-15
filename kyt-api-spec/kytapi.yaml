@@ -16,7 +16,7 @@ tags:
   - name: device
     description: A connected device
 paths:
-  '/devices':
+  '/dlm/devices':
     get:
       tags:
         - device
