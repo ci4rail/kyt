@@ -19,6 +19,7 @@ job=build-client-sources:
     - kyt-api-spec/kytapi.yaml
   artifact:
     - kyt-cli/openapi
+  user: "{user.uid}:{user.gid}"
   annotations:
     description: "-> build kyt-api-client sources"
     tags:

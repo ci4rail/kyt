@@ -41,6 +41,7 @@ job=build-server-sources:
     - kyt-api-spec/kytapi.yaml
   artifact:
     - kyt-api-server/main.go
+  user: "{user.uid}:{user.gid}"
   annotations:
     description: "-> build kyt-api-server sources"
     tags:
