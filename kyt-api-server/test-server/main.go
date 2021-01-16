@@ -34,9 +34,12 @@ func newIOTHubStubClient(connectionString string) (controllerif.IOTHubServices, 
 
 // ListDeviceIDs returns a list with the device IDs of all devices of that IoT Hub
 func (c *stubbedIOTHubServiceClient) ListDeviceIDs() (*[]string, error) {
-	devList := []string{
-		"1234",
-		"5678",
+	const numDevs = 1000
+	var devList [numDevs]string
+
+	for i := 0; i < numDevs; i++ {
+		devList[i] = fmt.Sprintf("Device %5d", i)
 	}
-	return &devList, nil
+	slice := devList[:]
+	return &slice, nil
 }

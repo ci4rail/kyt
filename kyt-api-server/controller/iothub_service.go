@@ -11,7 +11,8 @@ import (
 // IOTHubServiceClient is an Azure IoT Hub service client.
 type IOTHubServiceClient struct {
 	controllerif.IOTHubServices
-	iotClient *iotservice.Client
+	iotClient   *iotservice.Client
+	deviceIDArr []string // filled by callback of ListDeviceIDs
 }
 
 // NewIOTHubServiceClient creates a new IOTHubServiceClient based on the connection string
@@ -31,18 +32,23 @@ func NewIOTHubServiceClient(connectionString string) (controllerif.IOTHubService
 
 // ListDeviceIDs returns a list with the device IDs of all devices of that IoT Hub
 func (c *IOTHubServiceClient) ListDeviceIDs() (*[]string, error) {
-	var deviceIDArr []string
-
 	ctx := context.Background()
 
-	devices, err := c.iotClient.ListDevices(ctx)
+	c.deviceIDArr = nil
+
+	// this query selects all devices and returns only the deviceId
+	// Unfortunately, QueryDevices does not support paging
+	err := c.iotClient.QueryDevices(ctx, "SELECT deviceId FROM DEVICES", c.listDeviceIDsCB)
 
 	if err != nil {
-		return nil, fmt.Errorf("Error IoT Hub ListDevices %s", err)
+		return nil, fmt.Errorf("Error IoT Hub QueryDevices %s", err)
 	}
+	return &c.deviceIDArr, nil
+}
 
-	for _, device := range devices {
-		deviceIDArr = append(deviceIDArr, device.DeviceID)
-	}
-	return &deviceIDArr, nil
+// this gets called from QueryDevices once for each record (device)
+func (c *IOTHubServiceClient) listDeviceIDsCB(v map[string]interface{}) error {
+	deviceID := fmt.Sprintf("%v", v["deviceId"])
+	c.deviceIDArr = append(c.deviceIDArr, deviceID)
+	return nil
 }
