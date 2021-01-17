@@ -31,19 +31,20 @@ image=image-openapi-generator:
 # ===================================================
 # jobs
 # ===================================================
-job=build-server-sources:
+job=generate-server-sources:
   use: image-openapi-generator
-  command: generate -i /in/kyt-api-spec/kytapi.yaml -g go-gin-server -o /local -t /in/openapi-generator/templates/go-gin-server
+  command: generate -i /in/kyt-api-spec/kytapi.yaml -g go-gin-server -o /local
+           -t /in/openapi-generator/templates/go-gin-server --additional-properties apiPath=openapi
   mounts:
     - mount-project-root
     - mount-kyt-api-server-src-gen
   sources:
     - kyt-api-spec/kytapi.yaml
   artifact:
-    - kyt-api-server/main.go
+    - kyt-api-server/openapi
   user: "{user.uid}:{user.gid}"
   annotations:
-    description: "-> build kyt-api-server sources"
+    description: "-> generate kyt-api-server sources"
     tags:
       - generate-sources
 

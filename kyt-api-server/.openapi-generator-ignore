@@ -23,6 +23,6 @@
 #!docs/README.md
 
 main.go
-go/api*.go
+openapi/api*.go
 Dockerfile
 README.md

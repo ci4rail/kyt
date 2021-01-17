@@ -9,7 +9,7 @@ mount=mount-kyt-api-gen:
 # ===================================================
 # jobs
 # ===================================================
-job=build-client-sources:
+job=generate-client-sources:
   use: image-openapi-generator
   command: generate -i /in/kyt-api-spec/kytapi.yaml -g go -o /local
   mounts:
@@ -21,6 +21,6 @@ job=build-client-sources:
     - kyt-cli/openapi
   user: "{user.uid}:{user.gid}"
   annotations:
-    description: "-> build kyt-api-client sources"
+    description: "-> generate kyt-api-client sources"
     tags:
       - generate-sources
