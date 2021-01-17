@@ -9,16 +9,8 @@
 
 package main
 
-import (
-	"log"
-
-	sw "github.com/ci4rail/kyt-cli/kyt-api-server/go"
-)
+import "github.com/ci4rail/kyt-cli/kyt-api-server/cmd"
 
 func main() {
-	log.Printf("Server started")
-
-	router := sw.NewRouter()
-
-	log.Fatal(router.Run(":9091"))
+	cmd.Execute()
 }
