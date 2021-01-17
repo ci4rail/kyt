@@ -22,32 +22,41 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// loginCmd represents the login command
-var loginCmd = &cobra.Command{
-	Use:   "login",
-	Short: "Login to Ci4Rail services",
-	Long: `Login to Ci4Rail services
+// devicesCmd represents the devices command
+var devicesCmd = &cobra.Command{
+	Use:     "devices",
+	Aliases: []string{"device", "dev"},
+	Short:   "Display all kyt-devices",
+	Long: `Display all kyt-devices
 
-Log in with user name and password.
+Prints a table of the most important information of all kyt-devices.
+`,
+	Run: getDevices,
+}
 
-Log in interactively.
-
-Not implemented yet.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Login successful.")
-	},
+func getDevices(cmd *cobra.Command, args []string) {
+	apiClient, ctx := NewAPI()
+	resp, _, err := apiClient.DeviceApi.GetDevices(ctx).Execute()
+	if err.Error() != "" {
+		er(fmt.Sprintf("Error calling DeviceApi.GetDevices: %v\n", err))
+	}
+	// response from `GetDevices`: []Device
+	fmt.Println("DEVICE ID")
+	for _, dev := range resp {
+		fmt.Println(dev.GetId())
+	}
 }
 
 func init() {
-	rootCmd.AddCommand(loginCmd)
+	getCmd.AddCommand(devicesCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// loginCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// devicesCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// loginCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// devicesCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

@@ -25,7 +25,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var serverAddr string = ":8080"
+var serverAddr string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -60,6 +60,6 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&serverAddr, "addr", "", "address the server shall listen to (default is \":8080\")")
+	rootCmd.PersistentFlags().StringVar(&serverAddr, "addr", ":8080", "address the server shall listen to")
 
 }
