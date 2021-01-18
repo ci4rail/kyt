@@ -11,14 +11,15 @@ package openapi
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 )
 
 // GetDevices - List devices for a tenant
 func GetDevices(c *gin.Context) {
-	client, err := ControllerNewIOTHubServiceClient(os.Getenv("IOTHUB_SERVICE_CONNECTION_STRING"))
+
+	iotHubConnectionString, err := MapTenantToIOTHubSAS("")
+	client, err := ControllerNewIOTHubServiceClient(iotHubConnectionString)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -38,5 +39,4 @@ func GetDevices(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, deviceList)
-
 }
