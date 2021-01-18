@@ -4,9 +4,9 @@ parameters:
               ^kyt-cli/openapi/|
               ^kyt-api-server/api/|
               ^kyt-api-server/.openapi-generator/|
-              ^kyt-api-server/go/model.*.go|
-              ^kyt-api-server/go/routers.*go|
-              ^kyt-api-server/go/README.md
+              ^kyt-api-server/openapi/model.*.go|
+              ^kyt-api-server/openapi/routers.*go|
+              ^kyt-api-server/openapi/README.md
             )
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
