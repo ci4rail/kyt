@@ -41,7 +41,7 @@ job=generate-server-sources:
   sources:
     - kyt-api-spec/kytapi.yaml
   artifact:
-    - kyt-api-server/openapi
+    - kyt-api-server/openapi/routers.go
   user: "{user.uid}:{user.gid}"
   annotations:
     description: "-> generate kyt-api-server sources"
@@ -54,6 +54,8 @@ job=build-kyt-api-server:
   mounts:
     - mount-kyt-api-server-src
     - mount-kyt-api-server-bin
+  depends:
+    - generate-server-sources
   sources:
     - kyt-api-server
   artifact:

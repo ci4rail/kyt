@@ -1,5 +1,0 @@
-api/openapi.yaml
-openapi/README.md
-openapi/api_device.go
-openapi/model_device.go
-openapi/routers.go
