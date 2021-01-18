@@ -1,5 +1,5 @@
 # kyt-cli
-This repository contains kyt-cli sources, build environment and ci/cd pipeline.
+This repository contains kyt-cli and kyt-api-server sources, build environment and ci/cd pipeline (ci/cd currently missing).
 
 Dependencies:
 * git pre-commit hook
@@ -8,7 +8,74 @@ Dependencies:
 
 [Setup dependencies.](SetupDependencies.md)
 
-## git pre-commit hook
+## Build
+
+### KYT-API-SERVER
+
+Containerized Build of the kyt-api-server tool. Builds x86 version for linux.
+
+```bash
+$ ./dobi.sh build-kyt-apiserver
+```
+
+Get the iot hub connection string from the Azure Portal.
+Select the iot hub, then "shared access policies"
+
+Run the kyt-api-server:
+
+```bash
+export IOTHUB_SERVICE_CONNECTION_STRING="HostName=ci4rail-eval-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=6...="
+$ bin/kyt-api-server --addr :8080
+```
+
+Or, build/run it with your local go installation:
+
+```bash
+$ ./dobi.sh generate-server-sources
+$ cd kyt-api-server
+$ go run main.go  --addr :8080
+```
+
+#### Test-Server
+
+Folder `kyt-api-server/test-server` contains a test-server that answers API request with dummy data.
+
+```bash
+$ cd kyt-api-server/test-server
+$ go run main.go  --addr :8080
+```
+
+### KYT-CLI
+
+Containerized Build of the kyt-cli tool. The binary is named just `kyt`. Builds x86 version for windows and linux.
+
+```bash
+$ ./dobi.sh build-kyt-cli
+$ bin/kyt --server "http://localhost:8080/v1" dlm get devices
+```
+
+Or, build/run it with your local go installation:
+
+```bash
+$ ./dobi.sh generate-client-sources
+$ cd kyt-cli
+$ go run main.go --server "http://localhost:8080/v1" dlm get devices
+```
+
+## Repo Notes
+
+### OpenAPI specification
+
+The REST-API is defined with the OpenAPI document `kyt-api-spec/kytapi.yaml`. From this specification, parts of the server and client go code are automatically generated.
+
+### Auto-Generated code
+
+Openapi-generator (https://openapi-generator.tech/) is used to generate the go code for the server and client.
+
+Note that the generated files are not placed in git.
+
+
+### git pre-commit hook
 
 Git pre-commit hook is used to ensure that a minimum set of quality is fullfilled by the checked in contents.
 
@@ -44,12 +111,3 @@ Related dobi-tasks:
 * image-kyt-go-builder
 
 To push docker container to docker registry execute `./dobi.sh image-kyt-go-builder:push`. This requires `docker login harbor.ci4rail.com` to be executed before. See [Confluence Documentation](https://ci4rail.atlassian.net/l/c/61KodS7x) for further information.
-
-## Build kyt-cli
-
-Build kyt-cli within docker container.
-
-Related dobi-tasks:
-
-* build
-* build-kyt-cli

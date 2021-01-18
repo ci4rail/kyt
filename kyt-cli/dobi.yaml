@@ -61,7 +61,7 @@ job=build-kyt-cli:
   sources:
     - kyt-cli
   artifact:
-    - bin
+    - bin/kyt-cli
   env:
     - USERID={user.uid}
     - GROUPID={user.gid}
