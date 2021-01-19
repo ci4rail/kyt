@@ -1,9 +1,5 @@
-FROM alpine/git:v2.26.2 AS git
-RUN git clone https://github.com/ci4rail/kyt-cli.git /tmp/git
-RUN ls /tmp/git
-
 FROM openapitools/openapi-generator-cli:v5.0.0 AS openapi
-COPY --from=git /tmp/git/ /git
+COPY . /git
 RUN mkdir -p /openapi && \
     java -Xmx1024M -DloggerPath=conf/log4j.properties -jar \
     /opt/openapi-generator/modules/openapi-generator-cli/target/openapi-generator-cli.jar \
@@ -12,7 +8,7 @@ RUN mkdir -p /openapi && \
 
 FROM golang:1.15.6 AS build
 WORKDIR /go/src/github.com/ci4rail/
-COPY --from=git /tmp/git /go/src/github.com/ci4rail/kyt-cli
+COPY . /go/src/github.com/ci4rail/kyt-cli
 WORKDIR /go/src/github.com/ci4rail/kyt-cli/kyt-api-server
 COPY --from=openapi /openapi/model_device.go ./openapi/
 COPY --from=openapi /openapi/routers.go ./openapi/
