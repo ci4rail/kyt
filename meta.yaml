@@ -6,7 +6,6 @@ meta:
   include:
     - dobi.yaml
     - version.yaml
-    - docker/dobi.yaml
     - kyt-api-spec/dobi.yaml
     - kyt-cli/dobi.yaml
     - kyt-api-server/dobi.yaml

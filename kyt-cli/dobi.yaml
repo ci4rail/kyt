@@ -8,12 +8,12 @@ mount=mount-kyt-api-gen:
 
 mount=mount-kyt-cli-src:
   bind: "kyt-cli/"
-  path: "/home/user/src"
+  path: "/src"
   read-only: false  # allow go.mod update
 
 mount=mount-kyt-cli-bin:
   bind: "bin/"
-  path: "/home/user/bin"
+  path: "/install"
   read-only: false
 
 # ===================================================
@@ -41,8 +41,8 @@ job=generate-client-sources:
       - generate-sources
 
 job=build-kyt-cli:
-  use: image-kyt-go-builder
-  command: bash -c 'cd src && make -j${nproc}'
+  use: image-go-builder
+  command: bash -c 'cd /src && make -j${nproc}'
   mounts:
     - mount-kyt-cli-src
     - mount-kyt-cli-bin
@@ -54,9 +54,10 @@ job=build-kyt-cli:
   artifact:
     - bin/kyt
     - bin/kyt.exe
+  user: "{user.uid}:{user.gid}"
   env:
-    - USERID={user.uid}
-    - GROUPID={user.gid}
+    - BIN_DIR=/install
+    - GOCACHE=/tmp/cache
   annotations:
     description: "-> build kyt-cli"
     tags:

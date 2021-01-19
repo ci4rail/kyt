@@ -34,8 +34,10 @@ job=generate-server-sources:
       - generate-sources
 
 job=build-kyt-api-server:
-  use: image-kyt-go-builder
+  use: image-go-builder
   command: bash -c 'cd /src && make -j${nproc}'
+  # command: bash
+  # interactive: true
   mounts:
     - mount-kyt-api-server-src
     - mount-kyt-api-server-bin
@@ -45,10 +47,10 @@ job=build-kyt-api-server:
     - kyt-api-server
   artifact:
     - bin/kyt-api-server
+  user: "{user.uid}:{user.gid}"
   env:
-    - USERID={user.uid}
-    - GROUPID={user.gid}
     - BIN_DIR=/install
+    - GOCACHE=/tmp/cache
   annotations:
     description: "-> build kyt-api-server"
     tags:
