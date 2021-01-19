@@ -26,7 +26,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
+var (
+	cfgFile   string
+	serverURL string
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -40,12 +43,16 @@ Control the kyt-servies application lifecycle management (alm), device lifecycle
 	//	Run: func(cmd *cobra.Command, args []string) { },
 }
 
+func er(msg interface{}) {
+	fmt.Fprintf(os.Stderr, "Error: %v", msg)
+	os.Exit(1)
+}
+
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		er(err)
 	}
 }
 
@@ -57,6 +64,7 @@ func init() {
 	// will be global for your application.
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.kyt-cli.yaml)")
+	rootCmd.PersistentFlags().StringVar(&serverURL, "server", "https://kyt.ci4rail.com/v1", "use alternate server URL")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -68,8 +76,7 @@ func initConfig() {
 		// Find home directory.
 		home, err := homedir.Dir()
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			er(err)
 		}
 
 		// Search config in home directory with name ".kyt-cli" (without extension).

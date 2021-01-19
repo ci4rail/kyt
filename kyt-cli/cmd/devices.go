@@ -30,19 +30,21 @@ var devicesCmd = &cobra.Command{
 	Long: `Display all kyt-devices
 
 Prints a table of the most important information of all kyt-devices.
-
-Not implemented yet. Dummy table printed.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		devices := [3]string{"device 1", "device 2", "device 3"}
-		fmt.Println("NAME")
-		for _, dev := range devices {
-			fmt.Println(dev)
-		}
-	},
+`,
+	Run: getDevices,
 }
 
-func getDevices() {
-
+func getDevices(cmd *cobra.Command, args []string) {
+	apiClient, ctx := NewAPI()
+	resp, _, err := apiClient.DeviceApi.GetDevices(ctx).Execute()
+	if err.Error() != "" {
+		er(fmt.Sprintf("Error calling DeviceApi.GetDevices: %v\n", err))
+	}
+	// response from `GetDevices`: []Device
+	fmt.Println("DEVICE ID")
+	for _, dev := range resp {
+		fmt.Println(dev.GetId())
+	}
 }
 
 func init() {
