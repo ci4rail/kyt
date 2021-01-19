@@ -1,46 +1,63 @@
 # ===================================================
+# images
+# ===================================================
+image=image-azure-cli:
+  image: mcr.microsoft.com/azure-cli
+  tags: ["2.17.1"]
+  pull: once
+
+image=image-kubectl:
+  image: bitnami/kubectl
+  tags: ["1.20.2"]
+  pull: once
+
+# ===================================================
 # mounts
 # ===================================================
+# Read only is not possible as azure continuously changes stuff within this directory.
+mount=mount-azure-dir:
+  bind: "{user.home}/.azure"
+  path: "/.azure"
+  read-only: false
+
 mount=mount-kubeconfig-kyt-dev-aks:
   bind: "{user.home}/.kube/config-kyt-dev-aks"
-  path: "/home/user/.kube/"
+  path: "/.kube/"
   read-only: false
 
 mount=mount-kyt-service-deployment-dir:
   bind: "kyt-service-deployment"
-  path: "/home/user/deployment/"
+  path: "/deployment/"
   read-only: true
+
 # ===================================================
 # jobs
 # ===================================================
-
 job=deploy-kyt-service:
-  use: image-kubectl-runtime
-  command: |
-    bash
+  use: image-kubectl
+  command: ""
   interactive: true
   mounts:
     - mount-kubeconfig-kyt-dev-aks
     - mount-kyt-service-deployment-dir
-  env:
-    - USERID={user.uid}
+  user: "{user.uid}:{user.gid}"
+  entrypoint: bash
   annotations:
     description: "-> deploy kyt service to azure kubernetes service"
     tags:
       - deploy
 
 job=get-aks-config:
-  use: image-azure-runtime
+  use: image-azure-cli
   command: |
-    bash
+    bash -c 'az aks get-credentials --resource-group $AZURE_RESOURCE_GROUP --name $AKS_NAME'
   interactive: true
   mounts:
     - mount-kubeconfig-kyt-dev-aks
     - mount-azure-dir
   env:
-    - USERID={user.uid}
-    - GROUPID={user.gid}
+    - AZURE_RESOURCE_GROUP={env.AZURE_RESOURCE_GROUP}
+    - AKS_NAME={env.AKS_NAME}
+  user: "{user.uid}:{user.gid}"
   annotations:
     description: "-> get azure kubernetes service kubeconfig"
-    tags:
-      - deploy

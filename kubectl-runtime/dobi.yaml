@@ -1,9 +1,0 @@
-# ===================================================
-# images
-# ===================================================
-image=image-kubectl-runtime:
-  image: "ci4rail/kubectl-runtime"
-  context: kubectl-runtime
-  tags: ["{env.GitVersion_BranchVersion}"]
-  annotations:
-    description: "-> build image-kubectl-runtime"
