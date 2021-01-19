@@ -1,0 +1,18 @@
+# ===================================================
+# images
+# ===================================================
+image=image-azure-runtime:
+  image: ci4rail/azure-runtime
+  context: azure-runtime
+  tags: ["{env.GitVersion_BranchVersion}"]
+  annotations:
+    description: "-> build image-azure-runtime"
+
+# ===================================================
+# mounts
+# ===================================================
+# Read only is not possible as azure continuously changes stuff within this directory.
+mount=mount-azure-dir:
+  bind: "{user.home}/.azure"
+  path: "/home/user/.azure"
+  read-only: false
