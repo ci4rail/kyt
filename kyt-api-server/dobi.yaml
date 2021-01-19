@@ -45,7 +45,6 @@ job=build-kyt-api-server:
     - kyt-api-server
   artifact:
     - bin/kyt-api-server
-    - bin/kyt-api-server.exe
   env:
     - USERID={user.uid}
     - GROUPID={user.gid}
