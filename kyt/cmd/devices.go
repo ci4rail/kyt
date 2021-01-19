@@ -22,32 +22,39 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// loginCmd represents the login command
-var loginCmd = &cobra.Command{
-	Use:   "login",
-	Short: "Login to Ci4Rail services",
-	Long: `Login to Ci4Rail services
+// devicesCmd represents the devices command
+var devicesCmd = &cobra.Command{
+	Use:     "devices",
+	Aliases: []string{"device", "dev"},
+	Short:   "Display all kyt-devices",
+	Long: `Display all kyt-devices
 
-Log in with user name and password.
+Prints a table of the most important information of all kyt-devices.
 
-Log in interactively.
-
-Not implemented yet.`,
+Not implemented yet. Dummy table printed.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Login successful.")
+		devices := [3]string{"device 1", "device 2", "device 3"}
+		fmt.Println("NAME")
+		for _, dev := range devices {
+			fmt.Println(dev)
+		}
 	},
 }
 
+func getDevices() {
+
+}
+
 func init() {
-	rootCmd.AddCommand(loginCmd)
+	getCmd.AddCommand(devicesCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// loginCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// devicesCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// loginCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// devicesCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
