@@ -21,6 +21,7 @@ import (
 	"log"
 	"os"
 
+	common "github.com/ci4rail/kyt-cli/kyt-api-server/common"
 	sw "github.com/ci4rail/kyt-cli/kyt-api-server/openapi"
 	"github.com/spf13/cobra"
 )
@@ -60,6 +61,6 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&serverAddr, "addr", ":8080", "address the server shall listen to")
+	rootCmd.PersistentFlags().StringVar(&serverAddr, "addr", fmt.Sprintf(":%d", common.KYT_PORT), "address and port the server shall listen to")
 
 }
