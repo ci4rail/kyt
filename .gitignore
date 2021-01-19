@@ -4,3 +4,5 @@ bin
 
 #dobi build tool
 .dobi
+
+.vscode
