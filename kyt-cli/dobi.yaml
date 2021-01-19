@@ -3,68 +3,61 @@
 # ===================================================
 mount=mount-kyt-api-gen:
   bind: "kyt-cli/openapi"
-  path: "/local"
+  path: "/openapi"
   read-only: false
 
 mount=mount-kyt-cli-src:
   bind: "kyt-cli/"
-  path: "/home/user/src"
+  path: "/src"
   read-only: false  # allow go.mod update
 
 mount=mount-kyt-cli-bin:
   bind: "bin/"
-  path: "/home/user/bin"
+  path: "/install"
   read-only: false
 
 # ===================================================
 # jobs
 # ===================================================
-job=__generate-client-sources:
+job=generate-client-sources:
   use: image-openapi-generator
-  command: generate -i /in/kyt-api-spec/kytapi.yaml -g go -o /local
+  command: bash -c 'java -Xmx1024M -DloggerPath=conf/log4j.properties -jar
+          /opt/openapi-generator/modules/openapi-generator-cli/target/openapi-generator-cli.jar
+          generate -i /kyt-api-spec/kytapi.yaml -g go -o /openapi;
+          rm -f /openapi/go.mod /openapi/go.sum'
+  interactive: true
   mounts:
     - mount-project-root
+    - mount-kyt-api-spec
     - mount-kyt-api-gen
   sources:
     - kyt-api-spec/kytapi.yaml
   artifact:
     - kyt-cli/openapi/client.go
   user: "{user.uid}:{user.gid}"
-
-# this does the actual generation of the openapi sources,
-# but removes unwanted go.mod and go.sum created by the generator
-job=generate-client-sources:
-  use: image-kyt-go-builder
-  command: bash -c 'cd /local && rm -f go.mod go.sum'
-  env:
-    - "USERID={user.uid}"
-  mounts:
-    - mount-kyt-api-gen
-  sources:
-    - kyt-cli/openapi/go.mod
-  depends:
-    - __generate-client-sources
   annotations:
     description: "-> generate kyt-api-client sources"
     tags:
       - generate-sources
 
-
 job=build-kyt-cli:
-  use: image-kyt-go-builder
-  command: bash -c 'cd src && make'
+  use: image-go-builder
+  command: bash -c 'cd /src && make -j${nproc}'
   mounts:
     - mount-kyt-cli-src
     - mount-kyt-cli-bin
   depends:
     - generate-client-sources
   sources:
-    - kyt-cli
+    - kyt-cli/cmd
+    - kyt-cli/main.go
   artifact:
-    - bin/kyt-cli
+    - bin/kyt
+    - bin/kyt.exe
+  user: "{user.uid}:{user.gid}"
   env:
-    - USERID={user.uid}
-    - GROUPID={user.gid}
+    - BIN_DIR=/install
+    - GOCACHE=/tmp/cache
   annotations:
     description: "-> build kyt-cli"
     tags:

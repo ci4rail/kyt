@@ -1,4 +1,4 @@
-package openapi
+package iothubservice
 
 import (
 	"github.com/ci4rail/kyt-cli/kyt-api-server/controller"

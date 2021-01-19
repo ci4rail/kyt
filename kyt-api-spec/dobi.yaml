@@ -1,0 +1,14 @@
+# ===================================================
+# mounts
+# ===================================================
+mount=mount-kyt-api-spec:
+  bind: "kyt-api-spec"
+  path: "/kyt-api-spec"
+  read-only: true
+
+
+image=image-openapi-generator:
+  image: openapitools/openapi-generator-cli
+  tags: ["v5.0.0"]
+  pull: once
+
