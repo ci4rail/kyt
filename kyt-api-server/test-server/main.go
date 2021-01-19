@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	common "github.com/ci4rail/kyt-cli/kyt-api-server/common"
 	"github.com/ci4rail/kyt-cli/kyt-api-server/controllerif"
 	sw "github.com/ci4rail/kyt-cli/kyt-api-server/go"
 )
@@ -16,7 +17,7 @@ func main() {
 
 	router := sw.NewRouter()
 
-	log.Fatal(router.Run(":9091"))
+	log.Fatal(router.Run(fmt.Sprintf(":%d", common.KYT_PORT)))
 }
 
 type stubbedIOTHubServiceClient struct {
