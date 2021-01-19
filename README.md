@@ -113,6 +113,19 @@ Apply the pipeline with the name `kyt-services-pull-requests`
 ```bash
 $ fly -t prod set-pipeline -p kyt-services-pull-requests -c pipeline-pullrequests.yaml -l ci/credentials-pullrequests.yaml
 ```
+## Deploy
+
+### KYT-API-SERVER
+
+Containerized deployment of the kyt-api-server. Deploys kyt-api-server docker image DOCKER_IMAGE from docker registry DOCKER_REGISTRY to azure kubernetes services AKS_NAME.
+
+```bash
+$ ./dobi.sh deploy-kyt-api-server
+```
+
+Preconditions:
+* `azure login` needs to be executed before. Use a web browser to open the page https://microsoft.com/devicelogin and enter the code displayed by az login to authenticate.
+* Get kubeconfig from azure kubernetes service by executing `./dobi.sh get-aks-config`
 
 # Repo Notes
 

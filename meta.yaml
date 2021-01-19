@@ -37,7 +37,7 @@ alias=deploy:
 
 alias=aks-deploy:
   tasks:
-    - deploy-kyt-service
+    - deploy-kyt-api-server
   annotations:
     description: "[alias] deploy all"
     tags:

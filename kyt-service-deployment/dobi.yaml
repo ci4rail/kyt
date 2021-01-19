@@ -33,7 +33,7 @@ mount=mount-kyt-service-deployment-dir:
 # ===================================================
 # jobs
 # ===================================================
-job=deploy-kyt-service:
+job=deploy-kyt-api-server:
   use: image-kubectl
   command: ""
   interactive: true
