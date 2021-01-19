@@ -111,3 +111,18 @@ Related dobi-tasks:
 * image-kyt-go-builder
 
 To push docker container to docker registry execute `./dobi.sh image-kyt-go-builder:push`. This requires `docker login harbor.ci4rail.com` to be executed before. See [Confluence Documentation](https://ci4rail.atlassian.net/l/c/61KodS7x) for further information.
+
+## Build kyt-cli
+
+Build kyt-cli within docker container.
+
+Related dobi-tasks:
+
+* build
+* build-kyt-cli
+
+## kyt-cli
+
+Available commands:
+* kyt login
+* kyt d(lm) get dev(ice(s))
