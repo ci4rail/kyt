@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cmd
+package api
 
 import (
 	"context"
@@ -24,7 +24,7 @@ import (
 
 // NewAPI generates a new APIClient object to issue further API calls
 // It considers "server" command line parameter
-func NewAPI() (*openapiclient.APIClient, context.Context) {
+func NewAPI(serverURL string) (*openapiclient.APIClient, context.Context) {
 	configuration := openapiclient.NewConfiguration()
 
 	if serverURL != "" {

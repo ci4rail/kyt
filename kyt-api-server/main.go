@@ -9,8 +9,24 @@
 
 package main
 
-import "github.com/ci4rail/kyt-cli/kyt-api-server/cmd"
+import (
+	"fmt"
+	"log"
+	"os"
+
+	"github.com/ci4rail/kyt-cli/kyt-api-server/cmd"
+)
+
+const (
+	ENV_IOTHUB_CONNECTION_STRING = "IOTHUB_SERVICE_CONNECTION_STRING"
+)
 
 func main() {
+	envName := fmt.Sprintf(ENV_IOTHUB_CONNECTION_STRING)
+	_, ok := os.LookupEnv(envName)
+
+	if !ok {
+		log.Fatalf("Error: environment variable %s missing", ENV_IOTHUB_CONNECTION_STRING)
+	}
 	cmd.Execute()
 }
