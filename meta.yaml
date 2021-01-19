@@ -18,7 +18,16 @@ alias=build:
   tasks:
     - build-kyt-cli
     - build-kyt-api-server
+    - image-kyt-api-server
   annotations:
     description: "[alias] build all"
+    tags:
+      - alias
+
+alias=deploy:
+  tasks:
+    - image-kyt-api-server:push
+  annotations:
+    description: "[alias] push all"
     tags:
       - alias
