@@ -19,6 +19,7 @@ package cmd
 import (
 	"fmt"
 
+	api "github.com/ci4rail/kyt-cli/kyt-cli/internal/api"
 	"github.com/spf13/cobra"
 )
 
@@ -35,7 +36,7 @@ Prints a table of the most important information of all kyt-devices.
 }
 
 func getDevices(cmd *cobra.Command, args []string) {
-	apiClient, ctx := NewAPI()
+	apiClient, ctx := api.NewAPI(serverURL)
 	resp, _, err := apiClient.DeviceApi.GetDevices(ctx).Execute()
 	if err.Error() != "" {
 		er(fmt.Sprintf("Error calling DeviceApi.GetDevices: %v\n", err))
