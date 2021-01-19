@@ -4,6 +4,7 @@
 meta:
   project: kyt-cli
   include:
+    - dobi.yaml
     - version.yaml
     - azure-runtime/dobi.yaml
     - kubectl-runtime/dobi.yaml
