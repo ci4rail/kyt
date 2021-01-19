@@ -47,6 +47,48 @@ job=deploy-kyt-api-server:
     tags:
       - deploy
 
+job=deploy-docker-registry-secret:
+  use: image-kubectl
+  command: |
+    bash -c 'source /deployment/.env &&
+             kubectl create namespace $NAMESPACE_NAME --dry-run=client -o yaml | kubectl apply -f - &&
+             kubectl create secret docker-registry $SECRET_NAME \
+                                                   --namespace=$NAMESPACE_NAME \
+                                                   --docker-server=$DOCKER_REGISTRY \
+                                                   --docker-username=$DOCKER_REGISTRY_USERNAME \
+                                                   --docker-password=$DOCKER_REGISTRY_PASSWORD \
+                                                   --validate=true '
+  interactive: true
+  mounts:
+    - mount-kubeconfig-kyt-dev-aks
+    - mount-kyt-service-deployment-dir
+  user: "{user.uid}:{user.gid}"
+  entrypoint: ""
+  env:
+    - SECRET_NAME={env.DOCKER_REGISTRY_SECRET_NAME}
+    - DOCKER_REGISTRY={env.DOCKER_REGISTRY}
+    - NAMESPACE_NAME={env.SERVICE_NAMESPACE}
+  annotations:
+    description: "-> deploy docker registry secret to azure kubernetes service"
+    tags:
+      - deploy
+
+job=remove-docker-registry-secret:
+  use: image-kubectl
+  command: |
+    bash -c ' kubectl delete secret -n $NAMESPACE_NAME $SECRET_NAME'
+  mounts:
+    - mount-kubeconfig-kyt-dev-aks
+  user: "{user.uid}:{user.gid}"
+  entrypoint: ""
+  env:
+    - SECRET_NAME={env.DOCKER_REGISTRY_SECRET_NAME}
+    - NAMESPACE_NAME={env.SERVICE_NAMESPACE}
+  annotations:
+    description: "-> remove docker registry secret from azure kubernetes service"
+    tags:
+      - remove
+
 job=get-aks-config:
   use: image-azure-cli
   command: |

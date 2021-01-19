@@ -9,3 +9,6 @@ build
 .vscode
 
 TODO
+
+#credential files
+*/.env

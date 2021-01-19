@@ -115,6 +115,26 @@ $ fly -t prod set-pipeline -p kyt-services-pull-requests -c pipeline-pullrequest
 ```
 ## Deploy
 
+### Docker registry credentials
+
+Containerized deployment of docker registry credentials to kubernetes cluster. Credentials are stored as kubernetes secret.
+
+```bash
+$ ./dobi.sh deploy-docker-registry-secret
+```
+Secret can be removed from kubernetes cluster with
+
+```bash
+$ ./dobi.sh remove-docker-registry-secret
+```
+
+Preconditions:
+* File kyt-service-deployment/.env is required with harbor username, password and e-mail adress (e.g. use credentials from bitwarden "Harbor yoda cli user")
+    ```
+    DOCKER_REGISTRY_USERNAME={username}
+    DOCKER_REGISTRY_PASSWORD={password}
+    ```
+
 ### KYT-API-SERVER
 
 Containerized deployment of the kyt-api-server. Deploys kyt-api-server docker image DOCKER_IMAGE from docker registry DOCKER_REGISTRY to azure kubernetes services AKS_NAME.
