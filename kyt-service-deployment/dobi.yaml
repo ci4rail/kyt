@@ -1,0 +1,46 @@
+# ===================================================
+# mounts
+# ===================================================
+mount=mount-kubeconfig-kyt-dev-aks:
+  bind: "{user.home}/.kube/config-kyt-dev-aks"
+  path: "/home/user/.kube/"
+  read-only: false
+
+mount=mount-kyt-service-deployment-dir:
+  bind: "kyt-service-deployment"
+  path: "/home/user/deployment/"
+  read-only: true
+# ===================================================
+# jobs
+# ===================================================
+
+job=deploy-kyt-service:
+  use: image-kubectl-runtime
+  command: |
+    bash
+  interactive: true
+  mounts:
+    - mount-kubeconfig-kyt-dev-aks
+    - mount-kyt-service-deployment-dir
+  env:
+    - USERID={user.uid}
+  annotations:
+    description: "-> deploy kyt service to azure kubernetes service"
+    tags:
+      - deploy
+
+job=get-aks-config:
+  use: image-azure-runtime
+  command: |
+    bash
+  interactive: true
+  mounts:
+    - mount-kubeconfig-kyt-dev-aks
+    - mount-azure-dir
+  env:
+    - USERID={user.uid}
+    - GROUPID={user.gid}
+  annotations:
+    description: "-> get azure kubernetes service kubeconfig"
+    tags:
+      - deploy

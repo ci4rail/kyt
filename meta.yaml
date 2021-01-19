@@ -4,11 +4,13 @@
 meta:
   project: kyt-cli
   include:
-    - dobi.yaml
     - version.yaml
+    - azure-runtime/dobi.yaml
+    - kubectl-runtime/dobi.yaml
     - kyt-api-spec/dobi.yaml
     - kyt-cli/dobi.yaml
     - kyt-api-server/dobi.yaml
+    - kyt-service-deployment/dobi.yaml
 
 # ===================================================
 # alias
@@ -29,5 +31,13 @@ alias=deploy:
     - image-kyt-api-server:push
   annotations:
     description: "[alias] push all"
+    tags:
+      - alias
+
+alias=aks-deploy:
+  tasks:
+    - deploy-kyt-service
+  annotations:
+    description: "[alias] deploy all"
     tags:
       - alias
