@@ -5,6 +5,7 @@ resources:
       owner: ci4rail
       repository: kyt-cli
       access_token: ((github_access_token))
+      release: false
       pre_release: true
 
   # Upstream docker images
@@ -167,16 +168,16 @@ jobs:
                 # copy the artifacts as a
                 cp ../bin/kyt ../bin/kyt.exe ${ROOT}/install
 
-      - put: gh-release
-        params:
-          name: s3-gitversion/gitversion/plain/BranchVersion
-          tag: s3-gitversion/gitversion/plain/BranchVersion
-          globs:
-            - install/*
-
       - put: image-kyt-api-server
         params:
           build: source/
           dockerfile: source/kyt-api-server/Dockerfile
           latest: false
           tag_file: s3-gitversion/gitversion/plain/BranchVersion
+
+      - put: gh-release
+        params:
+          name: s3-gitversion/gitversion/plain/BranchVersion
+          tag: s3-gitversion/gitversion/plain/BranchVersion
+          globs:
+            - install/*
