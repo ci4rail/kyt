@@ -15,12 +15,6 @@ resources:
       repository: elbb/bb-gitversion
       tag: 0.7.0
 
-  - name: image-aws-cli
-    type: docker-image
-    source:
-      repository: amazon/aws-cli
-      tag: 2.0.22
-
   - name: image-golang
     type: docker-image
     source:
@@ -41,17 +35,6 @@ resources:
       username: ((registry_user))
       password: ((registry_password))
 
-  # S3 buckets
-  - name: s3-gitversion
-    type: s3
-    source:
-      bucket: ((name))
-      endpoint: ((s3_endpoint))
-      regexp: ((name))/gitversion/gitversion-(.*).tar.gz
-      access_key_id: ((s3_access_key))
-      secret_access_key: ((s3_secret_key))
-      disable_ssl: ((s3_skip_ssl_verification))
-
   # Git sources
   - name: source
     type: git
@@ -62,14 +45,16 @@ resources:
       skip_ssl_verification: ((git_skip_ssl_verification))
 
 jobs:
-  - name: generate-gitversion-and-put-it-on-s3
+  - name: build-((name))
     public: true
     plan:
       - in_parallel:
           - get: image-bb-gitversion-tool
           - get: source
             trigger: true
-          - get: image-aws-cli
+          - get: image-openapi-generator
+          - get: image-golang
+
       - task: generate-version
         image: image-bb-gitversion-tool
         config:
@@ -85,48 +70,10 @@ jobs:
               - |
                 entrypoint.sh &&
                 jq empty gitversion/json/gitversion.json &&
-                cat gitversion/json/gitversion.json &&
-                tar cvfz gitversion/gitversion-$(cat gitversion/plain/BranchVersion).tar.gz gitversion/*
+                cat gitversion/json/gitversion.json
           params:
             GIT_PATH: source
             GEN_PATH: gitversion
-      - task: check-or-create-bucket-for-((name))-on-s3
-        image: image-aws-cli
-        config:
-          platform: linux
-          run:
-            path: /bin/bash
-            args:
-              - -xc
-              - |
-                mkdir -p ~/.aws
-                # hide setting credentials in plain text in concourse ui
-                set +x
-                export TERM="xterm-256color"
-                echo "[default]" > ~/.aws/credentials
-                echo "aws_access_key_id=((s3_access_key))" >> ~/.aws/credentials
-                echo "aws_secret_access_key=((s3_secret_key))" >> ~/.aws/credentials
-                set -x
-                # check if bucket exists on s3 endpoint. If not create one
-                aws --endpoint-url ((s3_endpoint)) s3api head-bucket --bucket ((name)) 2> /dev/null
-                if [ $? != 0 ]; then aws s3 mb s3://((name)) --endpoint-url ((s3_endpoint)); fi
-      - put: s3-gitversion
-        params:
-          file: gitversion/gitversion-*.tar.gz
-          acl: public-read
-
-  - name: build-((name))
-    public: true
-    plan:
-      - in_parallel:
-          - get: source
-          - get: s3-gitversion
-            passed: [generate-gitversion-and-put-it-on-s3]
-            trigger: true
-            params:
-              unpack: true
-          - get: image-openapi-generator
-          - get: image-golang
 
       - task: build-generate-kyt-cli-openapi
         image: image-openapi-generator
@@ -173,11 +120,11 @@ jobs:
           build: source/
           dockerfile: source/kyt-api-server/Dockerfile
           latest: false
-          tag_file: s3-gitversion/gitversion/plain/BranchVersion
+          tag_file: gitversion/plain/BranchVersion
 
       - put: gh-release
         params:
-          name: s3-gitversion/gitversion/plain/BranchVersion
-          tag: s3-gitversion/gitversion/plain/BranchVersion
+          name: gitversion/plain/BranchVersion
+          tag: gitversion/plain/BranchVersion
           globs:
             - install/*
