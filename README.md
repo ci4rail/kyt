@@ -11,6 +11,19 @@ Dependencies:
 ## Build
 
 ### KYT-API-SERVER
+#### Docker image
+To build (and deploy) the `kyt-api-server` docker image you can use the following commands:
+```bash
+$ ./dobi.sh image-kyt-api-server        # build only
+$ ./dobi.sh image-kyt-api-server:push   # build and push do docker registry
+```
+To run the docker image with a specific `<tag>` use:
+```bash
+docker run --rm -p 8080:8080 -e IOTHUB_SERVICE_CONNECTION_STRING="HostName=ci4rail-eval-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=6..." harbor.ci4rail.com/ci4rail/kyt/kyt-api-server:<tag>
+```
+Have a look at available tags for the image: https://harbor.ci4rail.com/harbor/projects/7/repositories/kyt%2Fkyt-api-server
+
+#### Plain binary
 
 Containerized Build of the kyt-api-server tool. Builds x86 version for linux.
 
@@ -24,7 +37,7 @@ Select the iot hub, then "shared access policies"
 Run the kyt-api-server:
 
 ```bash
-export IOTHUB_SERVICE_CONNECTION_STRING="HostName=ci4rail-eval-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=6...="
+$ export IOTHUB_SERVICE_CONNECTION_STRING="HostName=ci4rail-eval-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=6...="
 $ bin/kyt-api-server --addr :8080
 ```
 
