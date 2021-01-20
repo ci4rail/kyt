@@ -1,4 +1,6 @@
 # kyt-cli
+[![CI](https://concourse.ci4rail.com/api/v1/teams/main/pipelines/kyt-services/jobs/build-kyt-services/badge)](https://concourse.ci4rail.com/teams/main/pipelines/kyt-services) [![Go Report Card](https://goreportcard.com/badge/github.com/ci4rail/kyt-cli)](https://goreportcard.com/report/github.com/ci4rail/kyt-cli)
+
 This repository contains kyt-cli and kyt-api-server sources, build environment and ci/cd pipeline (ci/cd currently missing).
 
 Dependencies:
