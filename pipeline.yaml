@@ -40,7 +40,6 @@ resources:
     type: git
     source:
       uri: ((git_source))
-      private_key: ((privatekey))
       branch: ((git_branch))
       skip_ssl_verification: ((git_skip_ssl_verification))
 

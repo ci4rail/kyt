@@ -7,7 +7,7 @@ name: kyt-services
 # Git configuration
 # -----------------
 ## Specify the git repository to work with
-git_source: git@github.com:ci4rail/kyt-cli.git
+git_source: https://github.com/ci4rail/kyt-cli.git
 ## Specify the git branch to work with
 git_branch: main
 ## This enables/disables ssl verification of the git resource
