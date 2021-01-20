@@ -1,18 +1,25 @@
-FROM golang:1.10 AS build
-WORKDIR /go/src
-COPY openapi ./openapi
-COPY cmd ./cmd
-COPY controller ./controller
-COPY controllerif ./controllerif
-COPY main.go go.mod ./
+FROM openapitools/openapi-generator-cli:v5.0.0 AS openapi
+COPY . /git
+RUN mkdir -p /openapi && \
+    java -Xmx1024M -DloggerPath=conf/log4j.properties -jar \
+    /opt/openapi-generator/modules/openapi-generator-cli/target/openapi-generator-cli.jar \
+    generate -i /git/kyt-api-spec/kytapi.yaml -g go-gin-server -o / \
+    -t /git/openapi-generator/templates/go-gin-server --additional-properties apiPath=openapi
+
+FROM golang:1.15.6 AS build
+WORKDIR /go/src/github.com/ci4rail/
+COPY . /go/src/github.com/ci4rail/kyt-cli
+WORKDIR /go/src/github.com/ci4rail/kyt-cli/kyt-api-server
+COPY --from=openapi /openapi/model_device.go ./openapi/
+COPY --from=openapi /openapi/routers.go ./openapi/
 
 ENV CGO_ENABLED=0
-RUN ls -lR; go get -d -v ./...
+ENV GOPATH=/go
+RUN go get -d
+RUN go build -o /install/kyt-api-server main.go
 
-RUN go build -a -installsuffix cgo -o kyt-api-server .
-
-FROM scratch AS runtime
+FROM scratch
 ENV GIN_MODE=release
-COPY --from=build /go/src/kyt-api-server ./
+COPY --from=build /install/kyt-api-server /kyt-api-server
 EXPOSE 8080/tcp
-ENTRYPOINT ["./openapi"]
+ENTRYPOINT ["/kyt-api-server"]

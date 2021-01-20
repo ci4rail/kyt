@@ -36,8 +36,6 @@ job=generate-server-sources:
 job=build-kyt-api-server:
   use: image-go-builder
   command: bash -c 'cd /src && make -j${nproc}'
-  # command: bash
-  # interactive: true
   mounts:
     - mount-kyt-api-server-src
     - mount-kyt-api-server-bin
@@ -55,3 +53,12 @@ job=build-kyt-api-server:
     description: "-> build kyt-api-server"
     tags:
       - build
+
+image=image-kyt-api-server:
+  image: "{env.DOCKER_NAMESPACE:ci4rail}/kyt/kyt-api-server"
+  context: "."
+  dockerfile: kyt-api-server/Dockerfile
+  tags:
+    - "{env.GitVersion_BranchVersion}"
+  annotations:
+    description: "-> build kyt-api-server docker image"

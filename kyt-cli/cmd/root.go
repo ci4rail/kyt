@@ -27,7 +27,7 @@ import (
 )
 
 const (
-	DEFAULT_KYT_SERVER = "https://kyt.ci4rail.com/v1"
+	defaultKytServer = "https://kyt.ci4rail.com/v1"
 )
 
 var (
@@ -45,7 +45,7 @@ var rootCmd = &cobra.Command{
 Control the kyt-servies application lifecycle management (alm), device lifecycle management (dlm) and application data services (ads).`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	Run: func(cmd *cobra.Command, args []string) {},
+	// Run: func(cmd *cobra.Command, args []string) {},
 }
 
 func er(msg interface{}) {
@@ -68,7 +68,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.kyt-cli.yaml)")
-	rootCmd.PersistentFlags().StringVar(&serverURLParameter, "server", DEFAULT_KYT_SERVER, "use alternative server URL")
+	rootCmd.PersistentFlags().StringVar(&serverURLParameter, "server", defaultKytServer, "use alternative server URL")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -90,23 +90,26 @@ func initConfig() {
 
 	viper.AutomaticEnv() // read in environment variables that match
 
+	// override default server config with config file
+	// priority 1: '--server' argument that differs from defailt
+	// priority 2: 'server' from config file
+	// priority 3: default server
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 
-		// override default server config with config file
-		// priority 1: '--server' argument that differs from defailt
-		// priority 2: 'server' from config file
-		// priority 3: default server
-		if serverURLParameter != DEFAULT_KYT_SERVER {
-			serverURL = serverURLParameter
+		serverConfig := viper.GetString("server")
+		if len(serverConfig) > 0 {
+			serverURL = serverConfig
+			fmt.Println("using config")
 		} else {
-			serverConfig := viper.GetString("server")
-			if len(serverConfig) > 0 {
-				serverURL = serverConfig
-			} else {
-				serverURL = DEFAULT_KYT_SERVER
-			}
+			serverURL = defaultKytServer
+			fmt.Println("using default")
 		}
+	}
+
+	if serverURLParameter != defaultKytServer {
+		serverURL = serverURLParameter
+		fmt.Println("using argument")
 	}
 }
