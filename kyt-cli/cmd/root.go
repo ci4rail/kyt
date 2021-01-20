@@ -45,7 +45,7 @@ var rootCmd = &cobra.Command{
 Control the kyt-servies application lifecycle management (alm), device lifecycle management (dlm) and application data services (ads).`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	//Run: func(cmd *cobra.Command, args []string) {},
+	// Run: func(cmd *cobra.Command, args []string) {},
 }
 
 func er(msg interface{}) {
@@ -94,9 +94,6 @@ func initConfig() {
 	// priority 1: '--server' argument that differs from defailt
 	// priority 2: 'server' from config file
 	// priority 3: default server
-	if serverURLParameter != defaultKytServer {
-		serverURL = serverURLParameter
-	}
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
@@ -104,8 +101,15 @@ func initConfig() {
 		serverConfig := viper.GetString("server")
 		if len(serverConfig) > 0 {
 			serverURL = serverConfig
+			fmt.Println("using config")
 		} else {
 			serverURL = defaultKytServer
+			fmt.Println("using default")
 		}
+	}
+
+	if serverURLParameter != defaultKytServer {
+		serverURL = serverURLParameter
+		fmt.Println("using argument")
 	}
 }
