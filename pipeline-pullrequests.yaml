@@ -7,7 +7,7 @@ resource_types:
 resources:
 - name: pull-request
   type: pull-request
-  check_every: 1m
+  check_every: 10s
   webhook_token: ((webhook_token))
   source:
     repository: ci4rail/kyt-cli
