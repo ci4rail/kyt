@@ -146,6 +146,10 @@ $ ./dobi.sh deploy-kyt-api-server
 Preconditions:
 * `azure login` needs to be executed before. Use a web browser to open the page https://microsoft.com/devicelogin and enter the code displayed by az login to authenticate.
 * Get kubeconfig from azure kubernetes service by executing `./dobi.sh get-aks-config`
+* File kyt-service-deployment/.env is required with iot hub connection scring (can be obtained by executing the command `az iot hub connection-string show`)
+    ```
+    IOTHUB_SERVICE_CONNECTION_STRING="HostName=ci4rail-eval-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=6...="
+    ```
 
 # Repo Notes
 

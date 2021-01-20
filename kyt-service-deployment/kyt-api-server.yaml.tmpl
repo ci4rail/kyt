@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kyt-api-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kyt-api-server
+  template:
+    metadata:
+      labels:
+        app: kyt-api-server
+    spec:
+      nodeSelector:
+        "beta.kubernetes.io/os": linux
+      containers:
+        - name: kyt-api-server
+          image: DOCKER_IMAGE
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          env:
+            - name: IOTHUB_SERVICE_CONNECTION_STRING
+              value: "CONNECTION_STRING_VALUE"
+          ports:
+            - containerPort: 8080
+      imagePullSecrets:
+        - name: SECRET_NAME
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kyt-api-server
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 8080
+  selector:
+    app: kyt-api-server
