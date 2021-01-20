@@ -38,7 +38,10 @@ kind: Service
 metadata:
   name: kyt-api-server
   namespace: SERVICE_NAMESPACE
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: AZURE_RESOURCE_GROUP
 spec:
+  loadBalancerIP: PUBLIC_IP
   type: LoadBalancer
   ports:
     - port: 8080

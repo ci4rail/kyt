@@ -42,6 +42,8 @@ job=deploy-kyt-api-server:
              sed -e "s|CONNECTION_STRING_VALUE|$IOTHUB_SERVICE_CONNECTION_STRING|" | \
              sed -e "s|SECRET_NAME|$SECRET_NAME|" | \
              sed -e "s|SERVICE_NAMESPACE|$SERVICE_NAMESPACE|" | \
+             sed -e "s|PUBLIC_IP|$PUBLIC_IP|" | \
+             sed -e "s|AZURE_RESOURCE_GROUP|$AZURE_RESOURCE_GROUP|" | \
              kubectl apply -f -'
   mounts:
     - mount-kubeconfig-kyt-dev-aks
@@ -52,6 +54,8 @@ job=deploy-kyt-api-server:
     - DOCKER_IMAGE={env.DOCKER_IMAGE}
     - SECRET_NAME={env.DOCKER_REGISTRY_SECRET_NAME}
     - SERVICE_NAMESPACE={env.SERVICE_NAMESPACE}
+    - PUBLIC_IP={env.PUBLIC_IP}
+    - AZURE_RESOURCE_GROUP={env.AZURE_RESOURCE_GROUP}
   annotations:
     description: "-> deploy kyt service to azure kubernetes service"
     tags:

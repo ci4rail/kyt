@@ -115,6 +115,48 @@ $ fly -t prod set-pipeline -p kyt-services-pull-requests -c pipeline-pullrequest
 ```
 ## Deploy
 
+Preconditions:
+
+* Service principal created
+  ```
+  az ad sp create-for-rbac --skip-assignment --name kyt-dev-aks-sp
+  ```
+  Store output `appId` and `password` for later usage
+* Azure kubernetes service created (replace <appId> and <password> with output from step above)
+  ```
+  az aks create \
+        --resource-group kyt-dev \
+        --name kyt-dev-aks \
+        --node-count 1 \
+        --location westeurope \
+        --kubernetes-version 1.19.6 \
+        --node-vm-size Standard_B2s \
+        --enable-addons monitoring \
+        --service-principal <appId> \
+        --client-secret <password>
+  ```
+  Note: When creating an AKS cluster a second resource group is automatically created to store the AKS resources (in this case named `MC_kyt-dev_kyt-dev-aks_westeurope`).
+* Create public ip adress for services
+  ```
+  az network public-ip create \
+        --resource-group kyt-dev \
+        --name kyt-dev-publikip \
+        --location westeurope \
+        --sku "Standard" \
+        --allocation-method static
+  ```
+  Get public ip and update `PUBLIC_IP` in `default.env`:
+  ```
+  PUBLIC_IP=$(az network public-ip show -g kyt-dev -n kyt-dev-publikip --query "ipAddress" -o tsv)
+  ```
+* Delegate permissions to AKS service principal to enable access to public ip (replace <appId> with output from step above, enter <subscriptionId>)
+  ```
+  az role assignment create \
+    --assignee <appId> \
+    --role "Network Contributor" \
+    --scope /subscriptions/<subscriptionId>/resourceGroups/kyt-dev
+  ```
+
 ### Docker registry credentials
 
 Containerized deployment of docker registry credentials to kubernetes cluster. Credentials are stored as kubernetes secret.
