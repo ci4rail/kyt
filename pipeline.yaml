@@ -121,11 +121,11 @@ jobs:
               build: source/
               dockerfile: source/kyt-api-server/Dockerfile
               latest: false
-              tag_file: gitversion/plain/FullSemVer
+              tag_file: gitversion/plain/BranchVersion
 
       - put: gh-release
         params:
-          name: gitversion/plain/FullSemVer
-          tag: gitversion/plain/FullSemVer
+          name: gitversion/plain/BranchVersion
+          tag: gitversion/plain/BranchVersion
           globs:
             - install/*
