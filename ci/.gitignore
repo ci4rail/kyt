@@ -1,4 +1,3 @@
 credentials.yaml
-credentials-dev.yaml
-credentials-prod.yaml
 config-feature*.yaml
+credentials-*
