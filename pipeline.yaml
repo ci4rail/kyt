@@ -1,13 +1,4 @@
 resources:
-  - name: gh-release
-    type: github-release
-    source:
-      owner: ci4rail
-      repository: kyt-cli
-      access_token: ((github_access_token))
-      release: false
-      pre_release: true
-
   # Upstream docker images
   - name: image-bb-gitversion-tool
     type: docker-image
@@ -43,6 +34,16 @@ resources:
       branch: ((git_branch))
       skip_ssl_verification: ((git_skip_ssl_verification))
 
+  # Github release
+  - name: gh-release
+    type: github-release
+    source:
+      owner: ci4rail
+      repository: kyt-cli
+      access_token: ((github_access_token))
+      release: false
+      pre_release: true
+
 jobs:
   - name: build-((name))
     public: true
@@ -53,73 +54,74 @@ jobs:
             trigger: true
           - get: image-openapi-generator
           - get: image-golang
+      - in_parallel:
+          - task: generate-version
+            image: image-bb-gitversion-tool
+            config:
+              platform: linux
+              inputs:
+                - name: source
+              outputs:
+                - name: gitversion
+              run:
+                path: /bin/bash
+                args:
+                  - -exc
+                  - |
+                    entrypoint.sh &&
+                    jq empty gitversion/json/gitversion.json &&
+                    cat gitversion/json/gitversion.json
+              params:
+                GIT_PATH: source
+                GEN_PATH: gitversion
 
-      - task: generate-version
-        image: image-bb-gitversion-tool
-        config:
-          platform: linux
-          inputs:
-            - name: source
-          outputs:
-            - name: gitversion
-          run:
-            path: /bin/bash
-            args:
-              - -exc
-              - |
-                entrypoint.sh &&
-                jq empty gitversion/json/gitversion.json &&
-                cat gitversion/json/gitversion.json
-          params:
-            GIT_PATH: source
-            GEN_PATH: gitversion
+          - task: build-generate-kyt-cli-openapi
+            image: image-openapi-generator
+            config:
+              platform: linux
+              inputs:
+                - name: source
+              outputs:
+                - name: openapi
+              run:
+                path: /bin/bash
+                args:
+                  - -ec
+                  - |
+                    ROOT=$(pwd)
+                    java -Xmx1024M -DloggerPath=conf/log4j.properties -jar \
+                    /opt/openapi-generator/modules/openapi-generator-cli/target/openapi-generator-cli.jar \
+                    generate -i source/kyt-api-spec/kytapi.yaml -g go -o openapi
+                    rm -f openapi/go.mod openapi/go.sum
 
-      - task: build-generate-kyt-cli-openapi
-        image: image-openapi-generator
-        config:
-          platform: linux
-          inputs:
-            - name: source
-          outputs:
-            - name: openapi
-          run:
-            path: /bin/bash
-            args:
-              - -ec
-              - |
-                ROOT=$(pwd)
-                java -Xmx1024M -DloggerPath=conf/log4j.properties -jar \
-                /opt/openapi-generator/modules/openapi-generator-cli/target/openapi-generator-cli.jar \
-                generate -i source/kyt-api-spec/kytapi.yaml -g go -o openapi
-                rm -f openapi/go.mod openapi/go.sum
+      - in_parallel:
+          - task: build-kyt-cli
+            image: image-golang
+            config:
+              platform: linux
+              inputs:
+                - name: source
+                - name: openapi
+              outputs:
+                - name: install
+              run:
+                path: /bin/bash
+                args:
+                  - -ec
+                  - |
+                    ROOT=$(pwd)
+                    cp -r openapi/ ${ROOT}/source/kyt-cli
+                    cd ${ROOT}/source/kyt-cli
+                    make
+                    # copy the artifacts as a
+                    cp ../bin/kyt ../bin/kyt.exe ${ROOT}/install
 
-      - task: build-kyt-cli
-        image: image-golang
-        config:
-          platform: linux
-          inputs:
-            - name: source
-            - name: openapi
-          outputs:
-            - name: install
-          run:
-            path: /bin/bash
-            args:
-              - -ec
-              - |
-                ROOT=$(pwd)
-                cp -r openapi/ ${ROOT}/source/kyt-cli
-                cd ${ROOT}/source/kyt-cli
-                make
-                # copy the artifacts as a
-                cp ../bin/kyt ../bin/kyt.exe ${ROOT}/install
-
-      - put: image-kyt-api-server
-        params:
-          build: source/
-          dockerfile: source/kyt-api-server/Dockerfile
-          latest: false
-          tag_file: gitversion/plain/BranchVersion
+          - put: image-kyt-api-server
+            params:
+              build: source/
+              dockerfile: source/kyt-api-server/Dockerfile
+              latest: false
+              tag_file: gitversion/plain/BranchVersion
 
       - put: gh-release
         params:
