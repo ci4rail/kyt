@@ -1,0 +1,145 @@
+resource_types:
+- name: pull-request
+  type: docker-image
+  source:
+    repository: teliaoss/github-pr-resource
+
+resources:
+- name: pull-request
+  type: pull-request
+  check_every: 30m
+  webhook_token: ((webhook_token))
+  source:
+    repository: ci4rail/kyt-cli
+    access_token: ((access_token))
+
+- name: image-golang
+  type: docker-image
+  source:
+    repository: golang
+    tag: 1.15.6-buster
+
+- name: image-openapi-generator
+  type: docker-image
+  source:
+    repository: openapitools/openapi-generator-cli
+    tag: v5.0.0
+
+jobs:
+- name: build
+  plan:
+  - in_parallel:
+    - get: image-golang
+    - get: image-openapi-generator
+
+  - get: pull-request
+    trigger: true
+    version: every
+
+  - put: pull-request
+    params:
+      path: pull-request
+      status: pending
+
+  - in_parallel:
+    - task: build-generate-kyt-cli-openapi
+      image: image-openapi-generator
+      config:
+        platform: linux
+        inputs:
+          - name: pull-request
+        outputs:
+          - name: openapi-client
+        run:
+          path: /bin/bash
+          args:
+            - -ec
+            - |
+              java -Xmx1024M -DloggerPath=conf/log4j.properties -jar \
+              /opt/openapi-generator/modules/openapi-generator-cli/target/openapi-generator-cli.jar \
+              generate -i pull-request/kyt-api-spec/kytapi.yaml -g go -o openapi-client
+              rm -f openapi-client/go.mod openapi-client/go.sum
+      on_failure:
+        put: pull-request
+        params:
+          path: pull-request
+          status: failure
+
+    - task: build-generate-kyt-api-server-openapi
+      image: image-openapi-generator
+      config:
+        platform: linux
+        inputs:
+          - name: pull-request
+        outputs:
+          - name: openapi-api-server
+        run:
+          path: /bin/bash
+          args:
+            - -ec
+            - |
+              java -Xmx1024M -DloggerPath=conf/log4j.properties -jar \
+              /opt/openapi-generator/modules/openapi-generator-cli/target/openapi-generator-cli.jar \
+              generate -i pull-request/kyt-api-spec/kytapi.yaml -g go-gin-server -o openapi-api-server \
+              -t pull-request/openapi-generator/templates/go-gin-server --additional-properties apiPath=openapi
+      on_failure:
+        put: pull-request
+        params:
+          path: pull-request
+          status: failure
+
+  - in_parallel:
+    - task: build-kyt-cli
+      image: image-golang
+      config:
+        platform: linux
+        inputs:
+          - name: pull-request
+          - name: openapi-client
+        outputs:
+          - name: install
+        run:
+          path: /bin/bash
+          args:
+            - -ec
+            - |
+              ROOT=$(pwd)
+              cp -r openapi-client/ ${ROOT}/pull-request/kyt-cli/openapi
+              cd ${ROOT}/pull-request/kyt-cli
+              make
+              go test
+      on_failure:
+        put: pull-request
+        params:
+          path: pull-request
+          status: failure
+
+    - task: build-kyt-api-server
+      image: image-golang
+      config:
+        platform: linux
+        inputs:
+          - name: pull-request
+          - name: openapi-api-server
+        run:
+          path: /bin/bash
+          args:
+            - -ec
+            - |
+              ROOT=$(pwd)
+              mkdir -p ${ROOT}/pull-request/kyt-api-server/openapi
+              cp -r openapi-api-server/openapi/model_device.go ${ROOT}/pull-request/kyt-api-server/openapi
+              cp -r openapi-api-server/openapi/routers.go ${ROOT}/pull-request/kyt-api-server/openapi
+              cd ${ROOT}/pull-request/kyt-api-server
+              make
+              go test
+      on_failure:
+        put: pull-request
+        params:
+          path: pull-request
+          status: failure
+
+  - put: pull-request
+    params:
+      path: pull-request
+      status: success
