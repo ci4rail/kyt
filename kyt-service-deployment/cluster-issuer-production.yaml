@@ -7,7 +7,7 @@ spec:
     server: https://acme-v02.api.letsencrypt.org/directory
     email: engineering@ci4rail.com
     privateKeySecretRef:
-      name: letsencrypt-production
+      name: letsencrypt-acc-production
     solvers:
       - http01:
           ingress:
