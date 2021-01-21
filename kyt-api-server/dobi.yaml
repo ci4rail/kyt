@@ -18,7 +18,7 @@ mount=mount-kyt-api-server-bin:
 job=generate-server-sources:
   use: image-openapi-generator
   command: generate -i /kyt-api-spec/kytapi.yaml -g go-gin-server -o /src
-           -t /project/openapi-generator/templates/go-gin-server --additional-properties apiPath=openapi
+           -t /project/openapi-generator/templates/go-gin-server --additional-properties apiPath=openapi_gen
   mounts:
     - mount-project-root
     - mount-kyt-api-spec
