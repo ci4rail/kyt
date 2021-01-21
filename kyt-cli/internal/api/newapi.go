@@ -35,3 +35,19 @@ func NewAPI(serverURL string) (*openapiclient.APIClient, context.Context) {
 
 	return apiClient, context.Background()
 }
+
+// NewAPIWithToken generates a new APIClient object to issue further API calls with a specific token
+// It considers "server"argument and a specified token
+func NewAPIWithToken(serverURL string, token string) (*openapiclient.APIClient, context.Context) {
+	configuration := openapiclient.NewConfiguration()
+
+	configuration.AddDefaultHeader("Authorization", "Bearer "+token)
+	configuration.AddDefaultHeader("Content-Type", "Content-Type")
+	if serverURL != "" {
+		configuration.Servers[0].URL = serverURL
+	}
+
+	apiClient := openapiclient.NewAPIClient(configuration)
+
+	return apiClient, context.Background()
+}

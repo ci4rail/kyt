@@ -100,6 +100,7 @@ func NewOwnRouter() *gin.Engine {
 	}
 
 	router.POST("/v1/login", authMiddleware.LoginHandler)
+	router.GET("/v1/refresh_token", authMiddleware.RefreshHandler)
 
 	router.Use(authMiddleware.MiddlewareFunc())
 	for _, route := range routes {
