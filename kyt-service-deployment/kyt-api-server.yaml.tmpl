@@ -38,12 +38,50 @@ kind: Service
 metadata:
   name: kyt-api-server
   namespace: SERVICE_NAMESPACE
-  annotations:
-    service.beta.kubernetes.io/azure-load-balancer-resource-group: AZURE_RESOURCE_GROUP
 spec:
-  loadBalancerIP: PUBLIC_IP
-  type: LoadBalancer
+  type: ClusterIP
   ports:
     - port: 8080
   selector:
     app: kyt-api-server
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kyt-ingress
+  namespace: SERVICE_NAMESPACE
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  tls:
+    - hosts:
+        - DOMAIN
+      secretName: kyt-tls-secret
+  rules:
+    - host: DOMAIN
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kyt-api-server
+                port:
+                  number: 8080
+---
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: kyt-tls-secret
+  namespace: SERVICE_NAMESPACE
+spec:
+  secretName: kyt-tls-secret
+  dnsNames:
+    - DOMAIN
+  commonName: DOMAIN
+  issuerRef:
+    name: letsencrypt-staging
+    kind: ClusterIssuer
