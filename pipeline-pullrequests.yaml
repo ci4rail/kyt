@@ -128,9 +128,34 @@ jobs:
             - |
               ROOT=$(pwd)
               mkdir -p ${ROOT}/pull-request/kyt-api-server/openapi
-              rm openapi-api-server/openapi/api_device.go
+              rm openapi-api-server/openapi/api_*.go
               cp -r openapi-api-server/openapi/* ${ROOT}/pull-request/kyt-api-server/openapi
               cd ${ROOT}/pull-request/kyt-api-server
+              make
+              go test
+      on_failure:
+        put: pull-request
+        params:
+          path: pull-request
+          status: failure
+
+    - task: build-kyt-api-test-server
+      image: image-golang
+      config:
+        platform: linux
+        inputs:
+          - name: pull-request
+          - name: openapi-api-server
+        run:
+          path: /bin/bash
+          args:
+            - -ec
+            - |
+              ROOT=$(pwd)
+              mkdir -p ${ROOT}/pull-request/kyt-api-server/openapi
+              rm openapi-api-server/openapi/api_*.go
+              cp -r openapi-api-server/openapi/* ${ROOT}/pull-request/kyt-api-server/openapi
+              cd ${ROOT}/pull-request/kyt-api-server/test-server
               make
               go test
       on_failure:

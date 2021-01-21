@@ -18,15 +18,15 @@ import (
 )
 
 const (
-	ENV_IOTHUB_CONNECTION_STRING = "IOTHUB_SERVICE_CONNECTION_STRING"
+	envIotHubConnectionsString = "IOTHUB_SERVICE_CONNECTION_STRING"
 )
 
 func main() {
-	envName := fmt.Sprintf(ENV_IOTHUB_CONNECTION_STRING)
+	envName := fmt.Sprintf(envIotHubConnectionsString)
 	_, ok := os.LookupEnv(envName)
 
 	if !ok {
-		log.Fatalf("Error: environment variable %s missing", ENV_IOTHUB_CONNECTION_STRING)
+		log.Fatalf("Error: environment variable %s missing", envIotHubConnectionsString)
 	}
 	cmd.Execute()
 }
