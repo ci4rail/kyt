@@ -39,6 +39,7 @@ job=build-kyt-api-server:
   mounts:
     - mount-kyt-api-server-src
     - mount-kyt-api-server-bin
+    - mount-go-pkg
   depends:
     - generate-server-sources
   sources:
