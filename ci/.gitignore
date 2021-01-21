@@ -1,3 +1,4 @@
 credentials.yaml
 config-feature*.yaml
-credentials-*
+credentials*.yaml
+!credentials-pullrequests.template.yaml
