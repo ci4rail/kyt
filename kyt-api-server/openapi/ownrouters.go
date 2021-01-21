@@ -99,7 +99,7 @@ func NewOwnRouter() *gin.Engine {
 		log.Fatal("authMiddleware.MiddlewareInit() Error:" + errInit.Error())
 	}
 
-	router.POST("/login", authMiddleware.LoginHandler)
+	router.POST("/v1/login", authMiddleware.LoginHandler)
 
 	router.Use(authMiddleware.MiddlewareFunc())
 	for _, route := range routes {
