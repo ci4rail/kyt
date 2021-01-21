@@ -21,6 +21,7 @@ import (
 
 	api "github.com/ci4rail/kyt-cli/kyt-cli/internal/api"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // devicesCmd represents the devices command
@@ -36,7 +37,7 @@ Prints a table of the most important information of all kyt-devices.
 }
 
 func getDevices(cmd *cobra.Command, args []string) {
-	apiClient, ctx := api.NewAPI(serverURL)
+	apiClient, ctx := api.NewAPIWithToken(serverURL, viper.GetString("token"))
 	devices, _, err := apiClient.DeviceApi.GetDevices(ctx).Execute()
 	if err.Error() != "" {
 		er(fmt.Sprintf("Error calling DeviceApi.GetDevices: %v\n", err))

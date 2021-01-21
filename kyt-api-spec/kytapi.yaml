@@ -55,6 +55,18 @@ paths:
           description: OK
         '401':
           description: Unauthorized
+  '/refresh_token':
+    get:
+      summary: Refresh token
+      description: Refreshs a token
+      operationId: refreshToken
+      responses:
+        '200':
+          description: successful operation
+        '400':
+          description: Error refreshing
+      security:
+        - api_key: []
 components:
   requestBodies:
     Device:
