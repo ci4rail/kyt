@@ -77,18 +77,39 @@ $ go run main.go --server "http://localhost:8080/v1" dlm get devices
 
 [Concourse CI](https://concourse-ci.org/) will be used as CI/CD system.
 
+Download `fly` and login to concourse CI server.
+
+```bash
+# Download fly from concourse server
+$ sudo curl -L https://concourse.ci4rail.com/api/v1/cli?arch=amd64&platform=linux -o /usr/local/bin/fly && sudo chmod +x /usr/local/bin/fly
+# Login to concourse
+$ fly -t prod login -c https://concourse.ci4rail.com
+```
 ## pipeline.yaml
+
 The `pipeline.yaml` is the CI/CD pipeline that builds kyt-cli called `kyt` and kyt-api-server docker image. The kyt-cli goes to a [gitub pre-release](https://github.com/ci4rail/kyt-cli/releases) and the `kyt-api-server` will be published as docker image [here](https://harbor.ci4rail.com/harbor/projects/7/repositories/kyt%2Fkyt-api-server).
 
 ### Usage
 
-Copy `ci/credentials.template.yaml` to `ci/credentials.yaml` and enter the credentials needed.
-Download `fly` and apply the CI/CD pipeline to Concourse CI using:
+Copy `ci/credentials.template.yaml` to `ci/credentials.yaml` and enter the credentials needed. The `github_access_token` needs `write:packages` rights on Github.
+Apply the CI/CD pipeline to Concourse CI using
 ```bash
-# Download fly from concourse server
-$ sudo curl -L https://concourse.ci4rail.com/api/v1/cli?arch=amd64&platform=linux -o /usr/local/bin/fly && sudo chmod +x /usr/local/bin/fly
-# Apply pipeline
 $ fly -t prod set-pipeline -p kyt-services -c pipeline.yaml -l ci/config.yaml  -l ci/credentials.yaml
+```
+
+## pipeline-pullrequests.yaml
+
+The `pipeline-pullrequests.yaml` is the CI/CD pipeline that checks Github for commits within Pull Requests and performs a clean build of kyt-cli `kyt` and `kyt-api-server` go binaries. It also runs `go test` for both.
+
+### Usage
+
+Copy `ci/credentials-pullrequests.template.yaml` to `ci/credentials-pullrequests.yaml` and enter the Github `access_token` with `repo:status` rights. Enter the `webhook_token` key, you want to use.
+Configure a Webhook on github using this URL and the same webhook_token:
+`https://concourse.ci4rail.com/api/v1/teams/main/pipelines/kyt-services-pull-requests/resources/pull-request/check/webhook?webhook_token=<webhook_token>`
+
+Apply the pipeline with the name `kyt-services-pull-requests`
+```bash
+$ fly -t prod set-pipeline -p kyt-services-pull-requests -c pipeline-pullrequests.yaml -l ci/credentials-pullrequests.yaml
 ```
 
 # Repo Notes
@@ -99,9 +120,8 @@ The REST-API is defined with the OpenAPI document `kyt-api-spec/kytapi.yaml`. Fr
 
 ## Auto-Generated code
 
-Openapi-generator (https://openapi-generator.tech/) is used to generate the go code for the server and client.
-
-Note that the generated files are not placed in git.
+[Openapi-generator](https://openapi-generator.tech/) is used to generate the go code for the server and client.
+**Note that the generated files are not checked in.**
 
 
 ## git pre-commit hook
