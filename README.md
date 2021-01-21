@@ -171,7 +171,7 @@ $ ./dobi.sh remove-docker-registry-secret
 ```
 
 Preconditions:
-* File kyt-service-deployment/.env is required with harbor username, password and e-mail adress (e.g. use credentials from bitwarden "Harbor yoda cli user")
+* File kyt-service-deployment/.env is required with harbor username, password and e-mail adress (e.g. use credentials from bitwarden "yoda harbor robot user")
     ```
     DOCKER_REGISTRY_USERNAME={username}
     DOCKER_REGISTRY_PASSWORD={password}
