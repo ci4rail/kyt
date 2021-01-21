@@ -4,20 +4,18 @@ import (
 	"fmt"
 	"log"
 
-	common "github.com/ci4rail/kyt-cli/kyt-api-server/common"
+	"github.com/ci4rail/kyt-cli/kyt-api-server/cmd"
 	"github.com/ci4rail/kyt-cli/kyt-api-server/controllerif"
-	sw "github.com/ci4rail/kyt-cli/kyt-api-server/go"
+	"github.com/ci4rail/kyt-cli/kyt-api-server/iothubservice"
 )
 
 func main() {
 	log.Printf("Test Server with dummy data started")
 
 	// switch controller to stub functions
-	sw.ControllerNewIOTHubServiceClient = newIOTHubStubClient
+	iothubservice.ControllerNewIOTHubServiceClient = newIOTHubStubClient
+	cmd.Execute()
 
-	router := sw.NewRouter()
-
-	log.Fatal(router.Run(fmt.Sprintf(":%d", common.KYT_PORT)))
 }
 
 type stubbedIOTHubServiceClient struct {
