@@ -154,7 +154,7 @@ jobs:
               mkdir -p ${ROOT}/pull-request/kyt-api-server/openapi_gen
               cp -r openapi-api-server/openapi/* ${ROOT}/pull-request/kyt-api-server/openapi_gen
               cd ${ROOT}/pull-request/kyt-api-server/test-server
-              make
+              make OPENAPI_GEN_DIR=../openapi_gen
               go test
       on_failure:
         put: pull-request

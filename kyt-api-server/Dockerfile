@@ -10,11 +10,11 @@ FROM golang:1.15.6 AS build
 WORKDIR /go/src/github.com/ci4rail/
 COPY . /go/src/github.com/ci4rail/kyt-cli
 WORKDIR /go/src/github.com/ci4rail/kyt-cli/kyt-api-server
-COPY --from=openapi_gen /openapi_gen/* ./openapi_gen2/
+COPY --from=openapi_gen /openapi_gen/* ./openapi_gen/
 
 ENV CGO_ENABLED=0
 ENV GOPATH=/go
-RUN make BIN_DIR=/install OPENAPI_GEN_DIR=./openapi_gen2
+RUN make BIN_DIR=/install OPENAPI_GEN_DIR=./openapi_gen
 
 FROM scratch
 ENV GIN_MODE=release
