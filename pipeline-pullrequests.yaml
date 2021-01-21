@@ -139,6 +139,31 @@ jobs:
           path: pull-request
           status: failure
 
+    - task: build-kyt-api-test-server
+      image: image-golang
+      config:
+        platform: linux
+        inputs:
+          - name: pull-request
+          - name: openapi-api-server
+        run:
+          path: /bin/bash
+          args:
+            - -ec
+            - |
+              ROOT=$(pwd)
+              mkdir -p ${ROOT}/pull-request/kyt-api-server/openapi
+              cp -r openapi-api-server/openapi/model_device.go ${ROOT}/pull-request/kyt-api-server/openapi
+              cp -r openapi-api-server/openapi/routers.go ${ROOT}/pull-request/kyt-api-server/openapi
+              cd ${ROOT}/pull-request/kyt-api-server/test-server
+              make
+              go test
+      on_failure:
+        put: pull-request
+        params:
+          path: pull-request
+          status: failure
+
   - put: pull-request
     params:
       path: pull-request
