@@ -176,6 +176,21 @@ Preconditions:
     DOCKER_REGISTRY_USERNAME={username}
     DOCKER_REGISTRY_PASSWORD={password}
     ```
+### Ingress nginx
+
+Containerized deployment of ingress nginx to kubernetes cluster.
+
+```bash
+$ ./dobi.sh deploy-ingress-nginx
+```
+
+### cert-manager
+
+Containerized deployment of cert-manager to kubernetes cluster. Creates clusterissuer letsencrypt-staging and letsencrypt-production.
+
+```bash
+$ ./dobi.sh deploy-cert-manager
+```
 
 ### KYT-API-SERVER
 
@@ -184,6 +199,7 @@ Containerized deployment of the kyt-api-server. Deploys kyt-api-server docker im
 ```bash
 $ ./dobi.sh deploy-kyt-api-server
 ```
+Requires docker registry credentials, ingress nginx and cert-manager to be deployed.
 
 Preconditions:
 * `azure login` needs to be executed before. Use a web browser to open the page https://microsoft.com/devicelogin and enter the code displayed by az login to authenticate.
