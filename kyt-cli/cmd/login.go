@@ -17,8 +17,9 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
+	// "fmt"
 
+	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/public"
 	"github.com/spf13/cobra"
 )
 
@@ -33,9 +34,27 @@ Log in with user name and password.
 Log in interactively.
 
 Not implemented yet.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Login successful.")
-	},
+	Run: login,
+}
+
+func login(cmd *cobra.Command, args []string) {
+	app, err := public.New("config.ClientID")
+	if err != nil {
+		panic(err)
+	}
+
+	// var userAccount shared.Account
+	accounts := app.Accounts()
+	for _, account := range accounts {
+		if account.PreferredUsername == "" {
+
+		}
+		
+				// if account.PreferredUsername == config.Username {
+		// 	userAccount = account
+		// }
+	}
+
 }
 
 func init() {
