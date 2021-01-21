@@ -16,6 +16,7 @@ mount=mount-kyt-cli-bin:
   path: "/install"
   read-only: false
 
+
 # ===================================================
 # jobs
 # ===================================================
@@ -46,6 +47,7 @@ job=build-kyt-cli:
   mounts:
     - mount-kyt-cli-src
     - mount-kyt-cli-bin
+    - mount-go-pkg
   depends:
     - generate-client-sources
   sources:

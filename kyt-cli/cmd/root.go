@@ -27,13 +27,19 @@ import (
 )
 
 const (
-	defaultKytServer = "https://kyt.ci4rail.com/v1"
+	defaultKytServer     = "https://kyt.ci4rail.com/v1"
+	defaultToken         = ""
+	kytCliConfigFile     = ".kyt-cli"
+	kytCliConfigFileType = "yaml"
 )
 
 var (
 	cfgFile            string
 	serverURL          string
+	token              string
 	serverURLParameter string
+	tokenParameter     string
+	viperConfig        map[string]interface{}
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -69,10 +75,12 @@ func init() {
 	// will be global for your application.
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.kyt-cli.yaml)")
 	rootCmd.PersistentFlags().StringVar(&serverURLParameter, "server", defaultKytServer, "use alternative server URL")
+	rootCmd.PersistentFlags().StringVar(&tokenParameter, "token", "", "bearer token for accessing the kyt server")
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
+	viper.SetConfigType(kytCliConfigFileType)
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
@@ -85,7 +93,7 @@ func initConfig() {
 
 		// Search config in home directory with name ".kyt-cli" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".kyt-cli")
+		viper.SetConfigName(kytCliConfigFile)
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
@@ -95,21 +103,34 @@ func initConfig() {
 	// priority 2: 'server' from config file
 	// priority 3: default server
 	// If a config file is found, read it in.
+	tokenFound := false
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 
 		serverConfig := viper.GetString("server")
 		if len(serverConfig) > 0 {
 			serverURL = serverConfig
-			fmt.Println("using config")
 		} else {
 			serverURL = defaultKytServer
-			fmt.Println("using default")
+		}
+
+		tokenConfig := viper.GetString("token")
+		if len(tokenConfig) > 0 {
+			token = tokenConfig
+			tokenFound = true
 		}
 	}
 
 	if serverURLParameter != defaultKytServer {
 		serverURL = serverURLParameter
-		fmt.Println("using argument")
 	}
+
+	if !tokenFound && tokenParameter == defaultToken {
+		// log.Fatalln("No valid token. Run `login` command first!")
+	} else {
+		token = tokenParameter
+	}
+	viperConfig = viper.AllSettings()
+	viperConfig["serverURL"] = serverURL
+	viperConfig["token"] = token
 }
