@@ -38,6 +38,9 @@ alias=deploy:
 alias=aks-deploy:
   tasks:
     - deploy-kyt-api-server
+    - deploy-cert-manager
+    - deploy-ingress-nginx
+    - deploy-docker-registry-secret
   annotations:
     description: "[alias] deploy all"
     tags:
