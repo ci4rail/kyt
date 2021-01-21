@@ -121,11 +121,11 @@ jobs:
               build: source/
               dockerfile: source/kyt-api-server/Dockerfile
               latest: false
-              tag_file: gitversion/plain/BranchVersion
+              tag_file: gitversion/plain/InformationalVersion
 
       - put: gh-release
         params:
-          name: gitversion/plain/BranchVersion
-          tag: gitversion/plain/BranchVersion
+          name: gitversion/plain/InformationalVersion
+          tag: gitversion/plain/InformationalVersion
           globs:
             - install/*
