@@ -56,10 +56,6 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
-  tls:
-    - hosts:
-        - DOMAIN
-      secretName: kyt-tls-secret
   rules:
     - host: DOMAIN
       http:
