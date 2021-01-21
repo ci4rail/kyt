@@ -19,8 +19,17 @@ package cmd
 import (
 	// "fmt"
 
-	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/public"
+	"context"
+	"encoding/json"
+	"fmt"
+	"log"
+
+	api "github.com/ci4rail/kyt-cli/kyt-cli/internal/api"
+	"github.com/ci4rail/kyt-cli/kyt-cli/openapi"
+	"github.com/manifoldco/promptui"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // loginCmd represents the login command
@@ -38,23 +47,53 @@ Not implemented yet.`,
 }
 
 func login(cmd *cobra.Command, args []string) {
-	app, err := public.New("config.ClientID")
+	prompt := promptui.Prompt{
+		Label:    "Username",
+		Validate: nil,
+	}
+
+	username, err := prompt.Run()
 	if err != nil {
-		panic(err)
+		log.Panicln(err)
+	}
+	prompt = promptui.Prompt{
+		Label:    "Password",
+		Validate: nil,
+		Mask:     ' ',
 	}
 
-	// var userAccount shared.Account
-	accounts := app.Accounts()
-	for _, account := range accounts {
-		if account.PreferredUsername == "" {
+	password, err := prompt.Run()
+	if err != nil {
+		log.Panicln(err)
+	}
+	inlineObject := &openapi.InlineObject{
+		Username: &username,
+		Password: &password,
+	}
+	apiClient, _ := api.NewAPI(serverURL)
+	resp, openapierr := apiClient.DefaultApi.LoginPost(context.Background()).InlineObject(*inlineObject).Execute()
+	if openapierr.Error() != "" {
+		log.Fatalf("Error when calling `DefaultApi.LoginPost``: %v\n", openapierr)
 
-		}
-		
-				// if account.PreferredUsername == config.Username {
-		// 	userAccount = account
-		// }
+	}
+	var data map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&data)
+	if err != nil {
+		log.Fatalf("Error: %e", err)
 	}
 
+	token := data["token"]
+	viper.Set("token", token)
+	// Find home directory.
+	home, err := homedir.Dir()
+	if err != nil {
+		er(err)
+	}
+	err = viper.WriteConfigAs(fmt.Sprintf("%s/%s.%s", home, kytCliConfigFile, kytCliConfigFileType))
+	if err != nil {
+		log.Println("Cannot save config file")
+	}
+	fmt.Println("Login Succeeded")
 }
 
 func init() {
