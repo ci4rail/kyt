@@ -39,7 +39,7 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		log.Printf("Run args %s\n", args)
-		router := sw.NewRouter()
+		router := sw.NewOwnRouter()
 
 		log.Fatal(router.Run(serverAddr))
 

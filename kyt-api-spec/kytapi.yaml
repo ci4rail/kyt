@@ -34,6 +34,43 @@ paths:
           description: Invalid ID supplied
       security:
         - api_key: []
+  '/auth/login':
+    post:
+      tags:
+        - auth
+      summary: Login
+      requestBody:
+        content:
+          application/json:
+            schema:      # Request body contents
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              example:   # Sample object
+                username: user
+                password: password
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+  '/auth/refresh_token':
+    get:
+      tags:
+        - auth
+      summary: Refresh token
+      description: Refreshs a token
+      operationId: refreshToken
+      responses:
+        '200':
+          description: successful operation
+        '400':
+          description: Error refreshing
+      security:
+        - api_key: []
 components:
   requestBodies:
     Device:

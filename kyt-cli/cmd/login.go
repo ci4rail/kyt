@@ -17,9 +17,19 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
+	// "fmt"
 
+	"context"
+	"encoding/json"
+	"fmt"
+	"log"
+
+	api "github.com/ci4rail/kyt-cli/kyt-cli/internal/api"
+	"github.com/ci4rail/kyt-cli/kyt-cli/openapi"
+	"github.com/manifoldco/promptui"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // loginCmd represents the login command
@@ -33,9 +43,56 @@ Log in with user name and password.
 Log in interactively.
 
 Not implemented yet.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Login successful.")
-	},
+	Run: login,
+}
+
+func login(cmd *cobra.Command, args []string) {
+	prompt := promptui.Prompt{
+		Label:    "Username",
+		Validate: nil,
+	}
+
+	username, err := prompt.Run()
+	if err != nil {
+		log.Panicln(err)
+	}
+	prompt = promptui.Prompt{
+		Label:    "Password",
+		Validate: nil,
+		Mask:     ' ',
+	}
+
+	password, err := prompt.Run()
+	if err != nil {
+		log.Panicln(err)
+	}
+	inlineObject := &openapi.InlineObject{
+		Username: &username,
+		Password: &password,
+	}
+	apiClient, _ := api.NewAPI(serverURL)
+	resp, openapierr := apiClient.AuthApi.AuthLoginPost(context.Background()).InlineObject(*inlineObject).Execute()
+	if openapierr.Error() != "" {
+		log.Fatalf("Error when calling `DefaultApi.LoginPost``: %v\n", openapierr)
+	}
+	var data map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&data)
+	if err != nil {
+		log.Fatalf("Error: %e", err)
+	}
+
+	token := data["token"]
+	viper.Set("token", token)
+	// Find home directory.
+	home, err := homedir.Dir()
+	if err != nil {
+		er(err)
+	}
+	err = viper.WriteConfigAs(fmt.Sprintf("%s/%s.%s", home, kytCliConfigFile, kytCliConfigFileType))
+	if err != nil {
+		log.Println("Cannot save config file")
+	}
+	fmt.Println("Login Succeeded")
 }
 
 func init() {

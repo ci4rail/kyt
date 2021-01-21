@@ -7,6 +7,12 @@ mount=mount-project-root:
   path: "/project"
   read-only: true
 
+mount=mount-go-pkg:
+  bind: "build/go/pkg"
+  path: "/go/pkg"
+  read-only: false
+
+
 # ===================================================
 # images
 # ===================================================
