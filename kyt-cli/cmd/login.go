@@ -71,10 +71,9 @@ func login(cmd *cobra.Command, args []string) {
 		Password: &password,
 	}
 	apiClient, _ := api.NewAPI(serverURL)
-	resp, openapierr := apiClient.DefaultApi.LoginPost(context.Background()).InlineObject(*inlineObject).Execute()
+	resp, openapierr := apiClient.AuthApi.AuthLoginPost(context.Background()).InlineObject(*inlineObject).Execute()
 	if openapierr.Error() != "" {
 		log.Fatalf("Error when calling `DefaultApi.LoginPost``: %v\n", openapierr)
-
 	}
 	var data map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&data)

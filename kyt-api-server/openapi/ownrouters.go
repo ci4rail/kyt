@@ -28,7 +28,7 @@ func NewOwnRouter() *gin.Engine {
 	authMiddleware, err := jwt.New(&jwt.GinJWTMiddleware{
 		Realm:       "test zone",
 		Key:         []byte("du8Soo8g"),
-		Timeout:     time.Hour,
+		Timeout:     time.Minute * 5,
 		MaxRefresh:  time.Hour,
 		IdentityKey: identityKey,
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
@@ -99,8 +99,8 @@ func NewOwnRouter() *gin.Engine {
 		log.Fatal("authMiddleware.MiddlewareInit() Error:" + errInit.Error())
 	}
 
-	router.POST("/v1/login", authMiddleware.LoginHandler)
-	router.GET("/v1/refresh_token", authMiddleware.RefreshHandler)
+	router.POST("/v1/auth/login", authMiddleware.LoginHandler)
+	router.GET("/v1/auth/refresh_token", authMiddleware.RefreshHandler)
 
 	router.Use(authMiddleware.MiddlewareFunc())
 	for _, route := range routes {

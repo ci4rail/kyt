@@ -34,8 +34,10 @@ paths:
           description: Invalid ID supplied
       security:
         - api_key: []
-  '/login':
+  '/auth/login':
     post:
+      tags:
+        - auth
       summary: Login
       requestBody:
         content:
@@ -55,8 +57,10 @@ paths:
           description: OK
         '401':
           description: Unauthorized
-  '/refresh_token':
+  '/auth/refresh_token':
     get:
+      tags:
+        - auth
       summary: Refresh token
       description: Refreshs a token
       operationId: refreshToken

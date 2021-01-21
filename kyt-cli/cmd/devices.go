@@ -17,9 +17,13 @@ limitations under the License.
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
+	"os"
 
 	api "github.com/ci4rail/kyt-cli/kyt-cli/internal/api"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -37,9 +41,43 @@ Prints a table of the most important information of all kyt-devices.
 }
 
 func getDevices(cmd *cobra.Command, args []string) {
+	if !viper.IsSet("token") {
+		fmt.Println("No access token set. Please run `login` command.")
+		os.Exit(1)
+	}
 	apiClient, ctx := api.NewAPIWithToken(serverURL, viper.GetString("token"))
-	devices, _, err := apiClient.DeviceApi.GetDevices(ctx).Execute()
-	if err.Error() != "" {
+	devices, resp, err := apiClient.DeviceApi.GetDevices(ctx).Execute()
+	if resp.StatusCode == 401 {
+		fmt.Println("Token expired. Refreshing...")
+		resp, openapierr := apiClient.AuthApi.RefreshToken(ctx).Execute()
+		if openapierr.Error() != "" {
+			er(fmt.Sprintf("Error calling RefreshApi.RefreshToken: %v\n", openapierr))
+		}
+
+		var data map[string]interface{}
+		err := json.NewDecoder(resp.Body).Decode(&data)
+		if err != nil {
+			log.Fatalf("Error: %e", err)
+		}
+
+		token := data["token"]
+		viper.Set("token", token)
+		// Find home directory.
+		home, err := homedir.Dir()
+		if err != nil {
+			er(err)
+		}
+		err = viper.WriteConfigAs(fmt.Sprintf("%s/%s.%s", home, kytCliConfigFile, kytCliConfigFileType))
+		if err != nil {
+			log.Println("Cannot save config file")
+		}
+
+		apiClient, ctx := api.NewAPIWithToken(serverURL, viper.GetString("token"))
+		devices, _, openapierr = apiClient.DeviceApi.GetDevices(ctx).Execute()
+		if openapierr.Error() != "" {
+			er(fmt.Sprintf("Error calling RefreshApi.RefreshToken: %v\n", openapierr))
+		}
+	} else if err.Error() != "" {
 		er(fmt.Sprintf("Error calling DeviceApi.GetDevices: %v\n", err))
 	}
 
