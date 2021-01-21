@@ -24,5 +24,6 @@
 
 main.go
 openapi/api_device.go
+openapi/routers.go
 Dockerfile
 README.md
