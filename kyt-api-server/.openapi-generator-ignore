@@ -23,7 +23,6 @@
 #!docs/README.md
 
 main.go
-openapi/api*.go
-openapi/routers.go
+openapi/api_device.go
 Dockerfile
 README.md
