@@ -9,12 +9,17 @@ Here you can find the build instructions for either locally with and without doc
 ## Build locally
 
 ### KYT-API-SERVER
+
 #### Docker image
+
 To build (and deploy) the `kyt-api-server` docker image you can use the following commands:
 ```bash
 $ ./dobi.sh image-kyt-api-server        # build only
 $ ./dobi.sh image-kyt-api-server:push   # build and push do docker registry
 ```
+
+Get the IoT Hub connection string from the Azure Portal. Select the IoT Hub, then "shared access policies". Copy from `iothubowner` the connection string `Connection string—primary key`.
+
 To run the docker image with a specific `<tag>` use:
 ```bash
 docker run --rm -p 8080:8080 -e IOTHUB_SERVICE_CONNECTION_STRING="HostName=ci4rail-eval-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=6..." harbor.ci4rail.com/ci4rail/kyt/kyt-api-server:<tag>
@@ -28,9 +33,6 @@ Containerized Build of the kyt-api-server tool. Builds x86 version for linux.
 ```bash
 $ ./dobi.sh build-kyt-apiserver
 ```
-
-Get the iot hub connection string from the Azure Portal.
-Select the iot hub, then "shared access policies"
 
 Run the kyt-api-server:
 
@@ -99,7 +101,7 @@ $ fly -t prod set-pipeline -p kyt-services -c pipeline.yaml -l ci/config.yaml  -
 
 ## pipeline-pullrequests.yaml
 
-The `pipeline-pullrequests.yaml` is the CI/CD pipeline that checks Github for commits within Pull Requests and performs a clean build of kyt-cli `kyt` and `kyt-api-server` go binaries. It also runs `go test` for both.
+The `pipeline-pullrequests.yaml` defines a pipeline that runs basic quality checks on pull requests. For this, consourse checks Github for new or changed pull requests If a change is found, it downloads the branch and performs a clean build of kyt-cli `kyt` and `kyt-api-server` go binaries. It also runs go test for both.
 
 ### Usage
 
