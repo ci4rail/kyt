@@ -128,8 +128,8 @@ jobs:
             - |
               ROOT=$(pwd)
               mkdir -p ${ROOT}/pull-request/kyt-api-server/openapi
-              cp -r openapi-api-server/openapi/model_device.go ${ROOT}/pull-request/kyt-api-server/openapi
-              cp -r openapi-api-server/openapi/routers.go ${ROOT}/pull-request/kyt-api-server/openapi
+              rm openapi-api-server/openapi/api_device.go
+              cp -r openapi-api-server/openapi/* ${ROOT}/pull-request/kyt-api-server/openapi
               cd ${ROOT}/pull-request/kyt-api-server
               make
               go test
