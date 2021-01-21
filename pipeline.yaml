@@ -1,0 +1,131 @@
+resources:
+  # Upstream docker images
+  - name: image-bb-gitversion-tool
+    type: docker-image
+    source:
+      repository: elbb/bb-gitversion
+      tag: 0.7.0
+
+  - name: image-golang
+    type: docker-image
+    source:
+      repository: golang
+      tag: 1.15.6-buster
+
+  - name: image-openapi-generator
+    type: docker-image
+    source:
+      repository: openapitools/openapi-generator-cli
+      tag: v5.0.0
+
+  # Own docker images
+  - name: image-kyt-api-server
+    type: docker-image
+    source:
+      repository: harbor.ci4rail.com/ci4rail/kyt/kyt-api-server
+      username: ((registry_user))
+      password: ((registry_password))
+
+  # Git sources
+  - name: source
+    type: git
+    source:
+      uri: ((git_source))
+      branch: ((git_branch))
+      skip_ssl_verification: ((git_skip_ssl_verification))
+
+  # Github release
+  - name: gh-release
+    type: github-release
+    source:
+      owner: ci4rail
+      repository: kyt-cli
+      access_token: ((github_access_token))
+      release: false
+      pre_release: true
+
+jobs:
+  - name: build-((name))
+    public: true
+    plan:
+      - in_parallel:
+          - get: image-bb-gitversion-tool
+          - get: source
+            trigger: true
+          - get: image-openapi-generator
+          - get: image-golang
+      - in_parallel:
+          - task: generate-version
+            image: image-bb-gitversion-tool
+            config:
+              platform: linux
+              inputs:
+                - name: source
+              outputs:
+                - name: gitversion
+              run:
+                path: /bin/bash
+                args:
+                  - -exc
+                  - |
+                    entrypoint.sh &&
+                    jq empty gitversion/json/gitversion.json &&
+                    cat gitversion/json/gitversion.json
+              params:
+                GIT_PATH: source
+                GEN_PATH: gitversion
+
+          - task: build-generate-kyt-cli-openapi
+            image: image-openapi-generator
+            config:
+              platform: linux
+              inputs:
+                - name: source
+              outputs:
+                - name: openapi
+              run:
+                path: /bin/bash
+                args:
+                  - -ec
+                  - |
+                    ROOT=$(pwd)
+                    java -Xmx1024M -DloggerPath=conf/log4j.properties -jar \
+                    /opt/openapi-generator/modules/openapi-generator-cli/target/openapi-generator-cli.jar \
+                    generate -i source/kyt-api-spec/kytapi.yaml -g go -o openapi
+                    rm -f openapi/go.mod openapi/go.sum
+
+      - in_parallel:
+          - task: build-kyt-cli
+            image: image-golang
+            config:
+              platform: linux
+              inputs:
+                - name: source
+                - name: openapi
+              outputs:
+                - name: install
+              run:
+                path: /bin/bash
+                args:
+                  - -ec
+                  - |
+                    ROOT=$(pwd)
+                    cp -r openapi/ ${ROOT}/source/kyt-cli
+                    cd ${ROOT}/source/kyt-cli
+                    make
+                    # copy the artifacts as a
+                    cp ../bin/kyt ../bin/kyt.exe ${ROOT}/install
+
+          - put: image-kyt-api-server
+            params:
+              build: source/
+              dockerfile: source/kyt-api-server/Dockerfile
+              latest: false
+              tag_file: gitversion/plain/FullSemVer
+
+      - put: gh-release
+        params:
+          name: gitversion/plain/FullSemVer
+          tag: gitversion/plain/FullSemVer
+          globs:
+            - install/*
