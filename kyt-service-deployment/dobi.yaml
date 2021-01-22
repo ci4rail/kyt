@@ -1,0 +1,190 @@
+# ===================================================
+# images
+# ===================================================
+image=image-azure-cli:
+  image: mcr.microsoft.com/azure-cli
+  tags: ["2.17.1"]
+  pull: once
+
+image=image-kubectl:
+  image: bitnami/kubectl
+  tags: ["1.20.2"]
+  pull: once
+
+image=image-helm:
+  image: dtzar/helm-kubectl
+  tags: ["3.5.0"]
+  pull: once
+
+# ===================================================
+# mounts
+# ===================================================
+# Read only is not possible as azure continuously changes stuff within this directory.
+mount=mount-azure-dir:
+  bind: "{user.home}/.azure"
+  path: "/.azure"
+  read-only: false
+
+mount=mount-kubeconfig-kyt-dev-aks:
+  bind: "{user.home}/.kube/config-kyt-dev-aks"
+  path: "/.kube"
+  read-only: false
+
+mount=mount-kyt-service-deployment-dir:
+  bind: "kyt-service-deployment"
+  path: "/deployment"
+  read-only: true
+
+# ===================================================
+# jobs
+# ===================================================
+job=deploy-kyt-api-server:
+  use: image-kubectl
+  command: |
+    bash -c 'source /deployment/.env &&
+             cat /deployment/kyt-api-server.yaml.tmpl | \
+             sed -e "s|DOCKER_IMAGE|$DOCKER_IMAGE|" | \
+             sed -e "s|CONNECTION_STRING_VALUE|$IOTHUB_SERVICE_CONNECTION_STRING|" | \
+             sed -e "s|SECRET_NAME|$SECRET_NAME|" | \
+             sed -e "s|SERVICE_NAMESPACE|$SERVICE_NAMESPACE|" | \
+             sed -e "s|PUBLIC_IP|$PUBLIC_IP|" | \
+             sed -e "s|AZURE_RESOURCE_GROUP|$AZURE_RESOURCE_GROUP|" | \
+             sed -e "s|DOMAIN|$DOMAIN|" | \
+             kubectl apply -f -'
+  mounts:
+    - mount-kubeconfig-kyt-dev-aks
+    - mount-kyt-service-deployment-dir
+  user: "{user.uid}:{user.gid}"
+  entrypoint: ""
+  env:
+    - DOCKER_IMAGE={env.DOCKER_IMAGE}
+    - SECRET_NAME={env.DOCKER_REGISTRY_SECRET_NAME}
+    - SERVICE_NAMESPACE={env.SERVICE_NAMESPACE}
+    - PUBLIC_IP={env.PUBLIC_IP}
+    - AZURE_RESOURCE_GROUP={env.AZURE_RESOURCE_GROUP}
+    - DOMAIN={env.DOMAIN}
+  annotations:
+    description: "-> deploy kyt service to azure kubernetes service"
+    tags:
+      - deploy
+
+job=deploy-cert-manager:
+  use: image-helm
+  command: |
+    bash -c '\
+      cd /tmp/ &&
+      helm repo add jetstack https://charts.jetstack.io && \
+      helm repo update && \
+      helm upgrade cert-manager jetstack/cert-manager --install --create-namespace \
+        --namespace cert-manager \
+        --version v1.0.2 \
+        --set installCRDs=true \
+        --set nodeSelector."beta\.kubernetes\.io/os"=linux && \
+      kubectl apply -f /deployment/cluster-issuer-staging.yaml --namespace cer-manager && \
+      kubectl apply -f /deployment/cluster-issuer-production.yaml --namespace cer-manager \
+    '
+  mounts:
+    - mount-kubeconfig-kyt-dev-aks
+    - mount-kyt-service-deployment-dir
+  env:
+    - PUBLIC_IP={env.PUBLIC_IP}
+    - HELM_CACHE_HOME="/tmp/.cache/helm"
+    - HELM_CONFIG_HOME="/tmp/.config/helm"
+    - HELM_DATA_HOME="/tmp/.local/share/helm"
+    - HELM_REGISTRY_CONFIG="/tmp/.config/helm/registry.json"
+    - HELM_REPOSITORY_CACHE="/tmp/.cache/helm/repository"
+    - HELM_REPOSITORY_CONFIG="/tmp/.config/helm/repositories.yaml"
+  user: "{user.uid}:{user.gid}"
+  annotations:
+    description: "-> deploy cert-manager to azure kubernetes service"
+    tags:
+      - deploy
+
+job=deploy-ingress-nginx:
+  use: image-helm
+  command: |
+    bash -c '\
+      cd /tmp/ &&
+      helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx && \
+      helm repo update && \
+      helm upgrade nginx-ingress ingress-nginx/ingress-nginx --install --create-namespace \
+        --namespace ingress \
+        --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
+        --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux \
+        --set controller.service.loadBalancerIP="$PUBLIC_IP" \
+        --set alertmanager.ingress.annotations."alb\.ingress\.kubernetes\.io/tags"="Environment=dev\,Team=test" \
+        --set controller.service.annotations."service\.beta\.kubernetes\.io\/azure-load-balancer-resource-group"=$AZURE_RESOURCE_GROUP \
+    '
+  interactive: true
+  mounts:
+    - mount-kubeconfig-kyt-dev-aks
+  env:
+    - PUBLIC_IP={env.PUBLIC_IP}
+    - AZURE_RESOURCE_GROUP={env.AZURE_RESOURCE_GROUP}
+    - HELM_CACHE_HOME="/tmp/.cache/helm"
+    - HELM_CONFIG_HOME="/tmp/.config/helm"
+    - HELM_DATA_HOME="/tmp/.local/share/helm"
+    - HELM_REGISTRY_CONFIG="/tmp/.config/helm/registry.json"
+    - HELM_REPOSITORY_CACHE="/tmp/.cache/helm/repository"
+    - HELM_REPOSITORY_CONFIG="/tmp/.config/helm/repositories.yaml"
+  user: "{user.uid}:{user.gid}"
+  annotations:
+    description: "-> deploy ingress nginx to azure kubernetes service"
+    tags:
+      - deploy
+
+job=deploy-docker-registry-secret:
+  use: image-kubectl
+  command: |
+    bash -c 'source /deployment/.env &&
+             kubectl create namespace $NAMESPACE_NAME --dry-run=client -o yaml | kubectl apply -f - &&
+             kubectl create secret docker-registry $SECRET_NAME \
+                                                   --namespace=$NAMESPACE_NAME \
+                                                   --docker-server=$DOCKER_REGISTRY \
+                                                   --docker-username=$DOCKER_REGISTRY_USERNAME \
+                                                   --docker-password=$DOCKER_REGISTRY_PASSWORD \
+                                                   --validate=true '
+  mounts:
+    - mount-kubeconfig-kyt-dev-aks
+    - mount-kyt-service-deployment-dir
+  user: "{user.uid}:{user.gid}"
+  entrypoint: ""
+  env:
+    - SECRET_NAME={env.DOCKER_REGISTRY_SECRET_NAME}
+    - DOCKER_REGISTRY={env.DOCKER_REGISTRY}
+    - NAMESPACE_NAME={env.SERVICE_NAMESPACE}
+  annotations:
+    description: "-> deploy docker registry secret to azure kubernetes service"
+    tags:
+      - deploy
+
+job=remove-docker-registry-secret:
+  use: image-kubectl
+  command: |
+    bash -c ' kubectl delete secret -n $NAMESPACE_NAME $SECRET_NAME'
+  mounts:
+    - mount-kubeconfig-kyt-dev-aks
+  user: "{user.uid}:{user.gid}"
+  entrypoint: ""
+  env:
+    - SECRET_NAME={env.DOCKER_REGISTRY_SECRET_NAME}
+    - NAMESPACE_NAME={env.SERVICE_NAMESPACE}
+  annotations:
+    description: "-> remove docker registry secret from azure kubernetes service"
+    tags:
+      - remove
+
+job=get-aks-config:
+  use: image-azure-cli
+  command: |
+    bash -c 'az aks get-credentials --resource-group $AZURE_RESOURCE_GROUP --name $AKS_NAME'
+  interactive: true
+  mounts:
+    - mount-kubeconfig-kyt-dev-aks
+    - mount-azure-dir
+  env:
+    - AZURE_RESOURCE_GROUP={env.AZURE_RESOURCE_GROUP}
+    - AKS_NAME={env.AKS_NAME}
+  user: "{user.uid}:{user.gid}"
+  annotations:
+    description: "-> get azure kubernetes service kubeconfig"

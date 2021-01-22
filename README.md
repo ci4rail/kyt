@@ -113,6 +113,101 @@ Apply the pipeline with the name `kyt-services-pull-requests`
 ```bash
 $ fly -t prod set-pipeline -p kyt-services-pull-requests -c pipeline-pullrequests.yaml -l ci/credentials-pullrequests.yaml
 ```
+## Deploy
+
+Preconditions:
+
+* Service principal created
+  ```
+  az ad sp create-for-rbac --skip-assignment --name kyt-dev-aks-sp
+  ```
+  Store output `appId` and `password` for later usage
+* Azure kubernetes service created (replace <appId> and <password> with output from step above)
+  ```
+  az aks create \
+        --resource-group kyt-dev \
+        --name kyt-dev-aks \
+        --node-count 1 \
+        --location westeurope \
+        --kubernetes-version 1.19.6 \
+        --node-vm-size Standard_B2s \
+        --enable-addons monitoring \
+        --service-principal <appId> \
+        --client-secret <password>
+  ```
+  Note: When creating an AKS cluster a second resource group is automatically created to store the AKS resources (in this case named `MC_kyt-dev_kyt-dev-aks_westeurope`).
+* Create public ip adress for services
+  ```
+  az network public-ip create \
+        --resource-group kyt-dev \
+        --name kyt-dev-publikip \
+        --location westeurope \
+        --sku "Standard" \
+        --allocation-method static
+  ```
+  Get public ip and update `PUBLIC_IP` in `default.env`:
+  ```
+  PUBLIC_IP=$(az network public-ip show -g kyt-dev -n kyt-dev-publikip --query "ipAddress" -o tsv)
+  ```
+* Delegate permissions to AKS service principal to enable access to public ip (replace <appId> with output from step above, enter <subscriptionId>)
+  ```
+  az role assignment create \
+    --assignee <appId> \
+    --role "Network Contributor" \
+    --scope /subscriptions/<subscriptionId>/resourceGroups/kyt-dev
+  ```
+
+### Docker registry credentials
+
+Containerized deployment of docker registry credentials to kubernetes cluster. Credentials are stored as kubernetes secret.
+
+```bash
+$ ./dobi.sh deploy-docker-registry-secret
+```
+Secret can be removed from kubernetes cluster with
+
+```bash
+$ ./dobi.sh remove-docker-registry-secret
+```
+
+Preconditions:
+* File kyt-service-deployment/.env is required with harbor username, password and e-mail adress (e.g. use credentials from bitwarden "yoda harbor robot user")
+    ```
+    DOCKER_REGISTRY_USERNAME={username}
+    DOCKER_REGISTRY_PASSWORD={password}
+    ```
+### Ingress nginx
+
+Containerized deployment of ingress nginx to kubernetes cluster.
+
+```bash
+$ ./dobi.sh deploy-ingress-nginx
+```
+
+### cert-manager
+
+Containerized deployment of cert-manager to kubernetes cluster. Creates clusterissuer letsencrypt-staging and letsencrypt-production.
+
+```bash
+$ ./dobi.sh deploy-cert-manager
+```
+
+### KYT-API-SERVER
+
+Containerized deployment of the kyt-api-server. Deploys kyt-api-server docker image DOCKER_IMAGE from docker registry DOCKER_REGISTRY to azure kubernetes services AKS_NAME.
+
+```bash
+$ ./dobi.sh deploy-kyt-api-server
+```
+Requires docker registry credentials, ingress nginx and cert-manager to be deployed.
+
+Preconditions:
+* `azure login` needs to be executed before. Use a web browser to open the page https://microsoft.com/devicelogin and enter the code displayed by az login to authenticate.
+* Get kubeconfig from azure kubernetes service by executing `./dobi.sh get-aks-config`
+* File kyt-service-deployment/.env is required with iot hub connection scring (can be obtained by executing the command `az iot hub connection-string show`)
+    ```
+    IOTHUB_SERVICE_CONNECTION_STRING="HostName=ci4rail-eval-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=6...="
+    ```
 
 # Repo Notes
 
