@@ -7,7 +7,7 @@ resource_types:
 resources:
 - name: pull-request
   type: pull-request
-  check_every: 30m
+  check_every: 30s
   webhook_token: ((webhook_token))
   source:
     repository: ci4rail/kyt-cli
@@ -156,6 +156,29 @@ jobs:
               cd ${ROOT}/pull-request/kyt-api-server/test-server
               make OPENAPI_GEN_DIR=../openapi_gen
               go test
+      on_failure:
+        put: pull-request
+        params:
+          path: pull-request
+          status: failure
+
+    - task: build-kyt-api-server-docker-image
+      privileged: true
+      config:
+        platform: linux
+        image_resource:
+          type: registry-image
+          source:
+            repository: vito/oci-build-task
+        inputs:
+        - name: pull-request
+        outputs:
+        - name: image
+        run:
+          path: build
+        params:
+          CONTEXT: pull-request/
+          DOCKERFILE: pull-request/kyt-api-server/Dockerfile
       on_failure:
         put: pull-request
         params:
