@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/amenzhinsky/iothub/iotservice"
-	"github.com/ci4rail/kyt-cli/kyt-api-server/controllerif"
+	"github.com/ci4rail/kyt/kyt-api-server/controllerif"
 )
 
 // IOTHubServiceClient is an Azure IoT Hub service client.
