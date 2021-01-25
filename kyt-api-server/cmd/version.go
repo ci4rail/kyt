@@ -26,7 +26,7 @@ var version = "dev"
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Print version information and quit. Default is false.",
+	Short: "Print version information and quit.",
 	Long:  `This command displays version information for the kyt-api-server.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("kyt-api-server %s\n", version)
