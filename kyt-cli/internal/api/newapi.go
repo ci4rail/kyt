@@ -19,7 +19,7 @@ package api
 import (
 	"context"
 
-	openapiclient "github.com/ci4rail/kyt-cli/kyt-cli/openapi"
+	openapiclient "github.com/ci4rail/kyt/kyt-cli/openapi"
 )
 
 // NewAPI generates a new APIClient object to issue further API calls

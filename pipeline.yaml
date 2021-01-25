@@ -39,7 +39,7 @@ resources:
     type: github-release
     source:
       owner: ci4rail
-      repository: kyt-cli
+      repository: kyt
       access_token: ((github_access_token))
       release: false
       pre_release: true

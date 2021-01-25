@@ -24,8 +24,8 @@ import (
 	"fmt"
 	"log"
 
-	api "github.com/ci4rail/kyt-cli/kyt-cli/internal/api"
-	"github.com/ci4rail/kyt-cli/kyt-cli/openapi"
+	api "github.com/ci4rail/kyt/kyt-cli/internal/api"
+	"github.com/ci4rail/kyt/kyt-cli/openapi"
 	"github.com/manifoldco/promptui"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"

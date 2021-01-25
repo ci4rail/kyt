@@ -1,5 +1,5 @@
-# kyt-cli
-[![CI](https://concourse.ci4rail.com/api/v1/teams/main/pipelines/kyt-services/jobs/build-kyt-services/badge)](https://concourse.ci4rail.com/teams/main/pipelines/kyt-services) [![Go Report Card](https://goreportcard.com/badge/github.com/ci4rail/kyt-cli)](https://goreportcard.com/report/github.com/ci4rail/kyt-cli)
+# kyt
+[![CI](https://concourse.ci4rail.com/api/v1/teams/main/pipelines/kyt-services/jobs/build-kyt-services/badge)](https://concourse.ci4rail.com/teams/main/pipelines/kyt-services) [![Go Report Card](https://goreportcard.com/badge/github.com/ci4rail/kyt)](https://goreportcard.com/report/github.com/ci4rail/kyt)
 
 This repository contains kyt-cli and kyt-api-server sources, build environment and CI/CD pipeline.
 
@@ -89,7 +89,7 @@ $ fly -t prod login -c https://concourse.ci4rail.com
 ```
 ## pipeline.yaml
 
-The `pipeline.yaml` is the CI/CD pipeline that builds kyt-cli called `kyt` and kyt-api-server docker image. The kyt-cli goes to a [gitub pre-release](https://github.com/ci4rail/kyt-cli/releases) and the `kyt-api-server` will be published as docker image [here](https://harbor.ci4rail.com/harbor/projects/7/repositories/kyt%2Fkyt-api-server).
+The `pipeline.yaml` is the CI/CD pipeline that builds kyt-cli called `kyt` and kyt-api-server docker image. The kyt-cli goes to a [gitub pre-release](https://github.com/ci4rail/kyt/releases) and the `kyt-api-server` will be published as docker image [here](https://harbor.ci4rail.com/harbor/projects/7/repositories/kyt%2Fkyt-api-server).
 
 ### Usage
 

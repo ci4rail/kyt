@@ -10,7 +10,7 @@ resources:
   check_every: 30s
   webhook_token: ((webhook_token))
   source:
-    repository: ci4rail/kyt-cli
+    repository: ci4rail/kyt
     access_token: ((access_token))
 
 - name: image-golang

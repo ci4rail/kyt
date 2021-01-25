@@ -22,7 +22,7 @@ import (
 	"log"
 	"os"
 
-	api "github.com/ci4rail/kyt-cli/kyt-cli/internal/api"
+	api "github.com/ci4rail/kyt/kyt-cli/internal/api"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

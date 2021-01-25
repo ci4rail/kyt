@@ -8,8 +8,8 @@ RUN mkdir -p /openapi_gen && \
 
 FROM golang:1.15.6 AS build
 WORKDIR /go/src/github.com/ci4rail/
-COPY . /go/src/github.com/ci4rail/kyt-cli
-WORKDIR /go/src/github.com/ci4rail/kyt-cli/kyt-api-server
+COPY . /go/src/github.com/ci4rail/kyt
+WORKDIR /go/src/github.com/ci4rail/kyt/kyt-api-server
 COPY --from=openapi_gen /openapi_gen/* ./openapi_gen/
 
 ENV CGO_ENABLED=0

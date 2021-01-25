@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/ci4rail/kyt-cli/kyt-api-server/cmd"
-	"github.com/ci4rail/kyt-cli/kyt-api-server/controllerif"
-	"github.com/ci4rail/kyt-cli/kyt-api-server/iothubservice"
+	"github.com/ci4rail/kyt/kyt-api-server/cmd"
+	"github.com/ci4rail/kyt/kyt-api-server/controllerif"
+	"github.com/ci4rail/kyt/kyt-api-server/iothubservice"
 )
 
 func main() {
