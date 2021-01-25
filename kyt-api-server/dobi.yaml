@@ -26,7 +26,7 @@ job=generate-server-sources:
   sources:
     - kyt-api-spec/kytapi.yaml
   artifact:
-    - kyt-api-server/openapi/routers.go
+    - kyt-api-server/openapi_gen/routers.go
   user: "{user.uid}:{user.gid}"
   annotations:
     description: "-> generate kyt-api-server sources"
@@ -48,6 +48,7 @@ job=build-kyt-api-server:
     - bin/kyt-api-server
   user: "{user.uid}:{user.gid}"
   env:
+    - VERSION={env.GitVersion_InformationalVersion}
     - BIN_DIR=/install
     - GOCACHE=/tmp/cache
   annotations:
@@ -60,6 +61,8 @@ image=image-kyt-api-server:
   context: "."
   dockerfile: kyt-api-server/Dockerfile
   tags:
-    - "{env.GitVersion_BranchVersion}"
+    - "{env.GitVersion_InformationalVersion}"
+  args:
+    VERSION: "{env.GitVersion_InformationalVersion}"
   annotations:
     description: "-> build kyt-api-server docker image"

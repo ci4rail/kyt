@@ -102,6 +102,7 @@ jobs:
               inputs:
                 - name: source
                 - name: openapi
+                - name: gitversion
               outputs:
                 - name: install
               run:
@@ -112,16 +113,32 @@ jobs:
                     ROOT=$(pwd)
                     cp -r openapi/ ${ROOT}/source/kyt-cli
                     cd ${ROOT}/source/kyt-cli
-                    make
+                    VERSION=$(cat ${ROOT}/gitversion/plain/InformationalVersion) make
                     # copy the artifacts as a
                     cp ../bin/kyt ../bin/kyt.exe ${ROOT}/install
+          - task: generate-build-args-for-image-kyt-api-server
+            image: image-golang
+            config:
+              platform: linux
+              inputs:
+                - name: gitversion
+              outputs:
+                - name: kyt-api-server-build-args
+              run:
+                path: /bin/bash
+                args:
+                  - -ec
+                  - |
+                    ROOT=$(pwd)
+                    echo {\"VERSION\":\"$(cat gitversion/plain/InformationalVersion)\"} > kyt-api-server-build-args/build-args
 
-          - put: image-kyt-api-server
-            params:
-              build: source/
-              dockerfile: source/kyt-api-server/Dockerfile
-              latest: false
-              tag_file: gitversion/plain/InformationalVersion
+      - put: image-kyt-api-server
+        params:
+          build: source/
+          dockerfile: source/kyt-api-server/Dockerfile
+          latest: false
+          tag_file: gitversion/plain/InformationalVersion
+          build_args_file: kyt-api-server-build-args/build-args
 
       - put: gh-release
         params:

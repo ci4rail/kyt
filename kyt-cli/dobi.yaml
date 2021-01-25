@@ -58,6 +58,7 @@ job=build-kyt-cli:
     - bin/kyt.exe
   user: "{user.uid}:{user.gid}"
   env:
+    - VERSION={env.GitVersion_InformationalVersion}
     - BIN_DIR=/install
     - GOCACHE=/tmp/cache
   annotations:
