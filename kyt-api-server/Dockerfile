@@ -14,7 +14,8 @@ COPY --from=openapi_gen /openapi_gen/* ./openapi_gen/
 
 ENV CGO_ENABLED=0
 ENV GOPATH=/go
-RUN make BIN_DIR=/install OPENAPI_GEN_DIR=./openapi_gen
+ARG VERSION=dev
+RUN VERSION=${VERSION} make BIN_DIR=/install OPENAPI_GEN_DIR=./openapi_gen
 
 FROM scratch
 ENV GIN_MODE=release

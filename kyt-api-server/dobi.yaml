@@ -48,6 +48,7 @@ job=build-kyt-api-server:
     - bin/kyt-api-server
   user: "{user.uid}:{user.gid}"
   env:
+    - VERSION={env.GitVersion_InformationalVersion}
     - BIN_DIR=/install
     - GOCACHE=/tmp/cache
   annotations:
@@ -60,6 +61,8 @@ image=image-kyt-api-server:
   context: "."
   dockerfile: kyt-api-server/Dockerfile
   tags:
-    - "{env.GitVersion_BranchVersion}"
+    - "{env.GitVersion_InformationalVersion}"
+  args:
+    VERSION: "{env.GitVersion_InformationalVersion}"
   annotations:
     description: "-> build kyt-api-server docker image"
