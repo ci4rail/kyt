@@ -10,7 +10,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -22,11 +21,18 @@ const (
 )
 
 func main() {
-	envName := fmt.Sprintf(envIotHubConnectionsString)
-	_, ok := os.LookupEnv(envName)
+	versionArgFound := false
+	for _, v := range os.Args {
+		if v == "version" || v == "help" || v == "--help" || v == "-h" {
+			versionArgFound = true
+		}
+	}
+	if !versionArgFound {
+		_, ok := os.LookupEnv(envIotHubConnectionsString)
 
-	if !ok {
-		log.Fatalf("Error: environment variable %s missing", envIotHubConnectionsString)
+		if !ok {
+			log.Fatalf("Error: environment variable %s missing", envIotHubConnectionsString)
+		}
 	}
 	cmd.Execute()
 }
