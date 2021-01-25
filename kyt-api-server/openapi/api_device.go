@@ -13,7 +13,7 @@ import (
 	"log"
 	"net/http"
 
-	iothubservice "github.com/ci4rail/kyt-cli/kyt-api-server/iothubservice"
+	iothubservice "github.com/ci4rail/kyt/kyt-api-server/iothubservice"
 	"github.com/gin-gonic/gin"
 )
 

@@ -21,8 +21,8 @@ import (
 	"log"
 	"os"
 
-	common "github.com/ci4rail/kyt-cli/kyt-api-server/common"
-	sw "github.com/ci4rail/kyt-cli/kyt-api-server/openapi"
+	common "github.com/ci4rail/kyt/kyt-api-server/common"
+	sw "github.com/ci4rail/kyt/kyt-api-server/openapi"
 	"github.com/spf13/cobra"
 )
 

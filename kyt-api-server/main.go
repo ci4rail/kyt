@@ -13,7 +13,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/ci4rail/kyt-cli/kyt-api-server/cmd"
+	"github.com/ci4rail/kyt/kyt-api-server/cmd"
 )
 
 const (
