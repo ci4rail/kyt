@@ -1,5 +1,5 @@
 /*
-Copyright © 2021 NAME HERE <EMAIL ADDRESS>
+Copyright © 2021 Ci4Rail GmbH <engineering@ci4rail.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ var version = "dev"
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Print version information and quit. Default is false.",
+	Short: "Print version information and quit.",
 	Long:  `This command displays version information for the kyt-cli.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("kyt-cli %s\n", version)
