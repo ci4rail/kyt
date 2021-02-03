@@ -46,10 +46,10 @@ func getDevices(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 	apiClient, ctx := api.NewAPIWithToken(serverURL, viper.GetString("token"))
-	devices, resp, err := apiClient.DeviceApi.GetDevices(ctx).Execute()
+	devices, resp, err := apiClient.DeviceApi.DevicesGet(ctx).Execute()
 	if resp.StatusCode == 401 {
 		fmt.Println("Token expired. Refreshing...")
-		resp, openapierr := apiClient.AuthApi.RefreshToken(ctx).Execute()
+		resp, openapierr := apiClient.AuthApi.AuthRefreshTokenGet(ctx).Execute()
 		if openapierr.Error() != "" {
 			er(fmt.Sprintf("Error calling RefreshApi.RefreshToken: %v\n", openapierr))
 		}
@@ -73,12 +73,12 @@ func getDevices(cmd *cobra.Command, args []string) {
 		}
 
 		apiClient, ctx := api.NewAPIWithToken(serverURL, viper.GetString("token"))
-		devices, _, openapierr = apiClient.DeviceApi.GetDevices(ctx).Execute()
+		devices, _, openapierr = apiClient.DeviceApi.DevicesGet(ctx).Execute()
 		if openapierr.Error() != "" {
 			er(fmt.Sprintf("Error calling RefreshApi.RefreshToken: %v\n", openapierr))
 		}
 	} else if err.Error() != "" {
-		er(fmt.Sprintf("Error calling DeviceApi.GetDevices: %v\n", err))
+		er(fmt.Sprintf("Error calling DeviceApi.DevicesGet: %v\n", err))
 	}
 
 	fmt.Println("DEVICE ID")
