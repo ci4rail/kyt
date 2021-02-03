@@ -89,3 +89,14 @@ func (c *IOTHubServiceClient) ListDeviceById(id string) (*string, error) {
 	}
 	return nil, fmt.Errorf("No device found with id: %s", id)
 }
+
+// GetConnectionState gets the connection state from the Device Twin on IoT Hub
+// returns bool: 0 -> disconnected, 1 -> connected
+func (c *IOTHubServiceClient) GetConnectionState(deviceID string) (string, error) {
+	ctx := context.Background()
+	twin, err := c.iotClient.GetDeviceTwin(ctx, deviceID)
+	if err != nil {
+		return "", fmt.Errorf("Error reading device twin %s", err)
+	}
+	return string(twin.ConnectionState), nil
+}

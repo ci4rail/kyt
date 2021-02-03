@@ -72,7 +72,7 @@ func getDevicesById(deviceId string) (openapi.Device, error) {
 			fmt.Printf("Error calling RefreshApi.RefreshToken: %v\n", err)
 		}
 	} else if resp.StatusCode == 404 {
-		fmt.Println("No device found with deviceID: ", deviceId)
+		return openapi.Device{}, fmt.Errorf("No device found with deviceID: %s", deviceId)
 	} else if err.Error() != "" {
 		er(fmt.Sprintf("Error calling DeviceApi.DevicesGet: %v\n", err))
 	}
@@ -98,9 +98,11 @@ func getDevices(cmd *cobra.Command, args []string) {
 		devices = getDevicesAll()
 	}
 
-	fmt.Println("DEVICE ID")
-	for _, dev := range devices {
-		fmt.Println(dev.GetId())
+	if len(devices) > 0 {
+		fmt.Printf("%-40s\t%s\n", "DEVICE ID", "CONNECTED")
+		for _, dev := range devices {
+			fmt.Printf("%-40s\t%s\n", dev.GetId(), dev.GetNetwork())
+		}
 	}
 }
 

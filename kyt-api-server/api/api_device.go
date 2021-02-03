@@ -39,13 +39,20 @@ func DevicesDidGet(c *gin.Context) {
 	}
 	deviceIdFilter := c.Param("did")
 	deviceID, err := client.ListDeviceById(deviceIdFilter)
-
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	connection, err := client.GetConnectionState(deviceIdFilter)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err})
 		return
 	}
 
-	c.JSON(http.StatusOK, &Device{Id: *deviceID})
+	c.JSON(http.StatusOK, &Device{
+		Id:      *deviceID,
+		Network: connection,
+	})
 }
 
 // DevicesGet - List devices for a tenant
@@ -63,7 +70,6 @@ func DevicesGet(c *gin.Context) {
 	}
 
 	deviceIDs, err := client.ListDeviceIDs()
-
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -71,7 +77,15 @@ func DevicesGet(c *gin.Context) {
 
 	var deviceList []Device
 	for _, deviceID := range *deviceIDs {
-		deviceList = append(deviceList, Device{Id: deviceID})
+		connection, err := client.GetConnectionState(deviceID)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		deviceList = append(deviceList, Device{
+			Id:      deviceID,
+			Network: connection,
+		})
 	}
 
 	c.JSON(http.StatusOK, deviceList)

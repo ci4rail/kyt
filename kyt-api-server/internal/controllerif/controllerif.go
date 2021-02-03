@@ -23,4 +23,5 @@ type NewIOTHubServiceClient func(connectionString string) (IOTHubServices, error
 type IOTHubServices interface {
 	ListDeviceIDs() (*[]string, error)
 	ListDeviceById(string) (*string, error)
+	GetConnectionState(string) (string, error)
 }
