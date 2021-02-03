@@ -15,7 +15,7 @@ type DeviceInfo map[string]interface{}
 func NewModule() (*iotdevice.ModuleClient, error) {
 	c, err := iotdevice.NewModuleFromEnvironment(
 		// <transport>, <use iotedge gateway for connection>,
-		iotmqtt.NewModuleTransport(), false)
+		iotmqtt.NewModuleTransport(), true)
 	return c, err
 }
 
