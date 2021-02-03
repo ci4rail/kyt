@@ -65,29 +65,6 @@ jobs:
           path: pull-request
           status: failure
 
-    - task: build-generate-kyt-api-server-openapi
-      image: image-openapi-generator
-      config:
-        platform: linux
-        inputs:
-          - name: pull-request
-        outputs:
-          - name: openapi-api-server
-        run:
-          path: /bin/bash
-          args:
-            - -ec
-            - |
-              java -Xmx1024M -DloggerPath=conf/log4j.properties -jar \
-              /opt/openapi-generator/modules/openapi-generator-cli/target/openapi-generator-cli.jar \
-              generate -i pull-request/kyt-api-spec/kytapi.yaml -g go-gin-server -o openapi-api-server \
-              -t pull-request/openapi-generator/templates/go-gin-server --additional-properties apiPath=openapi
-      on_failure:
-        put: pull-request
-        params:
-          path: pull-request
-          status: failure
-
   - in_parallel:
     - task: build-kyt-cli
       image: image-golang
@@ -120,15 +97,12 @@ jobs:
         platform: linux
         inputs:
           - name: pull-request
-          - name: openapi-api-server
         run:
           path: /bin/bash
           args:
             - -ec
             - |
               ROOT=$(pwd)
-              mkdir -p ${ROOT}/pull-request/kyt-api-server/openapi_gen
-              cp -r openapi-api-server/openapi/* ${ROOT}/pull-request/kyt-api-server/openapi_gen
               cd ${ROOT}/pull-request/kyt-api-server
               make
               go test
@@ -144,17 +118,14 @@ jobs:
         platform: linux
         inputs:
           - name: pull-request
-          - name: openapi-api-server
         run:
           path: /bin/bash
           args:
             - -ec
             - |
               ROOT=$(pwd)
-              mkdir -p ${ROOT}/pull-request/kyt-api-server/openapi_gen
-              cp -r openapi-api-server/openapi/* ${ROOT}/pull-request/kyt-api-server/openapi_gen
               cd ${ROOT}/pull-request/kyt-api-server/test-server
-              make OPENAPI_GEN_DIR=../openapi_gen
+              make
               go test
       on_failure:
         put: pull-request
