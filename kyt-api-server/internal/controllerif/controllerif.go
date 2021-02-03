@@ -14,32 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package controllerif
 
-import (
-	"log"
-	"os"
+// NewIOTHubServiceClient points to the actual creator function
+type NewIOTHubServiceClient func(connectionString string) (IOTHubServices, error)
 
-	"github.com/ci4rail/kyt/kyt-api-server/cmd"
-)
-
-const (
-	envIotHubConnectionsString = "IOTHUB_SERVICE_CONNECTION_STRING"
-)
-
-func main() {
-	versionArgFound := false
-	for _, v := range os.Args {
-		if v == "version" || v == "help" || v == "--help" || v == "-h" {
-			versionArgFound = true
-		}
-	}
-	if !versionArgFound {
-		_, ok := os.LookupEnv(envIotHubConnectionsString)
-
-		if !ok {
-			log.Fatalf("Error: environment variable %s missing", envIotHubConnectionsString)
-		}
-	}
-	cmd.Execute()
+// IOTHubServices has all the services the IOTHub Controller offers
+type IOTHubServices interface {
+	ListDeviceIDs() (*[]string, error)
 }

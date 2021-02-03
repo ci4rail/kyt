@@ -1,4 +1,20 @@
-package openapi
+/*
+Copyright © 2021 Ci4Rail GmbH
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package api
 
 import (
 	"log"
@@ -9,20 +25,39 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	hardcodedUsername = "admin"
+	hardcodedPassword = "AN4EeN2L"
+)
+
 type user struct {
 	UserName  string
 	FirstName string
 	LastName  string
 }
-type login struct {
-	Username string `form:"username" json:"username" binding:"required"`
-	Password string `form:"password" json:"password" binding:"required"`
+
+var (
+	authMiddleware *jwt.GinJWTMiddleware
+	identityKey    = "id"
+)
+
+// Route is the information for every URI.
+type Route struct {
+	// Name is the name of this Route.
+	Name string
+	// Method is the string for the HTTP method. ex) GET, POST etc..
+	Method string
+	// Pattern is the pattern of the URI.
+	Pattern string
+	// HandlerFunc is the handler function of this route.
+	HandlerFunc gin.HandlerFunc
 }
 
-var identityKey = "id"
+// Routes is the list of the generated Route.
+type Routes []Route
 
-// NewOwnRouter returns a new router.
-func NewOwnRouter() *gin.Engine {
+// NewRouter returns a new router.
+func NewRouter() *gin.Engine {
 	router := gin.Default()
 	// the jwt middleware
 	authMiddleware, err := jwt.New(&jwt.GinJWTMiddleware{
@@ -46,13 +81,13 @@ func NewOwnRouter() *gin.Engine {
 			}
 		},
 		Authenticator: func(c *gin.Context) (interface{}, error) {
-			var loginVals login
+			var loginVals Login
 			if err := c.ShouldBind(&loginVals); err != nil {
 				return "", jwt.ErrMissingLoginValues
 			}
 			userID := loginVals.Username
 			password := loginVals.Password
-			if userID == "admin" && password == "AN4EeN2L" {
+			if userID == hardcodedUsername && password == hardcodedPassword {
 				return &user{
 					UserName:  userID,
 					LastName:  "admin",
@@ -99,9 +134,6 @@ func NewOwnRouter() *gin.Engine {
 		log.Fatal("authMiddleware.MiddlewareInit() Error:" + errInit.Error())
 	}
 
-	router.POST("/v1/auth/login", authMiddleware.LoginHandler)
-	router.GET("/v1/auth/refresh_token", authMiddleware.RefreshHandler)
-
 	router.Use(authMiddleware.MiddlewareFunc())
 	for _, route := range routes {
 		switch route.Method {
@@ -115,6 +147,43 @@ func NewOwnRouter() *gin.Engine {
 			router.DELETE(route.Pattern, route.HandlerFunc)
 		}
 	}
-
 	return router
+}
+
+// Index is the index handler.
+func Index(c *gin.Context) {
+	c.String(http.StatusOK, "Hello KYT!")
+}
+
+var routes = Routes{
+	{
+		"Index",
+		http.MethodGet,
+		"/v1/",
+		Index,
+	},
+	{
+		"AuthLoginPost",
+		http.MethodPost,
+		"/v1/auth/login",
+		authMiddleware.LoginHandler,
+	},
+	{
+		"AuthRefreshTokenGet",
+		http.MethodGet,
+		"/v1/auth/refresh_token",
+		authMiddleware.RefreshHandler,
+	},
+	{
+		"DevicesDidGet",
+		http.MethodGet,
+		"/v1/devices/:did",
+		DevicesDidGet,
+	},
+	{
+		"DevicesGet",
+		http.MethodGet,
+		"/v1/devices/",
+		DevicesGet,
+	},
 }

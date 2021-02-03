@@ -104,7 +104,7 @@ components:
         - id
       properties:
         id:
-          type: integer
+          type: string
         name:
           type: string
         network:
