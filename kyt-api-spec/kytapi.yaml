@@ -1,39 +1,48 @@
 openapi: 3.0.0
-servers:
-  - url: 'https://kyt.ci4rail.com/v1'
-    description: Production Server
 info:
-  description: >-
-    This is the KYT API Server
+  title: Device Information API
+  description: Public API to get Informations about asigned Devices.
   version: 0.0.1
-  title: KYT API Server
   license:
     name: Apache-2.0
     url: 'https://www.apache.org/licenses/LICENSE-2.0.html'
+servers:
+  - url: 'https://kyt.ci4rail.com/v1'
+    description: Production Server
 tags:
   - name: device
-    description: A connected device
+    description: Device Informations
 paths:
-  '/dlm/devices':
+  '/devices/':
     get:
       tags:
         - device
       summary: List devices for a tenant
       description: Returns a list of devices
-      operationId: getDevices
       responses:
         '200':
-          description: successful operation
+          description: Ok
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Device'
+                  $ref: '#/components/schemas/DeviceItem'
         '400':
           description: Invalid ID supplied
       security:
-        - api_key: []
+        - bearerAuth: []
+  '/devices/{did}':
+    parameters:
+      - $ref: '#/components/parameters/Did'
+    get:
+      tags:
+        - device
+      responses:
+        200:
+          $ref: "#/components/responses/Device"
+      security:
+        - bearerAuth: []
   '/auth/login':
     post:
       tags:
@@ -42,19 +51,19 @@ paths:
       requestBody:
         content:
           application/json:
-            schema:      # Request body contents
+            schema:
               type: object
               properties:
                 username:
                   type: string
                 password:
                   type: string
-              example:   # Sample object
+              example:
                 username: user
                 password: password
       responses:
         '200':
-          description: OK
+          description: Ok
         '401':
           description: Unauthorized
   '/auth/refresh_token':
@@ -63,40 +72,71 @@ paths:
         - auth
       summary: Refresh token
       description: Refreshs a token
-      operationId: refreshToken
       responses:
         '200':
-          description: successful operation
+          description: Ok
         '400':
-          description: Error refreshing
+          description: Error refreshing token
       security:
-        - api_key: []
+        - bearerAuth: []
 components:
-  requestBodies:
+  parameters:
+    Did:
+      name: did
+      description: id of device
+      in: path
+      required: true
+      schema: 
+        type: string
+
+  responses:
     Device:
+      description: Ok
       content:
         application/json:
-          schema:
+          schema: 
             $ref: '#/components/schemas/Device'
-        application/xml:
-          schema:
-            $ref: '#/components/schemas/Device'
-      description: Device object
-      required: true
-  securitySchemes:
-    api_key:
-      type: apiKey
-      name: api_key
-      in: header
+
   schemas:
     Device:
-      title: a Device
-      description: A Device
       type: object
       required:
         - id
       properties:
         id:
+          type: integer
+        name:
           type: string
-      xml:
-        name: Device
+        network:
+          type: string
+          enum: [offline, online]
+        firmware_version:
+          type: string
+      example: 
+        id: device234
+        name: device1
+        network: offline
+        firmware_version: v1.2.1        
+     
+    DeviceItem:
+      type: object
+      properties:
+        name:
+          type: string
+        network:
+          type: string
+          enum: [offline, online]
+        self_uri:
+          type: string
+          format: uri
+      example:
+        name: Device name
+        network: online
+        self_uri: /devices/device234
+   
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  
