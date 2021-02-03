@@ -37,8 +37,8 @@ type user struct {
 }
 
 var (
-	authMiddleware *jwt.GinJWTMiddleware
-	identityKey    = "id"
+	// authMiddleware *jwt.GinJWTMiddleware
+	identityKey = "id"
 )
 
 // Route is the information for every URI.
@@ -134,6 +134,9 @@ func NewRouter() *gin.Engine {
 		log.Fatal("authMiddleware.MiddlewareInit() Error:" + errInit.Error())
 	}
 
+	router.POST("/v1/auth/login", authMiddleware.LoginHandler)
+	router.GET("/v1/auth/refresh_token", authMiddleware.RefreshHandler)
+
 	router.Use(authMiddleware.MiddlewareFunc())
 	for _, route := range routes {
 		switch route.Method {
@@ -161,18 +164,6 @@ var routes = Routes{
 		http.MethodGet,
 		"/v1/",
 		Index,
-	},
-	{
-		"AuthLoginPost",
-		http.MethodPost,
-		"/v1/auth/login",
-		authMiddleware.LoginHandler,
-	},
-	{
-		"AuthRefreshTokenGet",
-		http.MethodGet,
-		"/v1/auth/refresh_token",
-		authMiddleware.RefreshHandler,
 	},
 	{
 		"DevicesDidGet",
