@@ -26,7 +26,26 @@ import (
 
 // DevicesDidGet -
 func DevicesDidGet(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{})
+	iotHubConnectionString, err := iothubservice.MapTenantToIOTHubSAS("")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	client, err := iothubservice.ControllerNewIOTHubServiceClient(iotHubConnectionString)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	deviceIdFilter := c.Param("did")
+	deviceID, err := client.ListDeviceById(deviceIdFilter)
+
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err})
+		return
+	}
+
+	c.JSON(http.StatusOK, &Device{Id: *deviceID})
 }
 
 // DevicesGet - List devices for a tenant

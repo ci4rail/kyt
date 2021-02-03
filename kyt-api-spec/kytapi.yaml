@@ -27,7 +27,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DeviceItem'
+                  $ref: '#/components/schemas/Device'
         '400':
           description: Invalid ID supplied
       security:
@@ -118,25 +118,6 @@ components:
         network: offline
         firmware_version: v1.2.1        
      
-    DeviceItem:
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        network:
-          type: string
-          enum: [offline, online]
-        self_uri:
-          type: string
-          format: uri
-      example:
-        id: device1234
-        name: Device name
-        network: online
-        self_uri: /devices/device234
-   
   securitySchemes:
     bearerAuth:
       type: http

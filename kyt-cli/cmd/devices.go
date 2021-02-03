@@ -21,6 +21,7 @@ import (
 	"os"
 
 	api "github.com/ci4rail/kyt/kyt-cli/internal/api"
+	"github.com/ci4rail/kyt/kyt-cli/openapi"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -37,11 +38,7 @@ Prints a table of the most important information of all kyt-devices.
 	Run: getDevices,
 }
 
-func getDevices(cmd *cobra.Command, args []string) {
-	if !viper.IsSet("token") {
-		fmt.Println("No access token set. Please run `login` command.")
-		os.Exit(1)
-	}
+func getDevicesAll() []openapi.Device {
 	apiClient, ctx := api.NewAPIWithToken(serverURL, viper.GetString("token"))
 	devices, resp, err := apiClient.DeviceApi.DevicesGet(ctx).Execute()
 	// 401 mean 'Unauthorized'. Let's try to refresh the token once.
@@ -55,6 +52,50 @@ func getDevices(cmd *cobra.Command, args []string) {
 		}
 	} else if err.Error() != "" {
 		er(fmt.Sprintf("Error calling DeviceApi.DevicesGet: %v\n", err))
+	}
+	return devices
+}
+
+func getDevicesById(deviceId string) (openapi.Device, error) {
+	apiClient, ctx := api.NewAPIWithToken(serverURL, viper.GetString("token"))
+	device, resp, err := apiClient.DeviceApi.DevicesDidGet(ctx, deviceId).Execute()
+	// 401 mean 'Unauthorized'. Let's try to refresh the token once.
+	if resp.StatusCode == 401 {
+		RefreshToken()
+
+		apiClient, ctx := api.NewAPIWithToken(serverURL, viper.GetString("token"))
+		device, _, err = apiClient.DeviceApi.DevicesDidGet(ctx, deviceId).Execute()
+		if resp.StatusCode == 404 {
+			return openapi.Device{}, fmt.Errorf("No device found with deviceID: %s", deviceId)
+		}
+		if err.Error() != "" {
+			fmt.Printf("Error calling RefreshApi.RefreshToken: %v\n", err)
+		}
+	} else if resp.StatusCode == 404 {
+		fmt.Println("No device found with deviceID: ", deviceId)
+	} else if err.Error() != "" {
+		er(fmt.Sprintf("Error calling DeviceApi.DevicesGet: %v\n", err))
+	}
+	return device, nil
+}
+
+func getDevices(cmd *cobra.Command, args []string) {
+	if !viper.IsSet("token") {
+		fmt.Println("No access token set. Please run `login` command.")
+		os.Exit(1)
+	}
+	var devices []openapi.Device
+	if len(args) > 0 {
+		for _, arg := range args {
+			dev, err := getDevicesById(arg)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			devices = append(devices, dev)
+		}
+	} else {
+		devices = getDevicesAll()
 	}
 
 	fmt.Println("DEVICE ID")

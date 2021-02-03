@@ -64,7 +64,28 @@ func (c *IOTHubServiceClient) ListDeviceIDs() (*[]string, error) {
 
 // this gets called from QueryDevices once for each record (device)
 func (c *IOTHubServiceClient) listDeviceIDsCB(v map[string]interface{}) error {
+	// This is the place where things read from IoT Hub get entered into &Device{}
 	deviceID := fmt.Sprintf("%v", v["deviceId"])
 	c.deviceIDArr = append(c.deviceIDArr, deviceID)
 	return nil
+}
+
+// ListDeviceIDs returns a list with the device IDs of all devices of that IoT Hub
+func (c *IOTHubServiceClient) ListDeviceById(id string) (*string, error) {
+	ctx := context.Background()
+
+	c.deviceIDArr = nil
+
+	// this query selects all devices and returns only the deviceId
+	// Unfortunately, QueryDevices does not support paging
+	query := fmt.Sprintf("SELECT * FROM DEVICES WHERE deviceId = '%s'", id)
+	err := c.iotClient.QueryDevices(ctx, query, c.listDeviceIDsCB)
+
+	if err != nil {
+		return nil, fmt.Errorf("Error IoT Hub QueryDevices %s", err)
+	}
+	if len(c.deviceIDArr) > 0 {
+		return &c.deviceIDArr[0], nil
+	}
+	return nil, fmt.Errorf("No device found with id: %s", id)
 }
