@@ -121,6 +121,8 @@ components:
     DeviceItem:
       type: object
       properties:
+        id:
+          type: string
         name:
           type: string
         network:
@@ -130,6 +132,7 @@ components:
           type: string
           format: uri
       example:
+        id: device1234
         name: Device name
         network: online
         self_uri: /devices/device234
