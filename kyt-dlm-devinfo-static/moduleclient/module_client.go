@@ -25,7 +25,7 @@ func SetStaticDeviceInfo(c *iotdevice.ModuleClient, d DeviceInfo) error {
 	if err := c.Connect(context.Background()); err != nil {
 		return err
 	}
-	log.Println("connected to iothub")
+	log.Println("connect to iothub ok")
 	s := iotdevice.TwinState{
 		"version": "abc",
 	}
