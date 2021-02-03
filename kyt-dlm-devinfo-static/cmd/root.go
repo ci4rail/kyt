@@ -43,7 +43,10 @@ var rootCmd = &cobra.Command{
 		}
 		log.Println("client created")
 
-		err = moduleclient.SetStaticDeviceInfo(c, nil)
+		d := moduleclient.DeviceInfo{
+			"firmwareversion": "klgeplgepleglpleplgpelp",
+		}
+		err = moduleclient.SetStaticDeviceInfo(c, d)
 		if err != nil {
 			log.Println("failed to set device info", err)
 			return

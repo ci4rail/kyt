@@ -2,6 +2,7 @@ package moduleclient
 
 import (
 	"context"
+	"errors"
 	"log"
 
 	"github.com/amenzhinsky/iothub/iotdevice"
@@ -21,16 +22,26 @@ func NewModule() (*iotdevice.ModuleClient, error) {
 
 // SetStaticDeviceInfo writes device info to Iothub device twin
 func SetStaticDeviceInfo(c *iotdevice.ModuleClient, d DeviceInfo) error {
+	if d == nil {
+		return errors.New("DeviceInfo is nil")
+	}
+
 	// connect to the iothub
 	if err := c.Connect(context.Background()); err != nil {
 		return err
 	}
 	log.Println("connect to iothub ok")
-	s := iotdevice.TwinState{
-		"version": "abc",
-	}
+
+	s := makeStaticDeviceInfo(d)
 	if _, err := c.UpdateTwinState(context.Background(), s); err != nil {
 		return err
 	}
 	return nil
+}
+
+func makeStaticDeviceInfo(d DeviceInfo) iotdevice.TwinState {
+	s := make(iotdevice.TwinState)
+
+	s["verions"] = d
+	return s
 }
