@@ -16,9 +16,12 @@ limitations under the License.
 package main
 
 import (
+	"log"
+
 	"github.com/ci4rail/kyt/kyt-dlm-devinfo-static/cmd"
 )
 
 func main() {
+	log.Println("Hi From kyt-dlm-devinfo-static")
 	cmd.Execute()
 }

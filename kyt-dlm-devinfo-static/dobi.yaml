@@ -37,11 +37,12 @@ job=build-kyt-dlm-devinfo-static:
       - build
 
 image=image-kyt-dlm-devinfo-static:
-  image: "{env.DOCKER_NAMESPACE:ci4rail}/kyt/kyt-dlm-devinfo-static"
+  image: "{env.DOCKER_REGISTRY:ci4rail}/ci4rail-staging/kyt/kyt-dlm-devinfo-static"
   context: "."
   dockerfile: kyt-dlm-devinfo-static/Dockerfile
   tags:
     - "{env.GitVersion_InformationalVersion}"
+    - "latest"
   args:
     VERSION: "{env.GitVersion_InformationalVersion}"
   annotations:

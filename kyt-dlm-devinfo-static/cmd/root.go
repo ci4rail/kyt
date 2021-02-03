@@ -35,16 +35,20 @@ var rootCmd = &cobra.Command{
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 
+		log.Println("kyt-dlm-devinfo-static RUN")
 		c, err := moduleclient.NewModule()
 		if err != nil {
-			log.Fatal(err)
+			log.Println("failed to create module client", err)
+			return
 		}
 		log.Println("client created")
 
 		err = moduleclient.SetStaticDeviceInfo(c, nil)
 		if err != nil {
-			log.Fatal(err)
+			log.Println("failed to set device info", err)
+			return
 		}
+		log.Println("set device info ok", err)
 
 	},
 }
