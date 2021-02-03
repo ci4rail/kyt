@@ -2,6 +2,7 @@ package moduleclient
 
 import (
 	"context"
+	"log"
 
 	"github.com/amenzhinsky/iothub/iotdevice"
 	iotmqtt "github.com/amenzhinsky/iothub/iotdevice/transport/mqtt"
@@ -24,7 +25,7 @@ func SetStaticDeviceInfo(c *iotdevice.ModuleClient, d DeviceInfo) error {
 	if err := c.Connect(context.Background()); err != nil {
 		return err
 	}
-
+	log.Println("connected to iothub")
 	s := iotdevice.TwinState{
 		"version": "abc",
 	}
