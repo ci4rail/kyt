@@ -20,7 +20,18 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/ci4rail/kyt/device-state-service/internal/devicestate"
 	"github.com/spf13/cobra"
+)
+
+const (
+	defaultGpioChip = "gpiochip4"
+	defaultLineNr   = 26
+)
+
+var (
+	gpioChip string
+	lineNr   int
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -30,14 +41,15 @@ var rootCmd = &cobra.Command{
 	Long: `Read and provide edge device status
 
 Device status is indicated via LED on edge device:
-* Successful connection to cloud: LED on
-* Device tries to connect to cloud: LED blinking (1 sec)
-* Unsuccessful connection attempt: LED off (retry at least after 2 min)
+* LED on: Successful connection to cloud
+* LED blinking (1 sec): Device tries to connect to cloud
+* LED off: device-state-service terminated
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		// start here
-		fmt.Println("Started device-state-service.")
+		// start main function
+		devicestate.DeviceState(gpioChip, lineNr)
+
 	},
 }
 
@@ -51,5 +63,11 @@ func Execute() {
 }
 
 func init() {
-	// Nothing to do here.
+
+	// Here you will define your flags and configuration settings.
+	// Cobra supports persistent flags, which, if defined here,
+	// will be global for your application.
+
+	rootCmd.Flags().StringVarP(&gpioChip, "chip", "c", defaultGpioChip, "use alternative GPIO chip / bank")
+	rootCmd.Flags().IntVarP(&lineNr, "line", "l", defaultLineNr, "use alternative GPIO chip line")
 }
