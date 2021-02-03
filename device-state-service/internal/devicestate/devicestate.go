@@ -23,17 +23,12 @@ import (
 	"syscall"
 )
 
-const (
-	// numberGoroutines Number of goroutines to wait for.
-	numberGoroutines = 2
-)
-
 // DeviceState This is the main function of the devcie-state-service.
 // The following tasks are executed:
 // * Setup signal handler
 // * Startup processes
 // * Wait for processes to terminate
-func DeviceState(gpioChip string, lineNr int) {
+func DeviceState(gpioChip string, lineNr int, checkIntervalMs int) {
 
 	// Create channel for transmiision of connection state to led service
 	connectionStateChannel := make(chan bool)
@@ -49,7 +44,7 @@ func DeviceState(gpioChip string, lineNr int) {
 	}
 
 	// Create connection state instance
-	connectionState := NewConnectionState(connectionStateChannel)
+	connectionState := NewConnectionState(connectionStateChannel, checkIntervalMs)
 
 	// Change led status depending on connection state in goroutine
 	go ledService.Run()

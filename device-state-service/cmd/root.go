@@ -25,13 +25,15 @@ import (
 )
 
 const (
-	defaultGpioChip = "gpiochip4"
-	defaultLineNr   = 26
+	defaultGpioChip        = "gpiochip4"
+	defaultLineNr          = 26
+	defaultCheckIntervalMs = 500
 )
 
 var (
-	gpioChip string
-	lineNr   int
+	gpioChip        string
+	lineNr          int
+	checkIntervalMs int
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -48,7 +50,7 @@ Device status is indicated via LED on edge device:
 	Run: func(cmd *cobra.Command, args []string) {
 
 		// start main function
-		devicestate.DeviceState(gpioChip, lineNr)
+		devicestate.DeviceState(gpioChip, lineNr, checkIntervalMs)
 
 	},
 }
@@ -70,4 +72,5 @@ func init() {
 
 	rootCmd.Flags().StringVarP(&gpioChip, "chip", "c", defaultGpioChip, "use alternative GPIO chip / bank")
 	rootCmd.Flags().IntVarP(&lineNr, "line", "l", defaultLineNr, "use alternative GPIO chip line")
+	rootCmd.Flags().IntVarP(&checkIntervalMs, "interval", "i", defaultCheckIntervalMs, "interval in milliseconds for checking connection state")
 }

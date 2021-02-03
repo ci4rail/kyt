@@ -24,74 +24,74 @@ import (
 )
 
 const (
-	// cycleTime_msec The connection status is checked every cycleTimeSec
-	cycleTimeMilliSec = 500
+	nsLookupURI = "portal.azure.com"
 )
 
 // ConnectionState implements a service which continously checks the connection state
 // and provides the information via channel connectionStateChannel
 type ConnectionState struct {
-	closed                 chan struct{}
-	connectionStateChannel chan bool
-	wg                     sync.WaitGroup
+	closed          chan interface{}
+	stateChan       chan bool
+	wg              sync.WaitGroup
+	checkIntervalMs int
 }
 
 // NewConnectionState intialize connection state
-func NewConnectionState(connectionStateChannel chan bool) (connectionState ConnectionState) {
-	connectionState = ConnectionState{
-		connectionStateChannel: connectionStateChannel,
-		closed:                 make(chan struct{})}
-	return
+func NewConnectionState(connectionStateChannel chan bool, checkIntervalMs int) *ConnectionState {
+	return &ConnectionState{
+		stateChan:       connectionStateChannel,
+		closed:          make(chan interface{}),
+		checkIntervalMs: checkIntervalMs,
+	}
 }
 
 // Run runs the connection state service
-func (connectionState *ConnectionState) Run() {
+func (c *ConnectionState) Run() {
 
 	// add this goroutine to waitgroups
-	connectionState.wg.Add(1)
-	defer connectionState.wg.Done()
+	c.wg.Add(1)
+	defer c.wg.Done()
 
 	// pre-initialize connection state
 	connState := false
 
 	for {
-
 		select {
-		case <-connectionState.closed: // close function was called
+		case <-c.closed: // close function was called
 			// terminate goroutine
-			close(connectionState.connectionStateChannel)
+			close(c.stateChan)
 			return
 		default:
 			newConnState := getNetworkStatus()
 			if newConnState != connState {
 				connState = newConnState
 				// Log connection state change
-				if connState == true {
+				if connState {
 					fmt.Println("Device switched to connected state.")
 				} else {
 					fmt.Println("Device switched to disconnected state.")
 				}
 				// Provide connection change via channel
-				connectionState.connectionStateChannel <- connState
+				c.stateChan <- connState
 			}
 		}
-		time.Sleep(cycleTimeMilliSec * time.Millisecond)
+		time.Sleep(time.Duration(c.checkIntervalMs) * time.Millisecond)
 	}
 }
 
 // Close Cleaup function for LedService
-func (connectionState *ConnectionState) Close() {
+func (c *ConnectionState) Close() {
 
 	// terminate goroutine
-	close(connectionState.closed)
+	close(c.closed)
 	// wait for goroutine to finish
-	connectionState.wg.Wait()
+	c.wg.Wait()
 }
 
 // getNetworkStatus checks if a valid internet connection is established.
 // This is checked by executing a dns lookup.
 func getNetworkStatus() (status bool) {
-	_, err := net.LookupIP("portal.azure.com")
+	_, err := net.LookupIP(nsLookupURI)
 	if err != nil {
 		status = false
 	} else {

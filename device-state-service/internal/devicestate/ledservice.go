@@ -17,6 +17,8 @@ limitations under the License.
 package devicestate
 
 import (
+	"log"
+	"os"
 	"sync"
 	"time"
 
@@ -26,8 +28,6 @@ import (
 const (
 	// baseTimeMilliSec is the minimum time the led stays in one state
 	baseTimeMilliSec = 500
-	// numberSteps number of blink pattern steps defined
-	numberSteps = 2
 )
 
 // LedService implements an led service indicating the device connection state by
@@ -37,97 +37,86 @@ const (
 // LED blinking: Device tries to connect.
 // LED off: Service terminated.
 type LedService struct {
-	closed                 chan struct{}
-	connectionStateChannel chan bool
-	blinkPattern           blinkPattern
-	chip                   *gpiod.Chip
-	line                   *gpiod.Line
-	wg                     sync.WaitGroup
-}
-
-type blinkPatterns int
-
-const (
-	off blinkPatterns = iota
-	blink
-	on
-	exit
-)
-
-type blinkPattern struct {
-	pattern blinkPatterns
-	m       sync.Mutex
+	closed       chan interface{}
+	stateChan    chan bool
+	blinkPattern blinkPattern
+	chip         *gpiod.Chip
+	line         *gpiod.Line
+	wg           sync.WaitGroup
 }
 
 // NewLedService intialize led service
 // GPIO used can be configured
-func NewLedService(connectionStateChannel chan bool, gpioChip string, lineNr int) (ledService LedService, err error) {
+func NewLedService(connectionStateChannel chan bool, gpioChip string, lineNr int) (*LedService, error) {
 
 	chip, err := gpiod.NewChip(gpioChip)
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	line, err := chip.RequestLine(lineNr, gpiod.AsOutput(0))
 	if err != nil {
-		return
+		return nil, err
 	}
 
-	ledService = LedService{
-		closed:                 make(chan struct{}),
-		chip:                   chip,
-		line:                   line,
-		connectionStateChannel: connectionStateChannel}
-
-	return
+	return &LedService{
+		closed:    make(chan interface{}),
+		chip:      chip,
+		line:      line,
+		stateChan: connectionStateChannel,
+	}, nil
 }
 
 // Close Cleaup function for LedService
-func (ledService *LedService) Close() {
+func (l *LedService) Close() {
 
 	// terminate all goroutines
-	close(ledService.closed)
+	close(l.closed)
 	// wait for goroutines to finish
-	ledService.wg.Wait()
+	l.wg.Wait()
 
 	// close gpio ressources
-	ledService.chip.Close()
-	ledService.line.Reconfigure(gpiod.AsInput)
-	ledService.line.Close()
+	l.chip.Close()
+	err := l.line.Reconfigure(gpiod.AsInput)
+	if err != nil {
+		log.Println(err)
+	}
+	l.line.Close()
 }
 
 // Run runs the led servie
-func (ledService *LedService) Run() {
-
-	// add both this goroutine and the controlLed goroutine to waitgroups
-	ledService.wg.Add(2)
+func (l *LedService) Run() {
+	l.wg.Add(1)
+	defer l.wg.Done()
 
 	// start with blinkpattern
-	go ledService.controlLed()
-
-	defer ledService.wg.Done()
+	go l.controlLed()
 
 	// wait for new data from channel from device state goroutine
 	for {
 		select {
-		case <-ledService.closed: // close function was called
-			ledService.blinkPattern.changePattern(exit) // set blink pattern to terminate
+		case <-l.closed: // close function was called
+			l.blinkPattern.changePattern(exit) // set blink pattern to terminate
 			return
-		case connectionState := <-ledService.connectionStateChannel:
+		case connectionState := <-l.stateChan:
 			// depending on the connection state change the blink pattern
-			if connectionState == true {
-				ledService.blinkPattern.changePattern(on)
+			if connectionState {
+				l.blinkPattern.changePattern(on)
 
-			} else if connectionState == false {
-				ledService.blinkPattern.changePattern(blink)
+			} else if !connectionState {
+				l.blinkPattern.changePattern(blink)
 			}
 		}
 	}
 }
 
 // controlLed goroutine which executes the currently selected blink pattern
-func (ledService *LedService) controlLed() {
-	defer ledService.wg.Done()
+func (l *LedService) controlLed() {
+	l.wg.Add(1)
+	defer l.wg.Done()
+
+	// numberSteps number of blink pattern steps defined
+	const numberSteps = 2
 
 	steps := map[blinkPatterns][numberSteps]int{
 		off:   {0, 0},
@@ -138,10 +127,14 @@ func (ledService *LedService) controlLed() {
 	stepIdx := 0
 	curPattern := off
 	for {
-		pattern := ledService.blinkPattern.getPattern()
+		pattern := l.blinkPattern.getPattern()
 
 		if pattern == exit {
-			ledService.line.SetValue(0)
+			err := l.line.SetValue(0)
+			if err != nil {
+				log.Println(err)
+				os.Exit(1)
+			}
 			break
 		}
 		if pattern != curPattern {
@@ -150,7 +143,11 @@ func (ledService *LedService) controlLed() {
 		}
 
 		ledVal := steps[curPattern][stepIdx]
-		ledService.line.SetValue(ledVal)
+		err := l.line.SetValue(ledVal)
+		if err != nil {
+			log.Println(err)
+			os.Exit(1)
+		}
 
 		time.Sleep(baseTimeMilliSec * time.Millisecond)
 		stepIdx++
@@ -158,17 +155,4 @@ func (ledService *LedService) controlLed() {
 			stepIdx = 0
 		}
 	}
-}
-
-func (b *blinkPattern) changePattern(newPattern blinkPatterns) {
-	b.m.Lock()
-	b.pattern = newPattern
-	b.m.Unlock()
-}
-
-func (b *blinkPattern) getPattern() blinkPatterns {
-	b.m.Lock()
-	pattern := b.pattern
-	b.m.Unlock()
-	return pattern
 }
