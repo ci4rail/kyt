@@ -24,9 +24,18 @@ import (
 	"github.com/ci4rail/kyt/kyt-dlm-devinfo-static/fwinfo"
 	"github.com/ci4rail/kyt/kyt-dlm-devinfo-static/iothubclient"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
-const iothubCs string = "HostName=ci4rail-eval-iot-hub.azure-devices.net;DeviceId=verdinDevBoardOnGecko;SharedAccessKey=2HUdKhfzDX+aZ0rSQHS8qv1d5geRhOY9GKg6mCCPUlA="
+const (
+	configFile     = "/data/kyt/dlm.yaml"
+	configFileType = "yaml"
+)
+
+var (
+	deviceCs    string
+	viperConfig map[string]interface{}
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -38,18 +47,22 @@ var rootCmd = &cobra.Command{
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 
+		if deviceCs == "" {
+			log.Println("no device connection string")
+			return
+		}
+
 		log.Println("kyt-dlm-devinfo-static RUN")
-		c, err := iothubclient.New(iothubCs)
+		c, err := iothubclient.New(deviceCs)
 		if err != nil {
 			log.Println("failed to create iothub client", err)
 			return
 		}
-		log.Println("client created")
 
 		fwinfo, err := fwinfo.Read()
 		if err != nil {
 			log.Println("failed to read fwinfo", err)
-			//return
+			return
 		}
 
 		d := iothubclient.DeviceInfo{
@@ -76,9 +89,30 @@ func Execute() {
 }
 
 func init() {
-
+	cobra.OnInitialize(initConfig)
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
+}
+
+// initConfig reads in config file and ENV variables if set.
+func initConfig() {
+	viper.SetConfigType(configFileType)
+
+	viper.SetConfigFile(configFile)
+
+	viper.AutomaticEnv() // read in environment variables that match
+
+	// override default server config with config file
+	// priority 1: '--server' argument that differs from defailt
+	// priority 2: 'server' from config file
+	// priority 3: default server
+	// If a config file is found, read it in.
+	if err := viper.ReadInConfig(); err == nil {
+		fmt.Println("Using config file:", viper.ConfigFileUsed())
+
+		deviceCs = viper.GetString("device_connection_string")
+	}
+	viperConfig = viper.AllSettings()
 }

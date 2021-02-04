@@ -13,10 +13,10 @@ import (
 // It is a hierarcical map with key/value pairs
 type DeviceInfo map[string]interface{}
 
-// New creates a new Iotdevice client from the iothub connection string cs
+// New creates a new Iotdevice client from the device connection string cs
 func New(cs string) (*iotdevice.Client, error) {
 	c, err := iotdevice.NewFromConnectionString(
-		// <transport>, <use iotedge gateway for connection>,
+		// <transport>, <connection string>,
 		iotmqtt.New(), cs)
 	return c, err
 }
