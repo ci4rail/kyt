@@ -123,6 +123,8 @@ func (c *IOTHubServiceClient) GetVersions(deviceID string) (map[string]string, e
 		} else {
 			return nil, fmt.Errorf("Error IoT Hub GetFirmwareVersion: no key 'version' found")
 		}
+	} else {
+		return nil, fmt.Errorf("Error IoT Hub GetFirmwareVersion: no key 'version' found")
 	}
 	return versionsMap, nil
 }
