@@ -1,0 +1,2 @@
+TDX Wayland with XWayland 5.0.0-devel-20210202150822+build.0 (dunfell) \n \l
+Verdin-iMX8MM_Reference-Minimal-Image_CI.OS.LMP-0.1.0-12.Branch.feature-kp-persistent-loggin.Sha.3e3589c2950bd6316b26385f4f8d5bdb3503bbd9-dev

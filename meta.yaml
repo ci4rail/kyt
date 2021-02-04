@@ -12,6 +12,7 @@ meta:
     - kyt-cli/dobi.yaml
     - kyt-api-server/dobi.yaml
     - kyt-service-deployment/dobi.yaml
+    - kyt-dlm-devinfo-static/dobi.yaml
     - device-state-service/dobi.yaml
 
 # ===================================================

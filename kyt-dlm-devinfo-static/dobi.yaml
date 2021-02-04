@@ -1,0 +1,37 @@
+# ===================================================
+# mounts
+# ===================================================
+mount=mount-kyt-dlm-devinfo-static-src:
+  bind: "kyt-dlm-devinfo-static/"
+  path: "/src"
+  read-only: false
+
+mount=mount-kyt-dlm-devinfo-static-bin:
+  bind: "bin/"
+  path: "/install"
+  read-only: false
+
+# ===================================================
+# jobs
+# ===================================================
+
+job=build-kyt-dlm-devinfo-static:
+  use: image-go-builder
+  command: bash -c 'cd /src && make -j${nproc}'
+  mounts:
+    - mount-kyt-dlm-devinfo-static-src
+    - mount-kyt-dlm-devinfo-static-bin
+    - mount-go-pkg
+  sources:
+    - kyt-dlm-devinfo-static
+  artifact:
+    - bin/kyt-dlm-devinfo-static
+  user: "{user.uid}:{user.gid}"
+  env:
+    - VERSION={env.GitVersion_InformationalVersion}
+    - BIN_DIR=/install
+    - GOCACHE=/tmp/cache
+  annotations:
+    description: "-> build kyt-dlm-devinfo-static"
+    tags:
+      - build
