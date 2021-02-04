@@ -10,6 +10,7 @@ import (
 )
 
 // DeviceInfo is the type for passing the device info tuples
+// It is a hierarcical map with key/value pairs
 type DeviceInfo map[string]interface{}
 
 // NewModule creates a new Iotedge Module client from the environment
@@ -20,7 +21,9 @@ func NewModule() (*iotdevice.ModuleClient, error) {
 	return c, err
 }
 
-// SetStaticDeviceInfo writes device info to Iothub device twin
+// SetStaticDeviceInfo writes device info this iotedge module's twin
+// d is a hierarcical map which is placed currently unter the "reported/versions"
+// properties within the module twin
 func SetStaticDeviceInfo(c *iotdevice.ModuleClient, d DeviceInfo) error {
 	if d == nil {
 		return errors.New("DeviceInfo is nil")
