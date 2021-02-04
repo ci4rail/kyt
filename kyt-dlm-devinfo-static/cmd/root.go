@@ -21,6 +21,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/ci4rail/kyt/kyt-dlm-devinfo-static/fwinfo"
 	"github.com/ci4rail/kyt/kyt-dlm-devinfo-static/moduleclient"
 	"github.com/spf13/cobra"
 )
@@ -43,8 +44,14 @@ var rootCmd = &cobra.Command{
 		}
 		log.Println("client created")
 
+		fwinfo, err := fwinfo.Read()
+		if err != nil {
+			log.Println("failed to read fwinfo", err)
+			return
+		}
+
 		d := moduleclient.DeviceInfo{
-			"firmwareversion": "klgeplgepleglpleplgpelp",
+			"firmwareversion": fwinfo,
 		}
 		err = moduleclient.SetStaticDeviceInfo(c, d)
 		if err != nil {

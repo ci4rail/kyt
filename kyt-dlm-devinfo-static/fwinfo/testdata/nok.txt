@@ -1,0 +1,1 @@
+TDX Wayland with XWayland 5.0.0-devel-20210202150822+build.0 (dunfell) \n \l
