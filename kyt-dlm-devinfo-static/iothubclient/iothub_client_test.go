@@ -9,7 +9,7 @@ func TestMakeStaticDeviceInfo(t *testing.T) {
 
 	tt := map[*DeviceInfo]string{
 		{
-			"firmwareversion": "klgeplgepleglpleplgpelp",
+			"firmwareVersion": "klgeplgepleglpleplgpelp",
 			"hwrev":           "1.0",
 		}: `{"versions":{"firmwareversion":"klgeplgepleglpleplgpelp","hwrev":"1.0"}}`,
 		{}: `{"versions":{}}`,

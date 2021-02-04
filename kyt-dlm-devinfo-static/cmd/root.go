@@ -18,7 +18,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/ci4rail/kyt/kyt-dlm-devinfo-static/fwinfo"
@@ -28,13 +27,13 @@ import (
 )
 
 const (
-	configFile     = "/data/kyt/dlm.yaml"
-	configFileType = "yaml"
+	configFile      = "/data/kyt/dlm.yaml"
+	configFileType  = "yaml"
+	firmwareVersion = "firmwareVersion"
 )
 
 var (
-	deviceCs    string
-	viperConfig map[string]interface{}
+	deviceCs string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -48,32 +47,31 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if deviceCs == "" {
-			log.Println("no device connection string")
+			fmt.Println("Error: no device connection string")
 			return
 		}
 
-		log.Println("kyt-dlm-devinfo-static RUN")
 		c, err := iothubclient.New(deviceCs)
 		if err != nil {
-			log.Println("failed to create iothub client", err)
+			fmt.Println("Error: failed to create iothub client", err)
 			return
 		}
 
 		fwinfo, err := fwinfo.Read()
 		if err != nil {
-			log.Println("failed to read fwinfo", err)
+			fmt.Println("Error: failed to read fwinfo", err)
 			return
 		}
 
 		d := iothubclient.DeviceInfo{
-			"firmwareVersion": fwinfo,
+			firmwareVersion: fwinfo,
 		}
 		err = iothubclient.SetStaticDeviceInfo(c, d)
 		if err != nil {
-			log.Println("failed to set device info", err)
+			fmt.Println("Error: failed to set device info:", err)
 			return
 		}
-		log.Println("set device info ok", err)
+		fmt.Println("set device info ok")
 
 	},
 }
@@ -114,5 +112,4 @@ func initConfig() {
 
 		deviceCs = viper.GetString("device_connection_string")
 	}
-	viperConfig = viper.AllSettings()
 }

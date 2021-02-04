@@ -3,7 +3,7 @@ package iothubclient
 import (
 	"context"
 	"errors"
-	"log"
+	"fmt"
 
 	"github.com/amenzhinsky/iothub/iotdevice"
 	iotmqtt "github.com/amenzhinsky/iothub/iotdevice/transport/mqtt"
@@ -33,7 +33,7 @@ func SetStaticDeviceInfo(c *iotdevice.Client, d DeviceInfo) error {
 	if err := c.Connect(context.Background()); err != nil {
 		return err
 	}
-	log.Println("connect to iothub ok")
+	fmt.Println("connect to iothub ok")
 
 	s := makeStaticDeviceInfo(d)
 	if _, err := c.UpdateTwinState(context.Background(), s); err != nil {
