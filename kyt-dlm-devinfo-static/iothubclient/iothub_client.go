@@ -1,4 +1,4 @@
-package moduleclient
+package iothubclient
 
 import (
 	"context"
@@ -13,18 +13,18 @@ import (
 // It is a hierarcical map with key/value pairs
 type DeviceInfo map[string]interface{}
 
-// NewModule creates a new Iotedge Module client from the environment
-func NewModule() (*iotdevice.ModuleClient, error) {
-	c, err := iotdevice.NewModuleFromEnvironment(
+// New creates a new Iotdevice client from the iothub connection string cs
+func New(cs string) (*iotdevice.Client, error) {
+	c, err := iotdevice.NewFromConnectionString(
 		// <transport>, <use iotedge gateway for connection>,
-		iotmqtt.NewModuleTransport(), true)
+		iotmqtt.New(), cs)
 	return c, err
 }
 
 // SetStaticDeviceInfo writes device info this iotedge module's twin
 // d is a hierarcical map which is placed currently unter the "reported/versions"
 // properties within the module twin
-func SetStaticDeviceInfo(c *iotdevice.ModuleClient, d DeviceInfo) error {
+func SetStaticDeviceInfo(c *iotdevice.Client, d DeviceInfo) error {
 	if d == nil {
 		return errors.New("DeviceInfo is nil")
 	}

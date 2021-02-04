@@ -22,9 +22,11 @@ import (
 	"os"
 
 	"github.com/ci4rail/kyt/kyt-dlm-devinfo-static/fwinfo"
-	"github.com/ci4rail/kyt/kyt-dlm-devinfo-static/moduleclient"
+	"github.com/ci4rail/kyt/kyt-dlm-devinfo-static/iothubclient"
 	"github.com/spf13/cobra"
 )
+
+const iothubCs string = "HostName=ci4rail-eval-iot-hub.azure-devices.net;DeviceId=verdinDevBoardOnGecko;SharedAccessKey=2HUdKhfzDX+aZ0rSQHS8qv1d5geRhOY9GKg6mCCPUlA="
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -37,9 +39,9 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		log.Println("kyt-dlm-devinfo-static RUN")
-		c, err := moduleclient.NewModule()
+		c, err := iothubclient.New(iothubCs)
 		if err != nil {
-			log.Println("failed to create module client", err)
+			log.Println("failed to create iothub client", err)
 			return
 		}
 		log.Println("client created")
@@ -47,13 +49,13 @@ var rootCmd = &cobra.Command{
 		fwinfo, err := fwinfo.Read()
 		if err != nil {
 			log.Println("failed to read fwinfo", err)
-			return
+			//return
 		}
 
-		d := moduleclient.DeviceInfo{
-			"firmwareversion": fwinfo,
+		d := iothubclient.DeviceInfo{
+			"firmwareVersion": fwinfo,
 		}
-		err = moduleclient.SetStaticDeviceInfo(c, d)
+		err = iothubclient.SetStaticDeviceInfo(c, d)
 		if err != nil {
 			log.Println("failed to set device info", err)
 			return

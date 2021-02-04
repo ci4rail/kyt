@@ -1,4 +1,4 @@
-package moduleclient
+package iothubclient
 
 import (
 	"encoding/json"

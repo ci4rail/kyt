@@ -16,21 +16,13 @@ limitations under the License.
 package main
 
 import (
-	"fmt"
 	"log"
-	"os"
-	"strings"
 
 	"github.com/ci4rail/kyt/kyt-dlm-devinfo-static/cmd"
 )
 
 func main() {
-	log.Println("Hi From kyt-dlm-devinfo-static. Environment:")
-
-	for _, e := range os.Environ() {
-		pair := strings.SplitN(e, "=", 2)
-		fmt.Println(pair[0], pair[1])
-	}
+	log.Println("Hi From kyt-dlm-devinfo-static")
 
 	cmd.Execute()
 }
