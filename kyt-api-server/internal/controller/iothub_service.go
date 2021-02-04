@@ -100,3 +100,29 @@ func (c *IOTHubServiceClient) GetConnectionState(deviceID string) (string, error
 	}
 	return string(twin.ConnectionState), nil
 }
+
+// GetConnectionState gets the connection state from the Device Twin on IoT Hub
+// returns bool: 0 -> disconnected, 1 -> connected
+func (c *IOTHubServiceClient) GetVersions(deviceID string) (map[string]string, error) {
+	versionsMap := make(map[string]string)
+	ctx := context.Background()
+	twin, err := c.iotClient.GetDeviceTwin(ctx, deviceID)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading device twin %s", err)
+	}
+	versionJson, ok := twin.Properties.Reported["versions"]
+	if ok {
+		v, ok := versionJson.(map[string]interface{})
+		if ok {
+			firmwareVersion, ok := v["firmwareVersion"].(string)
+			if ok {
+				versionsMap["firmwareVersion"] = firmwareVersion
+			} else {
+				return nil, fmt.Errorf("Error IoT Hub GetFirmwareVersion: no key 'version.firmwareVersion' found")
+			}
+		} else {
+			return nil, fmt.Errorf("Error IoT Hub GetFirmwareVersion: no key 'version' found")
+		}
+	}
+	return versionsMap, nil
+}

@@ -21,7 +21,7 @@ import (
 	"fmt"
 
 	"github.com/ci4rail/kyt/kyt-cli/openapi"
-	"gopkg.in/yaml.v2"
+	"github.com/ghodss/yaml"
 )
 
 func convertToJson(devices *[]openapi.Device) (string, error) {
@@ -33,7 +33,11 @@ func convertToJson(devices *[]openapi.Device) (string, error) {
 }
 
 func convertToYaml(devices *[]openapi.Device) (string, error) {
-	c, err := yaml.Marshal(devices)
+	j, err := convertToJson(devices)
+	if err != nil {
+		return "", err
+	}
+	c, err := yaml.JSONToYAML([]byte(j))
 	if err != nil {
 		return "", fmt.Errorf("Cannot output as format yaml")
 	}

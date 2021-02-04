@@ -55,13 +55,13 @@ func getDevices(cmd *cobra.Command, args []string) {
 			fmt.Println(y)
 		case "wide":
 			// wide: Add here some more information for the table
-			fmt.Printf("%-40s\t%s\n", "DEVICE ID", "CONNECTION STATE")
+			fmt.Printf("%-40s\t%-16s  %s\n", "DEVICE ID", "CONNECTION STATE", "FIRMWARE VERSION")
 			for _, dev := range devices {
-				fmt.Printf("%-40s\t%s\n", dev.GetId(), dev.GetNetwork())
+				fmt.Printf("%-40s\t%-16s  %s\n", dev.GetId(), dev.GetNetwork(), dev.GetFirmwareVersion())
 			}
 		default:
 			// short: only the most important information
-			fmt.Printf("%-40s\t%s\n", "DEVICE ID", "CONNECTION STATE")
+			fmt.Printf("%-40s\t%-16s\n", "DEVICE ID", "CONNECTION STATE")
 			for _, dev := range devices {
 				fmt.Printf("%-40s\t%s\n", dev.GetId(), dev.GetNetwork())
 			}

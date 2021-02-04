@@ -17,6 +17,7 @@ limitations under the License.
 package api
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -48,10 +49,20 @@ func DevicesDidGet(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": err})
 		return
 	}
+	versions, err := client.GetVersions(deviceIdFilter)
+	if err != nil {
+		fmt.Println("no version reported")
+	}
+	var firmwareVersion = ""
+	f, ok := versions["firmwareVersion"]
+	if ok {
+		firmwareVersion = f
+	}
 
 	c.JSON(http.StatusOK, &Device{
-		Id:      *deviceID,
-		Network: connection,
+		Id:              *deviceID,
+		Network:         connection,
+		FirmwareVersion: firmwareVersion,
 	})
 }
 
@@ -82,9 +93,19 @@ func DevicesGet(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
+		versions, err := client.GetVersions(deviceID)
+		if err != nil {
+			fmt.Println("no version reported")
+		}
+		var firmwareVersion = ""
+		f, ok := versions["firmwareVersion"]
+		if ok {
+			firmwareVersion = f
+		}
 		deviceList = append(deviceList, Device{
-			Id:      deviceID,
-			Network: connection,
+			Id:              deviceID,
+			Network:         connection,
+			FirmwareVersion: firmwareVersion,
 		})
 	}
 

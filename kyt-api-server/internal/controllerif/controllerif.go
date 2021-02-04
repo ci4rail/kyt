@@ -24,4 +24,5 @@ type IOTHubServices interface {
 	ListDeviceIDs() (*[]string, error)
 	ListDeviceById(string) (*string, error)
 	GetConnectionState(string) (string, error)
+	GetVersions(string) (map[string]string, error)
 }
