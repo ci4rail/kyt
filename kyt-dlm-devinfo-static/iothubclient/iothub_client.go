@@ -45,6 +45,6 @@ func SetStaticDeviceInfo(c *iotdevice.Client, d DeviceInfo) error {
 func makeStaticDeviceInfo(d DeviceInfo) iotdevice.TwinState {
 	s := make(iotdevice.TwinState)
 
-	s["verions"] = d
+	s["versions"] = d
 	return s
 }
