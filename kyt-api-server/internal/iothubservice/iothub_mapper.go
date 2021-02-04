@@ -14,32 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package iothubservice
 
 import (
-	"log"
+	"fmt"
 	"os"
-
-	"github.com/ci4rail/kyt/kyt-api-server/cmd"
 )
 
-const (
-	envIotHubConnectionsString = "IOTHUB_SERVICE_CONNECTION_STRING"
-)
+// MapTenantToIOTHubSAS returns the SAS token of the IOT Hub for the specified tenant
+// TODO: Either take the SAS from a DB or get it via "az iot hub connection-string show"
+// TODO: tenant is currently ignored
+func MapTenantToIOTHubSAS(tenant string) (string, error) {
+	envName := fmt.Sprintf("IOTHUB_SERVICE_CONNECTION_STRING")
+	val, ok := os.LookupEnv(envName)
 
-func main() {
-	versionArgFound := false
-	for _, v := range os.Args {
-		if v == "version" || v == "help" || v == "--help" || v == "-h" {
-			versionArgFound = true
-		}
+	if !ok {
+		return "", fmt.Errorf("IOTHUB_SERVICE_CONNECTION_STRING not set")
 	}
-	if !versionArgFound {
-		_, ok := os.LookupEnv(envIotHubConnectionsString)
-
-		if !ok {
-			log.Fatalf("Error: environment variable %s missing", envIotHubConnectionsString)
-		}
-	}
-	cmd.Execute()
+	return val, nil
 }

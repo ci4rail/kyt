@@ -21,8 +21,8 @@ import (
 	"log"
 	"os"
 
-	common "github.com/ci4rail/kyt/kyt-api-server/common"
-	sw "github.com/ci4rail/kyt/kyt-api-server/openapi"
+	sw "github.com/ci4rail/kyt/kyt-api-server/api"
+	common "github.com/ci4rail/kyt/kyt-api-server/internal/common"
 	"github.com/spf13/cobra"
 )
 
@@ -39,7 +39,7 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		log.Printf("Run args %s\n", args)
-		router := sw.NewOwnRouter()
+		router := sw.NewRouter()
 
 		log.Fatal(router.Run(serverAddr))
 

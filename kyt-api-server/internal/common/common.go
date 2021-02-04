@@ -14,32 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
-
-import (
-	"log"
-	"os"
-
-	"github.com/ci4rail/kyt/kyt-api-server/cmd"
-)
+package common
 
 const (
-	envIotHubConnectionsString = "IOTHUB_SERVICE_CONNECTION_STRING"
+	KYT_PORT = 8080
 )
-
-func main() {
-	versionArgFound := false
-	for _, v := range os.Args {
-		if v == "version" || v == "help" || v == "--help" || v == "-h" {
-			versionArgFound = true
-		}
-	}
-	if !versionArgFound {
-		_, ok := os.LookupEnv(envIotHubConnectionsString)
-
-		if !ok {
-			log.Fatalf("Error: environment variable %s missing", envIotHubConnectionsString)
-		}
-	}
-	cmd.Execute()
-}

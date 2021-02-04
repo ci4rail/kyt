@@ -1,5 +1,5 @@
 /*
-Copyright © 2021 Ci4Rail GmbH
+Copyright © 2021 Ci4Rail GmbH <engineering@ci4rail.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,32 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package cmd
 
 import (
-	"log"
+	"fmt"
 	"os"
 
-	"github.com/ci4rail/kyt/kyt-api-server/cmd"
+	"github.com/spf13/viper"
 )
 
-const (
-	envIotHubConnectionsString = "IOTHUB_SERVICE_CONNECTION_STRING"
-)
-
-func main() {
-	versionArgFound := false
-	for _, v := range os.Args {
-		if v == "version" || v == "help" || v == "--help" || v == "-h" {
-			versionArgFound = true
-		}
+func tokenConfigCheck() {
+	if !viper.IsSet("token") {
+		fmt.Println("No access token set. Please run `login` command.")
+		os.Exit(1)
 	}
-	if !versionArgFound {
-		_, ok := os.LookupEnv(envIotHubConnectionsString)
-
-		if !ok {
-			log.Fatalf("Error: environment variable %s missing", envIotHubConnectionsString)
-		}
-	}
-	cmd.Execute()
 }

@@ -17,18 +17,41 @@ limitations under the License.
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
-// getCmd represents the get command
-var getCmd = &cobra.Command{
-	Use:   "get",
-	Short: "Display specified resources",
-	Long: `Display specified resources
+var (
+	output string
+)
 
-Prints a table of the most important information of the specified resources.`,
+// devicesCmd represents the devices command
+var describeDevicesCmd = &cobra.Command{
+	Use:     "devices",
+	Aliases: []string{"device", "dev"},
+	Short:   "Display detailed information about kyt-devices",
+	Long: `Display detailed information about kyt-devices
+
+Prints detailed information about kyt-devices.
+`,
+	Run: describeDevices,
+}
+
+func describeDevices(cmd *cobra.Command, args []string) {
+	tokenConfigCheck()
+
+	devices := fetchDevices(args)
+
+	if len(devices) > 0 {
+		y, err := convertToYaml(&devices)
+		if err != nil {
+			er(err)
+		}
+		fmt.Println(y)
+	}
 }
 
 func init() {
-	dlmCmd.AddCommand(getCmd)
+	describeCmd.AddCommand(describeDevicesCmd)
 }
