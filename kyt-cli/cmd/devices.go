@@ -55,7 +55,7 @@ func fetchDevicesAll() []openapi.Device {
 		apiClient, ctx := api.NewAPIWithToken(serverURL, viper.GetString("token"))
 		devices, _, err = apiClient.DeviceApi.DevicesGet(ctx).Execute()
 		if err.Error() != "" {
-			er(fmt.Sprintf("Error calling RefreshApi.RefreshToken: %v\n", err))
+			er(fmt.Sprintf("Error calling DeviceApi.DevicesGet: %v\n", err))
 		}
 	} else if err.Error() != "" {
 		er(fmt.Sprintf("Error calling DeviceApi.DevicesGet: %v\n", err))
