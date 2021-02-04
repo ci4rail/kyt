@@ -13,6 +13,7 @@ meta:
     - kyt-api-server/dobi.yaml
     - kyt-service-deployment/dobi.yaml
     - kyt-dlm-devinfo-static/dobi.yaml
+    - device-state-service/dobi.yaml
 
 # ===================================================
 # alias
@@ -23,6 +24,7 @@ alias=build:
     - build-kyt-cli
     - build-kyt-api-server
     - image-kyt-api-server
+    - build-device-state-service
   annotations:
     description: "[alias] build all"
     tags:
