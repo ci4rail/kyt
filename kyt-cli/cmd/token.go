@@ -10,18 +10,21 @@ import (
 	"github.com/spf13/viper"
 )
 
-func RefreshToken() {
+func RefreshToken() error {
 	apiClient, ctx := api.NewAPIWithToken(serverURL, viper.GetString("token"))
 	fmt.Println("Token expired. Refreshing...")
 	resp, openapierr := apiClient.AuthApi.AuthRefreshTokenGet(ctx).Execute()
-	if openapierr.Error() != "" {
+	if resp.StatusCode == 401 {
+		return fmt.Errorf("Unable to refresh access token. Please run `login` command again.")
+
+	} else if openapierr.Error() != "" {
 		er(fmt.Sprintf("Error calling RefreshApi.RefreshToken: %v\n", openapierr))
 	}
 
 	var data map[string]interface{}
 	err := json.NewDecoder(resp.Body).Decode(&data)
 	if err != nil {
-		log.Fatalf("Error: %e", err)
+		return fmt.Errorf("Error: %e", err)
 	}
 
 	token := data["token"]
@@ -35,4 +38,5 @@ func RefreshToken() {
 	if err != nil {
 		log.Println("Cannot save config file")
 	}
+	return nil
 }

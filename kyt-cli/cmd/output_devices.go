@@ -17,18 +17,25 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/spf13/cobra"
+	"encoding/json"
+	"fmt"
+
+	"github.com/ci4rail/kyt/kyt-cli/openapi"
+	"gopkg.in/yaml.v2"
 )
 
-// getCmd represents the get command
-var getCmd = &cobra.Command{
-	Use:   "get",
-	Short: "Display specified resources",
-	Long: `Display specified resources
-
-Prints a table of the most important information of the specified resources.`,
+func convertToJson(devices *[]openapi.Device) (string, error) {
+	c, err := json.MarshalIndent(devices, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("Cannot output as format json")
+	}
+	return string(c), nil
 }
 
-func init() {
-	dlmCmd.AddCommand(getCmd)
+func convertToYaml(devices *[]openapi.Device) (string, error) {
+	c, err := yaml.Marshal(devices)
+	if err != nil {
+		return "", fmt.Errorf("Cannot output as format yaml")
+	}
+	return string(c), nil
 }

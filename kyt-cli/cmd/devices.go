@@ -22,29 +22,36 @@ import (
 
 	api "github.com/ci4rail/kyt/kyt-cli/internal/api"
 	"github.com/ci4rail/kyt/kyt-cli/openapi"
-	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-// devicesCmd represents the devices command
-var devicesCmd = &cobra.Command{
-	Use:     "devices",
-	Aliases: []string{"device", "dev"},
-	Short:   "Display all kyt-devices",
-	Long: `Display all kyt-devices
-
-Prints a table of the most important information of all kyt-devices.
-`,
-	Run: getDevices,
+func fetchDevices(list []string) []openapi.Device {
+	var devices []openapi.Device
+	if len(list) > 0 {
+		for _, arg := range list {
+			dev, err := fetchDevicesById(arg)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			devices = append(devices, dev)
+		}
+	} else {
+		devices = fetchDevicesAll()
+	}
+	return devices
 }
 
-func getDevicesAll() []openapi.Device {
+func fetchDevicesAll() []openapi.Device {
 	apiClient, ctx := api.NewAPIWithToken(serverURL, viper.GetString("token"))
 	devices, resp, err := apiClient.DeviceApi.DevicesGet(ctx).Execute()
 	// 401 mean 'Unauthorized'. Let's try to refresh the token once.
 	if resp.StatusCode == 401 {
-		RefreshToken()
-
+		err := RefreshToken()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 		apiClient, ctx := api.NewAPIWithToken(serverURL, viper.GetString("token"))
 		devices, _, err = apiClient.DeviceApi.DevicesGet(ctx).Execute()
 		if err.Error() != "" {
@@ -56,66 +63,30 @@ func getDevicesAll() []openapi.Device {
 	return devices
 }
 
-func getDevicesById(deviceId string) (openapi.Device, error) {
+func fetchDevicesById(deviceId string) (openapi.Device, error) {
 	apiClient, ctx := api.NewAPIWithToken(serverURL, viper.GetString("token"))
 	device, resp, err := apiClient.DeviceApi.DevicesDidGet(ctx, deviceId).Execute()
 	// 401 mean 'Unauthorized'. Let's try to refresh the token once.
 	if resp.StatusCode == 401 {
-		RefreshToken()
-
+		err := RefreshToken()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 		apiClient, ctx := api.NewAPIWithToken(serverURL, viper.GetString("token"))
-		device, _, err = apiClient.DeviceApi.DevicesDidGet(ctx, deviceId).Execute()
+		device, resp, err = apiClient.DeviceApi.DevicesDidGet(ctx, deviceId).Execute()
 		if resp.StatusCode == 404 {
 			return openapi.Device{}, fmt.Errorf("No device found with deviceID: %s", deviceId)
 		}
 		if err.Error() != "" {
-			fmt.Printf("Error calling RefreshApi.RefreshToken: %v\n", err)
+			fmt.Printf("Unable to refresh access token. Please run `login` command again.")
 		}
 	} else if resp.StatusCode == 404 {
 		return openapi.Device{}, fmt.Errorf("No device found with deviceID: %s", deviceId)
+	} else if resp.StatusCode == 401 {
+		fmt.Printf("Unable to refresh access token. Please run `login` command again.")
 	} else if err.Error() != "" {
 		er(fmt.Sprintf("Error calling DeviceApi.DevicesGet: %v\n", err))
 	}
 	return device, nil
-}
-
-func getDevices(cmd *cobra.Command, args []string) {
-	if !viper.IsSet("token") {
-		fmt.Println("No access token set. Please run `login` command.")
-		os.Exit(1)
-	}
-	var devices []openapi.Device
-	if len(args) > 0 {
-		for _, arg := range args {
-			dev, err := getDevicesById(arg)
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-			devices = append(devices, dev)
-		}
-	} else {
-		devices = getDevicesAll()
-	}
-
-	if len(devices) > 0 {
-		fmt.Printf("%-40s\t%s\n", "DEVICE ID", "CONNECTED")
-		for _, dev := range devices {
-			fmt.Printf("%-40s\t%s\n", dev.GetId(), dev.GetNetwork())
-		}
-	}
-}
-
-func init() {
-	getCmd.AddCommand(devicesCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// devicesCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// devicesCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

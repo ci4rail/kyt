@@ -21,14 +21,14 @@ import (
 )
 
 // getCmd represents the get command
-var getCmd = &cobra.Command{
-	Use:   "get",
-	Short: "Display specified resources",
-	Long: `Display specified resources
+var describeCmd = &cobra.Command{
+	Use:   "describe",
+	Short: "Display detailed specified resources",
+	Long: `Display detailed specified resources
 
-Prints a table of the most important information of the specified resources.`,
+Prints a detailed list of information of the specified resources.`,
 }
 
 func init() {
-	dlmCmd.AddCommand(getCmd)
+	dlmCmd.AddCommand(describeCmd)
 }
