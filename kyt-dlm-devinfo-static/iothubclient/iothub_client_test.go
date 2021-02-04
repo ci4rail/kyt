@@ -11,7 +11,7 @@ func TestMakeStaticDeviceInfo(t *testing.T) {
 		{
 			"firmwareVersion": "klgeplgepleglpleplgpelp",
 			"hwrev":           "1.0",
-		}: `{"versions":{"firmwareversion":"klgeplgepleglpleplgpelp","hwrev":"1.0"}}`,
+		}: `{"versions":{"firmwareVersion":"klgeplgepleglpleplgpelp","hwrev":"1.0"}}`,
 		{}: `{"versions":{}}`,
 	}
 
