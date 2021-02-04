@@ -11,8 +11,8 @@ func TestMakeStaticDeviceInfo(t *testing.T) {
 		{
 			"firmwareversion": "klgeplgepleglpleplgpelp",
 			"hwrev":           "1.0",
-		}: `{"verions":{"firmwareversion":"klgeplgepleglpleplgpelp","hwrev":"1.0"}}`,
-		{}: `{"verions":{}}`,
+		}: `{"versions":{"firmwareversion":"klgeplgepleglpleplgpelp","hwrev":"1.0"}}`,
+		{}: `{"versions":{}}`,
 	}
 
 	for d, exp := range tt {
@@ -21,7 +21,7 @@ func TestMakeStaticDeviceInfo(t *testing.T) {
 		b, _ := json.Marshal(s)
 		t.Logf("%s", b)
 		if string(b) != exp {
-			t.Errorf("want %v, got %v", exp, b)
+			t.Errorf("want %v, got %v", exp, string(b))
 		}
 	}
 }
