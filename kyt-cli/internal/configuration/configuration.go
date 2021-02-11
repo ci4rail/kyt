@@ -18,6 +18,7 @@ package configuration
 
 const (
 	DefaultDlmServer = "https://dlm.ci4rail.com/v1"
+	DefaultAlmServer = "https://alm.ci4rail.com/v1"
 )
 
 const (

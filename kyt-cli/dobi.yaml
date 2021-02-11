@@ -6,6 +6,11 @@ mount=mount-kyt-dlm-api-gen:
   path: "/openapidlm"
   read-only: false
 
+mount=mount-kyt-alm-api-gen:
+  bind: "kyt-cli/openapialm"
+  path: "/openapialm"
+  read-only: false
+
 mount=mount-kyt-cli-src:
   bind: "kyt-cli/"
   path: "/src"
@@ -24,16 +29,23 @@ job=generate-client-sources:
   command: bash -c 'java -Xmx1024M -DloggerPath=conf/log4j.properties -jar
     /opt/openapi-generator/modules/openapi-generator-cli/target/openapi-generator-cli.jar
     generate -i /kyt-api-spec/kytdlmapi.yaml -g go -o /openapidlm --package-name openapidlm;
-    rm -f /openapidlm/go.mod /openapidlm/go.sum'
+    rm -f /openapidlm/go.mod /openapidlm/go.sum;
+    java -Xmx1024M -DloggerPath=conf/log4j.properties -jar
+    /opt/openapi-generator/modules/openapi-generator-cli/target/openapi-generator-cli.jar
+    generate -i /kyt-api-spec/kytalmapi.yaml -g go -o /openapialm --package-name openapialm;
+    rm -f /openapialm/go.mod /openapialm/go.sum'
   interactive: true
   mounts:
     - mount-project-root
     - mount-kyt-api-spec
     - mount-kyt-dlm-api-gen
+    - mount-kyt-alm-api-gen
   sources:
     - kyt-api-spec/kytdlmapi.yaml
+    - kyt-api-spec/kytalmapi.yaml
   artifact:
     - kyt-cli/openapidlm/client.go
+    - kyt-cli/openapialm/client.go
   user: "{user.uid}:{user.gid}"
   annotations:
     description: "-> generate kyt-api-client sources"
