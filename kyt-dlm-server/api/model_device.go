@@ -1,5 +1,5 @@
 /*
-Copyright © 2021 Ci4Rail GmbH <engineering@ci4rail.com>
+Copyright © 2021 Ci4Rail GmbH
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,21 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cmd
+package api
 
-import (
-	"github.com/spf13/cobra"
-)
-
-// getCmd represents the get command
-var getCmd = &cobra.Command{
-	Use:   "get",
-	Short: "Display specified resources",
-	Long: `Display specified resources
-
-Prints a table of the most important information of the specified resources.`,
-}
-
-func init() {
-	dlmCmd.AddCommand(getCmd)
+// Device struct containing supported device information
+type Device struct {
+	ID              string `json:"id"`
+	Name            string `json:"name,omitempty"`
+	Network         string `json:"network,omitempty"`
+	FirmwareVersion string `json:"firmware_version,omitempty"`
 }

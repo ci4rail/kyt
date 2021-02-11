@@ -1,5 +1,5 @@
 /*
-Copyright © 2021 Ci4Rail GmbH
+Copyright © 2021 Ci4Rail GmbH <engineering@ci4rail.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,32 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package cmd
 
 import (
-	"log"
-	"os"
-
-	"github.com/ci4rail/kyt/kyt-api-server/cmd"
+	"github.com/spf13/cobra"
 )
 
-const (
-	envIotHubConnectionsString = "IOTHUB_SERVICE_CONNECTION_STRING"
-)
+// dlmDescribeCmd represents the get command
+var dlmDescribeCmd = &cobra.Command{
+	Use:   "describe",
+	Short: "Display detailed specified resources",
+	Long: `Display detailed specified resources
 
-func main() {
-	versionArgFound := false
-	for _, v := range os.Args {
-		if v == "version" || v == "help" || v == "--help" || v == "-h" {
-			versionArgFound = true
-		}
-	}
-	if !versionArgFound {
-		_, ok := os.LookupEnv(envIotHubConnectionsString)
+Prints a detailed list of information of the specified resources.`,
+}
 
-		if !ok {
-			log.Fatalf("Error: environment variable %s missing", envIotHubConnectionsString)
-		}
-	}
-	cmd.Execute()
+func init() {
+	dlmCmd.AddCommand(dlmDescribeCmd)
 }

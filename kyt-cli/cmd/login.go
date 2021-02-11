@@ -23,6 +23,7 @@ import (
 	"log"
 
 	"github.com/ci4rail/kyt/kyt-cli/internal/configuration"
+	e "github.com/ci4rail/kyt/kyt-cli/internal/errors"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 )
@@ -68,19 +69,19 @@ func login(cmd *cobra.Command, args []string) {
 	}
 	req, err := createAccessTokenRequest(configuration.TokenEndpoint, configuration.ClientId, username, password)
 	if err != nil {
-		er(err)
+		e.Er(err)
 	}
 	resp, err := sendAccessTokenRequest(req)
 	if err != nil {
-		er(err)
+		e.Er(err)
 	}
 	token, refreshToken, err := extractAccessToken(resp)
 	if err != nil {
-		er(err)
+		e.Er(err)
 	}
 	claims, err := getTokenClaims(token)
 	if err != nil {
-		er(err)
+		e.Er(err)
 	}
 	writeTokensToConfig(token, refreshToken)
 

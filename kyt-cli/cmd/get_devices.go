@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 
+	e "github.com/ci4rail/kyt/kyt-cli/internal/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -36,22 +37,22 @@ Prints a table of the most important information of kyt-devices.
 }
 
 func getDevices(cmd *cobra.Command, args []string) {
-	tokenConfigCheck()
+	e.TokenConfigCheck()
 
-	devices := fetchDevices(args)
+	devices := FetchDevices(args)
 
 	if len(devices) > 0 {
 		switch o := output; o {
 		case "json", "j":
-			j, err := convertToJson(&devices)
+			j, err := ConvertToJSON(&devices)
 			if err != nil {
-				er(err)
+				e.Er(err)
 			}
 			fmt.Println(j)
 		case "yaml", "y":
-			y, err := convertToYaml(&devices)
+			y, err := ConvertToYaml(&devices)
 			if err != nil {
-				er(err)
+				e.Er(err)
 			}
 			fmt.Println(y)
 		case "wide", "w":
@@ -74,6 +75,6 @@ func getDevices(cmd *cobra.Command, args []string) {
 }
 
 func init() {
-	getCmd.AddCommand(getDevicesCmd)
+	dlmGetCmd.AddCommand(getDevicesCmd)
 	getDevicesCmd.Flags().StringVarP(&output, "output", "o", "short", "Output format. One of: short|s|json|j|yaml|y||wide|w")
 }

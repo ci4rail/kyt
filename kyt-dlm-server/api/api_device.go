@@ -21,7 +21,7 @@ import (
 	"log"
 	"net/http"
 
-	iothubservice "github.com/ci4rail/kyt/kyt-api-server/internal/iothubservice"
+	iothubservice "github.com/ci4rail/kyt/kyt-dlm-server/internal/iothubservice"
 	"github.com/gin-gonic/gin"
 	"github.com/golangci/golangci-lint/pkg/sliceutil"
 )
@@ -39,18 +39,18 @@ func DevicesDidGet(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	deviceIdFilter := c.Param("did")
-	deviceID, err := client.ListDeviceById(deviceIdFilter)
+	deviceIDFilter := c.Param("did")
+	deviceID, err := client.ListDeviceByID(deviceIDFilter)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
-	connection, err := client.GetConnectionState(deviceIdFilter)
+	connection, err := client.GetConnectionState(deviceIDFilter)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err})
 		return
 	}
-	versions, err := client.GetVersions(deviceIdFilter)
+	versions, err := client.GetVersions(deviceIDFilter)
 	if err != nil {
 		fmt.Printf("Info: device didn't repoart a version yet: %s\n", deviceIdFilter)
 	}
@@ -61,7 +61,7 @@ func DevicesDidGet(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, &Device{
-		Id:              *deviceID,
+		ID:              *deviceID,
 		Network:         connection,
 		FirmwareVersion: firmwareVersion,
 	})
@@ -127,7 +127,7 @@ func DevicesGet(c *gin.Context) {
 			firmwareVersion = f
 		}
 		deviceList = append(deviceList, Device{
-			Id:              deviceID,
+			ID:              deviceID,
 			Network:         connection,
 			FirmwareVersion: firmwareVersion,
 		})

@@ -27,6 +27,7 @@ import (
 	"strings"
 
 	configuration "github.com/ci4rail/kyt/kyt-cli/internal/configuration"
+	e "github.com/ci4rail/kyt/kyt-cli/internal/errors"
 	"github.com/dgrijalva/jwt-go"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
@@ -180,7 +181,7 @@ func extractAccessToken(body []byte) (string, string, error) {
 	case string:
 		i, err := strconv.Atoi(v)
 		if err != nil {
-			er(err)
+			e.Er(err)
 		}
 		atr.ExpiresIn = i
 	}
@@ -191,15 +192,15 @@ func extractAccessToken(body []byte) (string, string, error) {
 func RefreshToken() error {
 	req, err := createRefreshTokenRequest(configuration.TokenEndpoint, configuration.ClientId, username, password)
 	if err != nil {
-		er(err)
+		e.Er(err)
 	}
 	resp, err := sendRefreshTokenRequest(req)
 	if err != nil {
-		er(err)
+		e.Er(err)
 	}
 	token, refreshToken, err := extractAccessToken(resp)
 	if err != nil {
-		er(err)
+		e.Er(err)
 	}
 	writeTokensToConfig(token, refreshToken)
 	return nil
@@ -211,10 +212,10 @@ func writeTokensToConfig(token, refreshToken string) {
 
 	home, err := homedir.Dir()
 	if err != nil {
-		er(err)
+		e.Er(err)
 	}
 	err = viper.WriteConfigAs(fmt.Sprintf("%s/%s.%s", home, kytCliConfigFile, kytCliConfigFileType))
 	if err != nil {
-		er(err)
+		e.Er(err)
 	}
 }

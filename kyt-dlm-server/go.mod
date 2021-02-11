@@ -1,4 +1,4 @@
-module github.com/ci4rail/kyt/kyt-api-server
+module github.com/ci4rail/kyt/kyt-dlm-server
 
 go 1.15
 

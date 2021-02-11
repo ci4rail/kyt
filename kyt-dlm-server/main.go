@@ -14,11 +14,32 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package api
+package main
 
-type Device struct {
-	Id              string `json:"id"`
-	Name            string `json:"name,omitempty"`
-	Network         string `json:"network,omitempty"`
-	FirmwareVersion string `json:"firmware_version,omitempty"`
+import (
+	"log"
+	"os"
+
+	"github.com/ci4rail/kyt/kyt-dlm-server/cmd"
+)
+
+const (
+	envIotHubConnectionsString = "IOTHUB_SERVICE_CONNECTION_STRING"
+)
+
+func main() {
+	versionArgFound := false
+	for _, v := range os.Args {
+		if v == "version" || v == "help" || v == "--help" || v == "-h" {
+			versionArgFound = true
+		}
+	}
+	if !versionArgFound {
+		_, ok := os.LookupEnv(envIotHubConnectionsString)
+
+		if !ok {
+			log.Fatalf("Error: environment variable %s missing", envIotHubConnectionsString)
+		}
+	}
+	cmd.Execute()
 }

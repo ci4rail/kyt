@@ -17,15 +17,18 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
-	"os"
-
-	"github.com/spf13/viper"
+	"github.com/spf13/cobra"
 )
 
-func tokenConfigCheck() {
-	if !viper.IsSet("token") {
-		fmt.Println("No access token set. Please run `login` command.")
-		os.Exit(1)
-	}
+// getCmd represents the get command
+var dlmGetCmd = &cobra.Command{
+	Use:   "get",
+	Short: "Display specified resources",
+	Long: `Display specified resources
+
+Prints a table of the most important information of the specified resources.`,
+}
+
+func init() {
+	dlmCmd.AddCommand(dlmGetCmd)
 }

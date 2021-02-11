@@ -21,15 +21,18 @@ import (
 	"os"
 
 	api "github.com/ci4rail/kyt/kyt-cli/internal/api"
-	"github.com/ci4rail/kyt/kyt-cli/openapi"
+	e "github.com/ci4rail/kyt/kyt-cli/internal/errors"
+	openapi "github.com/ci4rail/kyt/kyt-cli/openapidlm"
 	"github.com/spf13/viper"
 )
 
-func fetchDevices(list []string) []openapi.Device {
+// FetchDevices Returns information from passed devices. In case list is empty, infromation
+// from all connected devices are returned.
+func FetchDevices(list []string) []openapi.Device {
 	var devices []openapi.Device
 	if len(list) > 0 {
 		for _, arg := range list {
-			dev, err := fetchDevicesById(arg)
+			dev, err := fetchDevicesByID(arg)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -43,7 +46,7 @@ func fetchDevices(list []string) []openapi.Device {
 }
 
 func fetchDevicesAll() []openapi.Device {
-	apiClient, ctx := api.NewAPIWithToken(serverURL, viper.GetString("token"))
+	apiClient, ctx := api.NewDlmAPIWithToken(viper.GetString("dlmServerURL"), viper.GetString("token"))
 	devices, resp, err := apiClient.DeviceApi.DevicesGet(ctx).Execute()
 	// 401 mean 'Unauthorized'. Let's try to refresh the token once.
 	if resp.StatusCode == 401 {
@@ -52,24 +55,24 @@ func fetchDevicesAll() []openapi.Device {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		apiClient, ctx := api.NewAPIWithToken(serverURL, viper.GetString("token"))
+		apiClient, ctx := api.NewDlmAPIWithToken(viper.GetString("dlmServerURL"), viper.GetString("token"))
 		devices, _, err = apiClient.DeviceApi.DevicesGet(ctx).Execute()
 		if resp.StatusCode == 403 {
-			er("Forbidden\n")
+			e.Er("Forbidden\n")
 		} else if err.Error() != "" {
-			er(fmt.Sprintf("Error calling DeviceApi.DevicesGet: %v\n", err))
+			e.Er(fmt.Sprintf("Error calling DeviceApi.DevicesGet: %v\n", err))
 		}
 	} else if resp.StatusCode == 403 {
-		er("Forbidden\n")
+		e.Er("Forbidden\n")
 	} else if err.Error() != "" {
-		er(fmt.Sprintf("Error calling DeviceApi.DevicesGet: %v\n", err))
+		e.Er(fmt.Sprintf("Error calling DeviceApi.DevicesGet: %v\n", err))
 	}
 	return devices
 }
 
-func fetchDevicesById(deviceId string) (openapi.Device, error) {
-	apiClient, ctx := api.NewAPIWithToken(serverURL, viper.GetString("token"))
-	device, resp, err := apiClient.DeviceApi.DevicesDidGet(ctx, deviceId).Execute()
+func fetchDevicesByID(deviceID string) (openapi.Device, error) {
+	apiClient, ctx := api.NewDlmAPIWithToken(viper.GetString("dlmServerURL"), viper.GetString("token"))
+	device, resp, err := apiClient.DeviceApi.DevicesDidGet(ctx, deviceID).Execute()
 	// 401 mean 'Unauthorized'. Let's try to refresh the token once.
 	if resp.StatusCode == 401 {
 		err := RefreshToken()
@@ -77,22 +80,22 @@ func fetchDevicesById(deviceId string) (openapi.Device, error) {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		apiClient, ctx := api.NewAPIWithToken(serverURL, viper.GetString("token"))
-		device, resp, err = apiClient.DeviceApi.DevicesDidGet(ctx, deviceId).Execute()
+		apiClient, ctx := api.NewDlmAPIWithToken(viper.GetString("dlmServerURL"), viper.GetString("token"))
+		device, resp, err = apiClient.DeviceApi.DevicesDidGet(ctx, deviceID).Execute()
 		if resp.StatusCode == 404 {
-			return openapi.Device{}, fmt.Errorf("No device found with deviceID: %s", deviceId)
+			return openapi.Device{}, fmt.Errorf("No device found with deviceID: %s", deviceID)
 		}
 		if err.Error() != "" {
 			fmt.Printf("Unable to refresh access token. Please run `login` command again.")
 		}
 	} else if resp.StatusCode == 404 {
-		return openapi.Device{}, fmt.Errorf("No device found with deviceID: %s", deviceId)
+		return openapi.Device{}, fmt.Errorf("No device found with deviceID: %s", deviceID)
 	} else if resp.StatusCode == 403 {
-		er("Forbidden\n")
+		e.Er("Forbidden\n")
 	} else if resp.StatusCode == 401 {
-		er("Unable to refresh access token. Please run `login` command again.\n")
+		e.Er("Unable to refresh access token. Please run `login` command again.\n")
 	} else if err.Error() != "" {
-		er(fmt.Sprintf("Error calling DeviceApi.DevicesGet: %v\n", err))
+		e.Er(fmt.Sprintf("Error calling DeviceApi.DevicesGet: %v\n", err))
 	}
 	return device, nil
 }

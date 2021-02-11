@@ -38,18 +38,16 @@ mount=mount-kyt-service-deployment-dir:
 # ===================================================
 # jobs
 # ===================================================
-job=deploy-kyt-api-server:
+job=deploy-kyt-dlm-server:
   use: image-kubectl
   command: |
     bash -c 'source /deployment/.env &&
-             cat /deployment/kyt-api-server.yaml.tmpl | \
-             sed -e "s|DOCKER_IMAGE|$DOCKER_IMAGE|" | \
+             cat /deployment/kyt-dlm-server.yaml.tmpl | \
+             sed -e "s|DLM_SERVER_IMAGE|$DLM_SERVER_IMAGE|" | \
              sed -e "s|CONNECTION_STRING_VALUE|$IOTHUB_SERVICE_CONNECTION_STRING|" | \
              sed -e "s|SECRET_NAME|$SECRET_NAME|" | \
              sed -e "s|SERVICE_NAMESPACE|$SERVICE_NAMESPACE|" | \
-             sed -e "s|PUBLIC_IP|$PUBLIC_IP|" | \
-             sed -e "s|AZURE_RESOURCE_GROUP|$AZURE_RESOURCE_GROUP|" | \
-             sed -e "s|DOMAIN|$DOMAIN|" | \
+             sed -e "s|DLM_DOMAIN|$DLM_DOMAIN|" | \
              kubectl apply -f -'
   mounts:
     - mount-kubeconfig-kyt-dev-aks
@@ -57,14 +55,12 @@ job=deploy-kyt-api-server:
   user: "{user.uid}:{user.gid}"
   entrypoint: ""
   env:
-    - DOCKER_IMAGE={env.DOCKER_IMAGE}
+    - DLM_SERVER_IMAGE={env.DLM_SERVER_IMAGE}
     - SECRET_NAME={env.DOCKER_REGISTRY_SECRET_NAME}
     - SERVICE_NAMESPACE={env.SERVICE_NAMESPACE}
-    - PUBLIC_IP={env.PUBLIC_IP}
-    - AZURE_RESOURCE_GROUP={env.AZURE_RESOURCE_GROUP}
-    - DOMAIN={env.DOMAIN}
+    - DLM_DOMAIN={env.DLM_DOMAIN}
   annotations:
-    description: "-> deploy kyt service to azure kubernetes service"
+    description: "-> deploy kyt dlm service to azure kubernetes service"
     tags:
       - deploy
 
@@ -87,7 +83,6 @@ job=deploy-cert-manager:
     - mount-kubeconfig-kyt-dev-aks
     - mount-kyt-service-deployment-dir
   env:
-    - PUBLIC_IP={env.PUBLIC_IP}
     - HELM_CACHE_HOME="/tmp/.cache/helm"
     - HELM_CONFIG_HOME="/tmp/.config/helm"
     - HELM_DATA_HOME="/tmp/.local/share/helm"

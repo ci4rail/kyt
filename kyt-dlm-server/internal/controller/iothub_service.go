@@ -21,7 +21,7 @@ import (
 	"fmt"
 
 	"github.com/amenzhinsky/iothub/iotservice"
-	"github.com/ci4rail/kyt/kyt-api-server/internal/controllerif"
+	"github.com/ci4rail/kyt/kyt-dlm-server/internal/controllerif"
 )
 
 // IOTHubServiceClient is an Azure IoT Hub service client.
@@ -70,8 +70,8 @@ func (c *IOTHubServiceClient) listDeviceIDsCB(v map[string]interface{}) error {
 	return nil
 }
 
-// ListDeviceIDs returns a list with the device IDs of all devices of that IoT Hub
-func (c *IOTHubServiceClient) ListDeviceById(id string) (*string, error) {
+// ListDeviceByID returns a list with the device IDs of all devices of that IoT Hub
+func (c *IOTHubServiceClient) ListDeviceByID(id string) (*string, error) {
 	ctx := context.Background()
 
 	c.deviceIDArr = nil
@@ -101,8 +101,7 @@ func (c *IOTHubServiceClient) GetConnectionState(deviceID string) (string, error
 	return string(twin.ConnectionState), nil
 }
 
-// GetConnectionState gets the connection state from the Device Twin on IoT Hub
-// returns bool: 0 -> disconnected, 1 -> connected
+// GetVersions gets the device versiones stored in IoT Hub device twin
 func (c *IOTHubServiceClient) GetVersions(deviceID string) (map[string]string, error) {
 	versionsMap := make(map[string]string)
 	ctx := context.Background()
@@ -110,9 +109,9 @@ func (c *IOTHubServiceClient) GetVersions(deviceID string) (map[string]string, e
 	if err != nil {
 		return nil, fmt.Errorf("Error reading device twin %s", err)
 	}
-	versionJson, ok := twin.Properties.Reported["versions"]
+	versionJSON, ok := twin.Properties.Reported["versions"]
 	if ok {
-		v, ok := versionJson.(map[string]interface{})
+		v, ok := versionJSON.(map[string]interface{})
 		if ok {
 			firmwareVersion, ok := v["firmwareVersion"].(string)
 			if ok {

@@ -11,4 +11,3 @@ image=image-openapi-generator:
   image: openapitools/openapi-generator-cli
   tags: ["v5.0.0"]
   pull: once
-

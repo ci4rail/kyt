@@ -19,10 +19,10 @@ resources:
       tag: v5.0.0
 
   # Own docker images
-  - name: image-kyt-api-server
+  - name: image-kyt-dlm-server
     type: docker-image
     source:
-      repository: harbor.ci4rail.com/ci4rail/kyt/kyt-api-server
+      repository: harbor.ci4rail.com/ci4rail/kyt/kyt-dlm-server
       username: ((registry_user))
       password: ((registry_password))
 
@@ -91,8 +91,8 @@ jobs:
                     ROOT=$(pwd)
                     java -Xmx1024M -DloggerPath=conf/log4j.properties -jar \
                     /opt/openapi-generator/modules/openapi-generator-cli/target/openapi-generator-cli.jar \
-                    generate -i source/kyt-api-spec/kytapi.yaml -g go -o openapi
-                    rm -f openapi/go.mod openapi/go.sum
+                    generate -i source/kyt-api-spec/kytdlmapi.yaml -g go -o openapi/openapidlm --package-name openapidlm
+                    rm -f openapi/openapidlm/go.mod openapi/openapidlm/go.sum
 
       - in_parallel:
           - task: build-kyt-cli
@@ -111,34 +111,34 @@ jobs:
                   - -ec
                   - |
                     ROOT=$(pwd)
-                    cp -r openapi/ ${ROOT}/source/kyt-cli
+                    cp -r openapi/openapidlm ${ROOT}/source/kyt-cli
                     cd ${ROOT}/source/kyt-cli
                     VERSION=$(cat ${ROOT}/gitversion/plain/InformationalVersion) make
                     # copy the artifacts as a
                     cp ../bin/kyt ../bin/kyt.exe ${ROOT}/install
-          - task: generate-build-args-for-image-kyt-api-server
+          - task: generate-build-args-for-image-kyt-dlm-server
             image: image-golang
             config:
               platform: linux
               inputs:
                 - name: gitversion
               outputs:
-                - name: kyt-api-server-build-args
+                - name: kyt-dlm-server-build-args
               run:
                 path: /bin/bash
                 args:
                   - -ec
                   - |
                     ROOT=$(pwd)
-                    echo {\"VERSION\":\"$(cat gitversion/plain/InformationalVersion)\"} > kyt-api-server-build-args/build-args
+                    echo {\"VERSION\":\"$(cat gitversion/plain/InformationalVersion)\"} > kyt-dlm-server-build-args/build-args
 
-      - put: image-kyt-api-server
+      - put: image-kyt-dlm-server
         params:
           build: source/
-          dockerfile: source/kyt-api-server/Dockerfile
+          dockerfile: source/kyt-dlm-server/Dockerfile
           latest: false
           tag_file: gitversion/plain/InformationalVersion
-          build_args_file: kyt-api-server-build-args/build-args
+          build_args_file: kyt-dlm-server-build-args/build-args
 
       - put: gh-release
         params:

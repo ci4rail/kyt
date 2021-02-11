@@ -1,60 +1,60 @@
 # kyt
 [![CI](https://concourse.ci4rail.com/api/v1/teams/main/pipelines/kyt-services/jobs/build-kyt-services/badge)](https://concourse.ci4rail.com/teams/main/pipelines/kyt-services) [![Go Report Card](https://goreportcard.com/badge/github.com/ci4rail/kyt)](https://goreportcard.com/report/github.com/ci4rail/kyt)
 
-This repository contains kyt-cli and kyt-api-server sources, build environment and CI/CD pipeline.
+This repository contains kyt-cli and kyt-dlm-server sources, build environment and CI/CD pipeline.
 
 # Build
 Here you can find the build instructions for either locally with and without docker and via the CI/CD pipeline.
 
 ## Build locally
 
-### KYT-API-SERVER
+### kyt-dlm-server
 
 #### Docker image
 
-To build (and deploy) the `kyt-api-server` docker image you can use the following commands:
+To build (and deploy) the `kyt-dlm-server` docker image you can use the following commands:
 ```bash
-$ ./dobi.sh image-kyt-api-server        # build only
-$ ./dobi.sh image-kyt-api-server:push   # build and push do docker registry
+$ ./dobi.sh image-kyt-dlm-server        # build only
+$ ./dobi.sh image-kyt-dlm-server:push   # build and push do docker registry
 ```
 
 Get the IoT Hub connection string from the Azure Portal. Select the IoT Hub, then "shared access policies". Copy from `iothubowner` the connection string `Connection string—primary key`.
 
 To run the docker image with a specific `<tag>` use:
 ```bash
-docker run --rm -p 8080:8080 -e IOTHUB_SERVICE_CONNECTION_STRING="HostName=ci4rail-eval-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=6..." harbor.ci4rail.com/ci4rail/kyt/kyt-api-server:<tag>
+docker run --rm -p 8080:8080 -e IOTHUB_SERVICE_CONNECTION_STRING="HostName=ci4rail-eval-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=6..." harbor.ci4rail.com/ci4rail/kyt/kyt-dlm-server:<tag>
 ```
-Have a look at available tags for the image: https://harbor.ci4rail.com/harbor/projects/7/repositories/kyt%2Fkyt-api-server
+Have a look at available tags for the image: https://harbor.ci4rail.com/harbor/projects/7/repositories/kyt%2Fkyt-dlm-server
 
 #### Plain binary
 
-Containerized Build of the kyt-api-server tool. Builds x86 version for linux.
+Containerized Build of the kyt-dlm-server tool. Builds x86 version for linux.
 
 ```bash
 $ ./dobi.sh build-kyt-apiserver
 ```
 
-Run the kyt-api-server:
+Run the kyt-dlm-server:
 
 ```bash
 $ export IOTHUB_SERVICE_CONNECTION_STRING="HostName=ci4rail-eval-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=6...="
-$ bin/kyt-api-server --addr :8080
+$ bin/kyt-dlm-server --addr :8080
 ```
 
 Or, build/run it with your local go installation:
 
 ```bash
 $ ./dobi.sh generate-server-sources
-$ cd kyt-api-server
+$ cd kyt-dlm-server
 $ go run main.go  --addr :8080
 ```
 
 #### Test-Server
 
-Folder `kyt-api-server/test-server` contains a test-server that answers API request with dummy data.
+Folder `kyt-dlm-server/test-server` contains a test-server that answers API request with dummy data.
 
 ```bash
-$ cd kyt-api-server/test-server
+$ cd kyt-dlm-server/test-server
 $ go run main.go  --addr :8080
 ```
 
@@ -89,7 +89,7 @@ $ fly -t prod login -c https://concourse.ci4rail.com
 ```
 ## pipeline.yaml
 
-The `pipeline.yaml` is the CI/CD pipeline that builds kyt-cli called `kyt` and kyt-api-server docker image. The kyt-cli goes to a [gitub pre-release](https://github.com/ci4rail/kyt/releases) and the `kyt-api-server` will be published as docker image [here](https://harbor.ci4rail.com/harbor/projects/7/repositories/kyt%2Fkyt-api-server).
+The `pipeline.yaml` is the CI/CD pipeline that builds kyt-cli called `kyt` and kyt-dlm-server docker image. The kyt-cli goes to a [gitub pre-release](https://github.com/ci4rail/kyt/releases) and the `kyt-dlm-server` will be published as docker image [here](https://harbor.ci4rail.com/harbor/projects/7/repositories/kyt%2Fkyt-dlm-server).
 
 ### Usage
 
@@ -101,7 +101,7 @@ $ fly -t prod set-pipeline -p kyt-services -c pipeline.yaml -l ci/config.yaml  -
 
 ## pipeline-pullrequests.yaml
 
-The `pipeline-pullrequests.yaml` defines a pipeline that runs basic quality checks on pull requests. For this, consourse checks Github for new or changed pull requests If a change is found, it downloads the branch and performs a clean build of kyt-cli `kyt` and `kyt-api-server` go binaries. It also runs go test for both.
+The `pipeline-pullrequests.yaml` defines a pipeline that runs basic quality checks on pull requests. For this, consourse checks Github for new or changed pull requests If a change is found, it downloads the branch and performs a clean build of kyt-cli `kyt` and `kyt-dlm-server` go binaries. It also runs go test for both.
 
 ### Usage
 
@@ -145,10 +145,11 @@ Preconditions:
         --sku "Standard" \
         --allocation-method static
   ```
-  Get public ip and update `PUBLIC_IP` in `default.env`:
+  Get public ips and update `PUBLIC_IP` in `default.env`:
   ```
   PUBLIC_IP=$(az network public-ip show -g kyt-dev -n kyt-dev-publikip --query "ipAddress" -o tsv)
   ```
+* Link ip adresses `PUBLIC_IP` to domains `KYT_DOMAIN` and `DLM_DOMAIN` in DNS settings of domain provider.
 * Delegate permissions to AKS service principal to enable access to public ip (replace <appId> with output from step above, enter <subscriptionId>)
   ```
   az role assignment create \
@@ -192,12 +193,12 @@ Containerized deployment of cert-manager to kubernetes cluster. Creates clusteri
 $ ./dobi.sh deploy-cert-manager
 ```
 
-### KYT-API-SERVER
+### kyt-dlm-server
 
-Containerized deployment of the kyt-api-server. Deploys kyt-api-server docker image DOCKER_IMAGE from docker registry DOCKER_REGISTRY to azure kubernetes services AKS_NAME.
+Containerized deployment of the kyt-dlm-server. Deploys kyt-dlm-server docker image KYT_API_SERVER_IMAGE from docker registry DOCKER_REGISTRY to azure kubernetes services AKS_NAME.
 
 ```bash
-$ ./dobi.sh deploy-kyt-api-server
+$ ./dobi.sh deploy-kyt-dlm-server
 ```
 Requires docker registry credentials, ingress nginx and cert-manager to be deployed.
 
@@ -213,7 +214,7 @@ Preconditions:
 
 ## OpenAPI specification
 
-The REST-API is defined with the OpenAPI document `kyt-api-spec/kytapi.yaml`. From this specification, parts of the server and client go code are automatically generated.
+The REST-API is defined with the OpenAPI document `kyt-api-spec/kytdlmapi.yaml`. From this specification, parts of the client go code are automatically generated.
 
 ## Auto-Generated code
 

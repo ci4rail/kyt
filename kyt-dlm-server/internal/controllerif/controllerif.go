@@ -22,7 +22,7 @@ type NewIOTHubServiceClient func(connectionString string) (IOTHubServices, error
 // IOTHubServices has all the services the IOTHub Controller offers
 type IOTHubServices interface {
 	ListDeviceIDs() (*[]string, error)
-	ListDeviceById(string) (*string, error)
+	ListDeviceByID(string) (*string, error)
 	GetConnectionState(string) (string, error)
 	GetVersions(string) (map[string]string, error)
 }

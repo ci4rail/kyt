@@ -86,7 +86,7 @@ components:
       description: id of device
       in: path
       required: true
-      schema: 
+      schema:
         type: string
 
   responses:
@@ -94,7 +94,7 @@ components:
       description: Ok
       content:
         application/json:
-          schema: 
+          schema:
             $ref: '#/components/schemas/Device'
 
   schemas:
@@ -112,15 +112,14 @@ components:
           enum: [offline, online]
         firmware_version:
           type: string
-      example: 
+      example:
         id: device234
         name: device1
         network: offline
-        firmware_version: v1.2.1        
-     
+        firmware_version: v1.2.1
+
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-  

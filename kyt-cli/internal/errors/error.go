@@ -1,5 +1,5 @@
 /*
-Copyright © 2021 Ci4Rail GmbH
+Copyright © 2021 Ci4Rail GmbH <engineering@ci4rail.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,8 +14,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package common
+package errors
 
-const (
-	KYT_PORT = 8080
+import (
+	"fmt"
+	"os"
+
+	"github.com/spf13/viper"
 )
+
+// Er Print error and terminate
+func Er(msg interface{}) {
+	fmt.Fprintf(os.Stderr, "Error: %v", msg)
+	os.Exit(1)
+}
+
+// TokenConfigCheck -
+func TokenConfigCheck() {
+	if !viper.IsSet("token") {
+		fmt.Println("No access token set. Please run `login` command.")
+		os.Exit(1)
+	}
+}

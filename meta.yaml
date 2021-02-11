@@ -10,7 +10,7 @@ meta:
     - kubectl-runtime/dobi.yaml
     - kyt-api-spec/dobi.yaml
     - kyt-cli/dobi.yaml
-    - kyt-api-server/dobi.yaml
+    - kyt-dlm-server/dobi.yaml
     - kyt-service-deployment/dobi.yaml
     - kyt-dlm-devinfo-static/dobi.yaml
     - device-state-service/dobi.yaml
@@ -22,8 +22,8 @@ meta:
 alias=build:
   tasks:
     - build-kyt-cli
-    - build-kyt-api-server
-    - image-kyt-api-server
+    - build-kyt-dlm-server
+    - image-kyt-dlm-server
     - build-device-state-service
   annotations:
     description: "[alias] build all"
@@ -32,7 +32,7 @@ alias=build:
 
 alias=deploy:
   tasks:
-    - image-kyt-api-server:push
+    - image-kyt-dlm-server:push
   annotations:
     description: "[alias] push all"
     tags:
@@ -40,7 +40,7 @@ alias=deploy:
 
 alias=aks-deploy:
   tasks:
-    - deploy-kyt-api-server
+    - deploy-kyt-dlm-server
     - deploy-cert-manager
     - deploy-ingress-nginx
     - deploy-docker-registry-secret

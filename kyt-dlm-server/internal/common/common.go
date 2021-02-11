@@ -1,5 +1,5 @@
 /*
-Copyright © 2021 Ci4Rail GmbH <engineering@ci4rail.com>
+Copyright © 2021 Ci4Rail GmbH
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,21 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cmd
+package common
 
-import (
-	"github.com/spf13/cobra"
+const (
+	// KytPort dlm api server listens to this port
+	KytPort = 8080
 )
-
-// getCmd represents the get command
-var describeCmd = &cobra.Command{
-	Use:   "describe",
-	Short: "Display detailed specified resources",
-	Long: `Display detailed specified resources
-
-Prints a detailed list of information of the specified resources.`,
-}
-
-func init() {
-	dlmCmd.AddCommand(describeCmd)
-}

@@ -1,4 +1,4 @@
-# Go API Server for kyt-api-server
+# Go API Server for kyt-dlm-server
 
 This is the KYT API Server
 
@@ -14,12 +14,12 @@ go run main.go
 
 To run the server in a docker container
 ```
-docker build --network=host -t kyt-api-server .
+docker build --network=host -t  .
 ```
 
 Once the image is built, just run
 ```
-docker run --rm -it kyt-api-server
+docker run --rm -it kyt-dlm-server
 ```
 
 ### Known Issue

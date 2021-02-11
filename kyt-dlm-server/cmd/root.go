@@ -21,8 +21,8 @@ import (
 	"log"
 	"os"
 
-	sw "github.com/ci4rail/kyt/kyt-api-server/api"
-	common "github.com/ci4rail/kyt/kyt-api-server/internal/common"
+	sw "github.com/ci4rail/kyt/kyt-dlm-server/api"
+	common "github.com/ci4rail/kyt/kyt-dlm-server/internal/common"
 	"github.com/spf13/cobra"
 )
 
@@ -30,7 +30,7 @@ var serverAddr string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "kyt-api-server",
+	Use:   "kyt-dlm-server",
 	Short: "REST API Server to control KYT",
 	Long: `kyt api server is the central service to control Ci4Rails KYT.
 
@@ -61,6 +61,6 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&serverAddr, "addr", fmt.Sprintf(":%d", common.KYT_PORT), "address and port the server shall listen to")
+	rootCmd.PersistentFlags().StringVar(&serverAddr, "addr", fmt.Sprintf(":%d", common.KytPort), "address and port the server shall listen to")
 
 }

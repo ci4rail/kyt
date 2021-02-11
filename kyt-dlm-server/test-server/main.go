@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/ci4rail/kyt/kyt-api-server/cmd"
-	"github.com/ci4rail/kyt/kyt-api-server/internal/controllerif"
-	"github.com/ci4rail/kyt/kyt-api-server/internal/iothubservice"
+	"github.com/ci4rail/kyt/kyt-dlm-server/cmd"
+	"github.com/ci4rail/kyt/kyt-dlm-server/internal/controllerif"
+	"github.com/ci4rail/kyt/kyt-dlm-server/internal/iothubservice"
 )
 
 func main() {

@@ -20,11 +20,12 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/ci4rail/kyt/kyt-cli/openapi"
+	openapi "github.com/ci4rail/kyt/kyt-cli/openapidlm"
 	"github.com/ghodss/yaml"
 )
 
-func convertToJson(devices *[]openapi.Device) (string, error) {
+// ConvertToJSON Convert devices infromation to JSON
+func ConvertToJSON(devices *[]openapi.Device) (string, error) {
 	c, err := json.MarshalIndent(devices, "", "  ")
 	if err != nil {
 		return "", fmt.Errorf("Cannot output as format json")
@@ -32,8 +33,9 @@ func convertToJson(devices *[]openapi.Device) (string, error) {
 	return string(c), nil
 }
 
-func convertToYaml(devices *[]openapi.Device) (string, error) {
-	j, err := convertToJson(devices)
+// ConvertToYaml Convert devices infromation to yaml
+func ConvertToYaml(devices *[]openapi.Device) (string, error) {
+	j, err := ConvertToJSON(devices)
 	if err != nil {
 		return "", err
 	}

@@ -1,5 +1,5 @@
 /*
-Copyright © 2021 Ci4Rail GmbH <engineering@ci4rail.com>
+Copyright © 2021 Ci4Rail GmbH
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,25 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cmd
+package iothubservice
 
 import (
-	"fmt"
-
-	"github.com/spf13/cobra"
+	"github.com/ci4rail/kyt/kyt-dlm-server/internal/controller"
+	"github.com/ci4rail/kyt/kyt-dlm-server/internal/controllerif"
 )
 
-var version = "dev"
-
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Print version information and quit.",
-	Long:  `This command displays version information for the kyt-api-server.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("kyt-api-server %s\n", version)
-	},
-}
-
-func init() {
-	rootCmd.AddCommand(versionCmd)
-}
+// ControllerNewIOTHubServiceClient points to the actual controller's NewIOTHubServiceClient function.
+// Can be re-assigned to a stub for testing
+var ControllerNewIOTHubServiceClient controllerif.NewIOTHubServiceClient = controller.NewIOTHubServiceClient
