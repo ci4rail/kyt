@@ -1,0 +1,86 @@
+openapi: 3.0.0
+info:
+  title: Application Lifecycle Management API
+  description: Public API to manage asigned Application Runtimes.
+  version: 0.0.1
+  license:
+    name: Apache-2.0
+    url: "https://www.apache.org/licenses/LICENSE-2.0.html"
+servers:
+  - url: "https://alm.ci4rail.com/v1"
+    description: Production Server
+tags:
+  - name: alm
+    description: Application Lifecycle Management
+paths:
+  "/runtimes/":
+    get:
+      tags:
+        - alm
+      summary: List runtimes for a tenant
+      description: Returns a list of runtimes
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Runtime"
+        "400":
+          description: Invalid ID supplied
+      security:
+        - bearerAuth: []
+  "/runtimes/{rid}":
+    parameters:
+      - $ref: "#/components/parameters/Rid"
+    get:
+      tags:
+        - alm
+      responses:
+        200:
+          $ref: "#/components/responses/Runtime"
+      security:
+        - bearerAuth: []
+components:
+  parameters:
+    Rid:
+      name: rid
+      description: id of runtime
+      in: path
+      required: true
+      schema:
+        type: string
+
+  responses:
+    Runtime:
+      description: Ok
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Runtime"
+
+  schemas:
+    Runtime:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        network:
+          type: string
+          enum: [offline, online]
+      example:
+        id: runtime234
+        name: runtime1
+        network: offline
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

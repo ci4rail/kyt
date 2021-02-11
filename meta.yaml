@@ -14,6 +14,7 @@ meta:
     - kyt-service-deployment/dobi.yaml
     - kyt-dlm-devinfo-static/dobi.yaml
     - device-state-service/dobi.yaml
+    - kyt-alm-server/dobi.yaml
 
 # ===================================================
 # alias
@@ -25,6 +26,9 @@ alias=build:
     - build-kyt-dlm-server
     - image-kyt-dlm-server
     - build-device-state-service
+    - build-kyt-dlm-devinfo-static
+    - build-kyt-alm-server
+    - image-kyt-alm-server
   annotations:
     description: "[alias] build all"
     tags:
@@ -33,6 +37,7 @@ alias=build:
 alias=deploy:
   tasks:
     - image-kyt-dlm-server:push
+    - image-kyt-alm-server:push
   annotations:
     description: "[alias] push all"
     tags:
@@ -40,10 +45,11 @@ alias=deploy:
 
 alias=aks-deploy:
   tasks:
-    - deploy-kyt-dlm-server
     - deploy-cert-manager
     - deploy-ingress-nginx
     - deploy-docker-registry-secret
+    - deploy-kyt-dlm-server
+    - deploy-kyt-alm-server
   annotations:
     description: "[alias] deploy all"
     tags:

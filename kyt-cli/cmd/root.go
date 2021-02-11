@@ -70,6 +70,7 @@ func initConfig() {
 	// priority 2: default servers
 	// If a config file is found, read it in.
 	viper.SetDefault("dlmServerURL", configuration.DefaultDlmServer)
+	viper.SetDefault("almServerURL", configuration.DefaultAlmServer)
 
 	viper.SetConfigType(common.KytCliConfigFileType)
 	if cfgFile != "" {

@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kyt-alm-server
+  namespace: SERVICE_NAMESPACE
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kyt-alm-server
+  template:
+    metadata:
+      labels:
+        app: kyt-alm-server
+    spec:
+      nodeSelector:
+        "beta.kubernetes.io/os": linux
+      containers:
+        - name: kyt-alm-server
+          image: ALM_SERVER_IMAGE
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          env:
+            - name: IOTHUB_SERVICE_CONNECTION_STRING
+              value: "CONNECTION_STRING_VALUE"
+          ports:
+            - containerPort: 8080
+      imagePullSecrets:
+        - name: SECRET_NAME
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kyt-alm-server
+  namespace: SERVICE_NAMESPACE
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+  selector:
+    app: kyt-alm-server
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: alm-ingress
+  namespace: SERVICE_NAMESPACE
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  tls:
+    - hosts:
+        - ALM_DOMAIN
+      secretName: alm-tls-secret
+  rules:
+    - host: ALM_DOMAIN
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kyt-alm-server
+                port:
+                  number: 8080
+---
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: alm-tls-secret
+  namespace: SERVICE_NAMESPACE
+spec:
+  secretName: alm-tls-secret
+  dnsNames:
+    - ALM_DOMAIN
+  commonName: ALM_DOMAIN
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
