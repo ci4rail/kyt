@@ -19,13 +19,9 @@ package cmd
 import (
 	// "fmt"
 
-	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 
-	api "github.com/ci4rail/kyt/kyt-cli/internal/api"
-	"github.com/ci4rail/kyt/kyt-cli/openapi"
 	"github.com/manifoldco/promptui"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -46,6 +42,11 @@ Not implemented yet.`,
 	Run: login,
 }
 
+var (
+	username string
+	password string
+)
+
 func login(cmd *cobra.Command, args []string) {
 	prompt := promptui.Prompt{
 		Label:    "Username",
@@ -62,26 +63,28 @@ func login(cmd *cobra.Command, args []string) {
 		Mask:     ' ',
 	}
 
-	password, err := prompt.Run()
+	password, err = prompt.Run()
 	if err != nil {
 		log.Panicln(err)
 	}
-	inlineObject := &openapi.InlineObject{
-		Username: &username,
-		Password: &password,
-	}
-	apiClient, _ := api.NewAPI(serverURL)
-	resp, openapierr := apiClient.AuthApi.AuthLoginPost(context.Background()).InlineObject(*inlineObject).Execute()
-	if openapierr.Error() != "" {
-		log.Fatalf("Error when calling `DefaultApi.LoginPost``: %v\n", openapierr)
-	}
-	var data map[string]interface{}
-	err = json.NewDecoder(resp.Body).Decode(&data)
+	req, err := createTokenRequest(viper.GetString("token_endpoint"), viper.GetString("client_id"), username, password)
 	if err != nil {
-		log.Fatalf("Error: %e", err)
+		er(err)
 	}
-
-	token := data["token"]
+	resp, err := sendTokenRequest(req)
+	if err != nil {
+		er(err)
+	}
+	token, err := extractAccessToken(resp)
+	if err != nil {
+		er(err)
+	}
+	claims, err := getTokenClaims(token)
+	if err != nil {
+		er(err)
+	}
+	fmt.Printf("Token: %s\n", token)
+	RefreshToken()
 	viper.Set("token", token)
 	// Find home directory.
 	home, err := homedir.Dir()
@@ -93,6 +96,7 @@ func login(cmd *cobra.Command, args []string) {
 		log.Println("Cannot save config file")
 	}
 	fmt.Println("Login Succeeded")
+	fmt.Printf("Logged in as: %s %s\n", claims["given_name"], claims["family_name"])
 }
 
 func init() {

@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/AzureAD/microsoft-authentication-library-for-go v0.0.0-20210119230233-00a8eb72c275
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/ghodss/yaml v1.0.0
 	github.com/manifoldco/promptui v0.8.0
 	github.com/mitchellh/go-homedir v1.1.0
