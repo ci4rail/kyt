@@ -27,13 +27,6 @@ import (
 
 // DevicesDidGet -
 func DevicesDidGet(c *gin.Context) {
-	// token := c.Request.Header.Get("X-Auth-Token")
-	// _, err := validateToken(token, "")
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	c.JSON(http.StatusNotFound, gin.H{"error": err})
-	// 	return
-	// }
 	iotHubConnectionString, err := iothubservice.MapTenantToIOTHubSAS("")
 	if err != nil {
 		log.Fatal(err)
