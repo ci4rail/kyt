@@ -31,8 +31,8 @@ var serverAddr string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "kyt-dlm-server",
-	Short: "REST API Server to control KYT",
-	Long: `kyt api server is the central service to control Ci4Rails KYT.
+	Short: "REST API Server to control KYT dlm",
+	Long: `kyt dlm api server is the central service to control Ci4Rails KYT device livecycle management.
 
 	KYT consists of application lifecycle management (alm), device lifecycle management (dlm) and application data services (ads).
 `,
