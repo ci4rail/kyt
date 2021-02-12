@@ -65,6 +65,7 @@ job=build-kyt-cli:
     - generate-client-sources
   sources:
     - kyt-cli/cmd
+    - kyt-cli/internal
     - kyt-cli/main.go
   artifact:
     - bin/kyt
