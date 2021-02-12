@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	configuration "github.com/ci4rail/kyt/kyt-cli/internal/configuration"
 	"github.com/dgrijalva/jwt-go"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
@@ -24,14 +25,21 @@ type accessTokenResponse struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
+func getScopes() string {
+	scopes := "offline_access openid "
+	for _, v := range configuration.GetConstScopes() {
+		scopes += v + " "
+	}
+	return scopes
+}
+
 func createAccessTokenRequest(host string, cid string, uid string, upw string) (*http.Request, error) {
 	data := url.Values{}
-	scope := fmt.Sprintf("%s %s", viper.GetString("scope"), "offline_access")
 	data.Add("grant_type", "password")
 	data.Add("username", uid)
 	data.Add("password", upw)
 	data.Add("client_id", cid)
-	data.Add("scope", scope)
+	data.Add("scope", getScopes())
 	req, err := http.NewRequest("POST", host, strings.NewReader(data.Encode()))
 	if err != nil {
 		return nil, err
@@ -43,10 +51,9 @@ func createAccessTokenRequest(host string, cid string, uid string, upw string) (
 
 func createRefreshTokenRequest(host string, cid string, uid string, upw string) (*http.Request, error) {
 	data := url.Values{}
-	scope := fmt.Sprintf("%s %s", viper.GetString("scope"), "offline_access")
 	data.Add("grant_type", "refresh_token")
 	data.Add("client_id", cid)
-	data.Add("scope", scope)
+	data.Add("scope", getScopes())
 	data.Add("refresh_token", viper.GetString("refresh_token"))
 
 	req, err := http.NewRequest("POST", host, strings.NewReader(data.Encode()))
@@ -166,7 +173,7 @@ func extractAccessToken(body []byte) (string, string, error) {
 }
 
 func RefreshToken() error {
-	req, err := createRefreshTokenRequest(viper.GetString("token_endpoint"), viper.GetString("client_id"), username, password)
+	req, err := createRefreshTokenRequest(configuration.TokenEndpoint, configuration.ClientId, username, password)
 	if err != nil {
 		er(err)
 	}

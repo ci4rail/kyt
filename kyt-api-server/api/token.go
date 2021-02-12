@@ -17,12 +17,9 @@ limitations under the License.
 package api
 
 import (
-	"bytes"
 	"crypto/rsa"
-	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -33,9 +30,12 @@ import (
 	"github.com/dgrijalva/jwt-go/request"
 )
 
+// downloads the current signing keys
+// TODO: this can be cached and redownloaded once a token signature
+// validation failed. For now it always downloads on every request.
 func readFlowKey() (string, error) {
-	url := "https://ci4railtesting.b2clogin.com/ci4railtesting.onmicrosoft.com/b2c_1_signin_native/discovery/v2.0/keys"
-	response, err := http.Get(url)
+	// read all signing keys from Azure B2C for specific User Flow
+	response, err := http.Get(azureB2CKeysURI)
 	if err != nil {
 		return "", err
 	}
@@ -49,6 +49,7 @@ func readFlowKey() (string, error) {
 	return string(responseData), nil
 }
 
+// keyArray and singleKey are used for unmarshalling the signing key response
 type singleKey struct {
 	Kid string `json:"kid"`
 	Nbf int    `json:"nbf"`
@@ -62,11 +63,12 @@ type keyArray struct {
 	Keys []singleKey `json:"keys"`
 }
 
-func tokenValidateConvert(js string) (string, error) {
+// convert n, e format to PublicKey
+func tokenValidateConvert(js string) (*rsa.PublicKey, error) {
 	k := &keyArray{}
 	err := json.Unmarshal([]byte(js), &k)
 	if err != nil {
-		return "", err
+		return &rsa.PublicKey{}, err
 	}
 
 	jwk := k.Keys[0]
@@ -77,7 +79,7 @@ func tokenValidateConvert(js string) (string, error) {
 	// decode the base64 bytes for n
 	nb, err := base64.RawURLEncoding.DecodeString(jwk.N)
 	if err != nil {
-		return "", err
+		return &rsa.PublicKey{}, err
 	}
 
 	e := 0
@@ -87,33 +89,19 @@ func tokenValidateConvert(js string) (string, error) {
 		e = 65537
 	} else {
 		// need to decode "e" as a big-endian int
-		return "", fmt.Errorf("need to deocde e:", jwk.E)
+		return &rsa.PublicKey{}, fmt.Errorf("need to deocde e:", jwk.E)
 	}
 
 	pk := &rsa.PublicKey{
 		N: new(big.Int).SetBytes(nb),
 		E: e,
 	}
-
-	der, err := x509.MarshalPKIXPublicKey(pk)
-	if err != nil {
-		return "", err
-	}
-
-	block := &pem.Block{
-		Type:  "RSA PUBLIC KEY",
-		Bytes: der,
-	}
-
-	var out bytes.Buffer
-	err = pem.Encode(&out, block)
-	if err != nil {
-		return "", nil
-	}
-	fmt.Println(out.String())
-	return out.String(), nil
+	return pk, nil
 }
 
+// extractor function for token signature validation.
+// It looks up the current signing keys and returns the PublicKey for
+// token signature validation
 func tokenExtractor(token *jwt.Token) (interface{}, error) {
 	keys, err := readFlowKey()
 	if err != nil {
@@ -123,26 +111,18 @@ func tokenExtractor(token *jwt.Token) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return []byte(cert), nil
+	return cert, nil
 }
 
-// func validateToken(token string, endpoint string) (bool, error) {
+// checks if the token that came in with a request is valid.
+// valid means:
+// - token is not expired.
+// - signature is validated to ensure that the token hasnt been changed since it was issued.
 func validateToken(r *http.Request) (bool, error) {
 	token, err := request.ParseFromRequest(r, request.OAuth2Extractor, tokenExtractor)
 	if err != nil {
 		fmt.Println(err)
 		return false, err
 	}
-	fmt.Println(token)
-	return true, nil
-	// var claims jwt.Claims = &jwt.MapClaims{}
-	// jwtToken, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
-	// 	return []byte("6OJ~NKqA17C27Lb9Zioark5te.5vPk__PZ"), nil
-	// })
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return false, err
-	// }
-	// fmt.Println(jwtToken)
-	// return true, nil
+	return token.Valid, nil
 }

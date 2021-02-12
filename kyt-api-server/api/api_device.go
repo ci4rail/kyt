@@ -58,7 +58,7 @@ func DevicesDidGet(c *gin.Context) {
 	}
 	versions, err := client.GetVersions(deviceIdFilter)
 	if err != nil {
-		fmt.Println("no version reported")
+		fmt.Printf("Info: device %s didn't repoart a version yet\n", deviceIdFilter)
 	}
 	var firmwareVersion = ""
 	f, ok := versions["firmwareVersion"]
@@ -75,9 +75,14 @@ func DevicesDidGet(c *gin.Context) {
 
 // DevicesGet - List devices for a tenant
 func DevicesGet(c *gin.Context) {
-	// token := c.Request.Header.Get("X-Auth-Token")
-	// _, err := validateToken(token, "")
-	_, err := validateToken(c.Request)
+	tokenValid, err := validateToken(c.Request)
+
+	// If token is not valid it means that either it has expired or the signature cannot be validated.
+	// In both cases return `Unauthorized`.
+	if !tokenValid {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err})
+		return
+	}
 	if err != nil {
 		fmt.Println(err)
 		c.JSON(http.StatusNotFound, gin.H{"error": err})
@@ -110,7 +115,7 @@ func DevicesGet(c *gin.Context) {
 		}
 		versions, err := client.GetVersions(deviceID)
 		if err != nil {
-			fmt.Println("no version reported")
+			fmt.Printf("Info: device %s didn't repoart a version yet\n", deviceID)
 		}
 		var firmwareVersion = ""
 		f, ok := versions["firmwareVersion"]

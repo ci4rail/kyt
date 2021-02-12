@@ -20,7 +20,9 @@ import (
 	// "fmt"
 
 	"fmt"
+	"log"
 
+	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -45,27 +47,25 @@ var (
 )
 
 func login(cmd *cobra.Command, args []string) {
-	// prompt := promptui.Prompt{
-	// 	Label:    "Username",
-	// 	Validate: nil,
-	// }
+	prompt := promptui.Prompt{
+		Label:    "Username",
+		Validate: nil,
+	}
 
-	// username, err := prompt.Run()
-	// if err != nil {
-	// 	log.Panicln(err)
-	// }
-	// prompt = promptui.Prompt{
-	// 	Label:    "Password",
-	// 	Validate: nil,
-	// 	Mask:     ' ',
-	// }
+	username, err := prompt.Run()
+	if err != nil {
+		log.Panicln(err)
+	}
+	prompt = promptui.Prompt{
+		Label:    "Password",
+		Validate: nil,
+		Mask:     ' ',
+	}
 
-	// password, err = prompt.Run()
-	// if err != nil {
-	// 	log.Panicln(err)
-	// }
-	username := "test@example.com"
-	password := "exampleexample"
+	password, err = prompt.Run()
+	if err != nil {
+		log.Panicln(err)
+	}
 	req, err := createAccessTokenRequest(viper.GetString("token_endpoint"), viper.GetString("client_id"), username, password)
 	if err != nil {
 		er(err)
@@ -90,6 +90,7 @@ func login(cmd *cobra.Command, args []string) {
 		if str, ok := givenNameClaims.(string); ok {
 			givenName = str
 		}
+
 	}
 	familyName := ""
 	if familyNameClaims, ok := claims["family_name"]; ok {
