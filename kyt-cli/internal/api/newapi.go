@@ -41,7 +41,8 @@ func NewAPI(serverURL string) (*openapiclient.APIClient, context.Context) {
 func NewAPIWithToken(serverURL string, token string) (*openapiclient.APIClient, context.Context) {
 	configuration := openapiclient.NewConfiguration()
 
-	configuration.AddDefaultHeader("Authorization", "Bearer "+token)
+	// configuration.AddDefaultHeader("X-Auth-Token", token)
+	configuration.AddDefaultHeader("Authorization", token)
 	configuration.AddDefaultHeader("Content-Type", "Content-Type")
 	if serverURL != "" {
 		configuration.Servers[0].URL = serverURL

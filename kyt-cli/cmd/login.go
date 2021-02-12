@@ -20,10 +20,7 @@ import (
 	// "fmt"
 
 	"fmt"
-	"log"
 
-	"github.com/manifoldco/promptui"
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -48,34 +45,36 @@ var (
 )
 
 func login(cmd *cobra.Command, args []string) {
-	prompt := promptui.Prompt{
-		Label:    "Username",
-		Validate: nil,
-	}
+	// prompt := promptui.Prompt{
+	// 	Label:    "Username",
+	// 	Validate: nil,
+	// }
 
-	username, err := prompt.Run()
-	if err != nil {
-		log.Panicln(err)
-	}
-	prompt = promptui.Prompt{
-		Label:    "Password",
-		Validate: nil,
-		Mask:     ' ',
-	}
+	// username, err := prompt.Run()
+	// if err != nil {
+	// 	log.Panicln(err)
+	// }
+	// prompt = promptui.Prompt{
+	// 	Label:    "Password",
+	// 	Validate: nil,
+	// 	Mask:     ' ',
+	// }
 
-	password, err = prompt.Run()
-	if err != nil {
-		log.Panicln(err)
-	}
-	req, err := createTokenRequest(viper.GetString("token_endpoint"), viper.GetString("client_id"), username, password)
+	// password, err = prompt.Run()
+	// if err != nil {
+	// 	log.Panicln(err)
+	// }
+	username := "test@example.com"
+	password := "exampleexample"
+	req, err := createAccessTokenRequest(viper.GetString("token_endpoint"), viper.GetString("client_id"), username, password)
 	if err != nil {
 		er(err)
 	}
-	resp, err := sendTokenRequest(req)
+	resp, err := sendAccessTokenRequest(req)
 	if err != nil {
 		er(err)
 	}
-	token, err := extractAccessToken(resp)
+	token, refreshToken, err := extractAccessToken(resp)
 	if err != nil {
 		er(err)
 	}
@@ -83,20 +82,25 @@ func login(cmd *cobra.Command, args []string) {
 	if err != nil {
 		er(err)
 	}
-	fmt.Printf("Token: %s\n", token)
-	RefreshToken()
-	viper.Set("token", token)
-	// Find home directory.
-	home, err := homedir.Dir()
-	if err != nil {
-		er(err)
-	}
-	err = viper.WriteConfigAs(fmt.Sprintf("%s/%s.%s", home, kytCliConfigFile, kytCliConfigFileType))
-	if err != nil {
-		log.Println("Cannot save config file")
-	}
+	writeTokensToConfig(token, refreshToken)
+
 	fmt.Println("Login Succeeded")
-	fmt.Printf("Logged in as: %s %s\n", claims["given_name"], claims["family_name"])
+	givenName := ""
+	if givenNameClaims, ok := claims["given_name"]; ok {
+		if str, ok := givenNameClaims.(string); ok {
+			givenName = str
+		}
+	}
+	familyName := ""
+	if familyNameClaims, ok := claims["family_name"]; ok {
+		if str, ok := familyNameClaims.(string); ok {
+			familyName = str
+		}
+	}
+	name := fmt.Sprintf("%s %s", givenName, familyName)
+	if len(name) > 0 {
+		fmt.Printf("Logged in as: %s\n", name)
+	}
 }
 
 func init() {

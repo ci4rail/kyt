@@ -7,29 +7,31 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 )
 
 type accessTokenResponse struct {
-	AccessToken  string `json:"access_token"`
 	Type         string `json:"token_type"`
-	ExpiresIn    string `json:"expires_in"`
-	ExtExpiresIn string `json:"ext_expires_in"`
-	ExpiresOn    string `json:"expires_on"`
-	NotBefore    string `json:"not_before"`
-	Resource     string `json:"resource"`
+	AccessToken  string `json:"access_token"`
+	ExpiresIn    int    `json:"expires_in"`
+	Scope        string `json:"scope"`
+	IdToken      string `json:"id_token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
-func createTokenRequest(host string, cid string, uid string, upw string) (*http.Request, error) {
+func createAccessTokenRequest(host string, cid string, uid string, upw string) (*http.Request, error) {
 	data := url.Values{}
+	scope := fmt.Sprintf("%s %s", viper.GetString("scope"), "offline_access")
 	data.Add("grant_type", "password")
 	data.Add("username", uid)
 	data.Add("password", upw)
 	data.Add("client_id", cid)
-	data.Add("scope", viper.GetString("scope"))
+	data.Add("scope", scope)
 	req, err := http.NewRequest("POST", host, strings.NewReader(data.Encode()))
 	if err != nil {
 		return nil, err
@@ -39,14 +41,14 @@ func createTokenRequest(host string, cid string, uid string, upw string) (*http.
 	return req, nil
 }
 
-func createRrefreshTokenRequest(host string, cid string, uid string, upw string) (*http.Request, error) {
+func createRefreshTokenRequest(host string, cid string, uid string, upw string) (*http.Request, error) {
 	data := url.Values{}
-	data.Add("grant_type", "authorization_code")
+	scope := fmt.Sprintf("%s %s", viper.GetString("scope"), "offline_access")
+	data.Add("grant_type", "refresh_token")
 	data.Add("client_id", cid)
-	data.Add("username", uid)
-	data.Add("password", upw)
-	data.Add("scope", "offline_access")
-	data.Add("code", viper.GetString("token"))
+	data.Add("scope", scope)
+	data.Add("refresh_token", viper.GetString("refresh_token"))
+
 	req, err := http.NewRequest("POST", host, strings.NewReader(data.Encode()))
 	if err != nil {
 		return nil, err
@@ -56,7 +58,34 @@ func createRrefreshTokenRequest(host string, cid string, uid string, upw string)
 	return req, nil
 }
 
-func sendTokenRequest(req *http.Request) ([]byte, error) {
+func sendAccessTokenRequest(req *http.Request) ([]byte, error) {
+	res, err := http.DefaultClient.Do(req)
+
+	if err != nil {
+		panic(err)
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+
+	if err != nil {
+		panic(err)
+	}
+
+	if res.StatusCode == 400 {
+		return nil, fmt.Errorf("invalid username or password\n")
+	}
+
+	if res.StatusCode != 200 {
+		fmt.Fprintf(os.Stderr, "Error response from token endpoint (HTTP Status %d):\n", res.StatusCode)
+		fmt.Fprintln(os.Stderr, string(body))
+		return nil, err
+	}
+
+	return body, nil
+}
+
+func sendRefreshTokenRequest(req *http.Request) ([]byte, error) {
 	res, err := http.DefaultClient.Do(req)
 
 	if err != nil {
@@ -92,59 +121,77 @@ func getTokenClaims(tokenString string) (jwt.MapClaims, error) {
 	return claims, nil
 }
 
-func extractAccessToken(body []byte) (string, error) {
-	var atr accessTokenResponse
-	err := json.Unmarshal(body, &atr)
+func extractAccessToken(body []byte) (string, string, error) {
+	// This intermediate step is needed, because `expires_in` is one time returned string and
+	// the other time as int from:
+	// `grant_type` == `password` and `token_refresh`
+	raw := struct {
+		Type         string      `json:"token_type"`
+		AccessToken  string      `json:"access_token"`
+		ExpiresIn    interface{} `json:"expires_in"`
+		Scope        string      `json:"scope"`
+		IdToken      string      `json:"id_token"`
+		RefreshToken string      `json:"refresh_token"`
+	}{}
+
+	err := json.Unmarshal(body, &raw)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to parse response: \"")
 		fmt.Fprintf(os.Stderr, "%s", err)
 		fmt.Fprintf(os.Stderr, "\"\n")
-		return "", err
+		return "", "", err
 	}
-	return atr.AccessToken, nil
+	atr := &accessTokenResponse{
+		Type:         raw.Type,
+		AccessToken:  raw.AccessToken,
+		Scope:        raw.Scope,
+		IdToken:      raw.IdToken,
+		RefreshToken: raw.RefreshToken,
+	}
+
+	// Populate ExpiresIn by converting the value into an int
+	// depending on the type of the value received
+	switch v := raw.ExpiresIn.(type) {
+	case int:
+		atr.ExpiresIn = v
+	case string:
+		i, err := strconv.Atoi(v)
+		if err != nil {
+			er(err)
+		}
+		atr.ExpiresIn = i
+	}
+
+	return atr.AccessToken, atr.RefreshToken, nil
 }
 
 func RefreshToken() error {
-	req, err := createRrefreshTokenRequest(viper.GetString("token_endpoint"), viper.GetString("client_id"), username, password)
+	req, err := createRefreshTokenRequest(viper.GetString("token_endpoint"), viper.GetString("client_id"), username, password)
 	if err != nil {
 		er(err)
 	}
-	resp, err := sendTokenRequest(req)
+	resp, err := sendRefreshTokenRequest(req)
 	if err != nil {
 		er(err)
 	}
-	token, err := extractAccessToken(resp)
+	token, refreshToken, err := extractAccessToken(resp)
 	if err != nil {
 		er(err)
 	}
-	fmt.Printf("Refreshed token: %s\n", token)
-
-	// apiClient, ctx := api.NewAPIWithToken(serverURL, viper.GetString("token"))
-	// fmt.Println("Token expired. Refreshing...")
-	// resp, openapierr := apiClient.AuthApi.AuthRefreshTokenGet(ctx).Execute()
-	// if resp.StatusCode == 401 {
-	// 	return fmt.Errorf("Unable to refresh access token. Please run `login` command again.")
-
-	// } else if openapierr.Error() != "" {
-	// 	er(fmt.Sprintf("Error calling RefreshApi.RefreshToken: %v\n", openapierr))
-	// }
-
-	// var data map[string]interface{}
-	// err := json.NewDecoder(resp.Body).Decode(&data)
-	// if err != nil {
-	// 	return fmt.Errorf("Error: %e", err)
-	// }
-
-	// token := data["token"]
-	// viper.Set("token", token)
-	// // Find home directory.
-	// home, err := homedir.Dir()
-	// if err != nil {
-	// 	er(err)
-	// }
-	// err = viper.WriteConfigAs(fmt.Sprintf("%s/%s.%s", home, kytCliConfigFile, kytCliConfigFileType))
-	// if err != nil {
-	// 	log.Println("Cannot save config file")
-	// }
+	writeTokensToConfig(token, refreshToken)
 	return nil
+}
+
+func writeTokensToConfig(token, refreshToken string) {
+	viper.Set("token", token)
+	viper.Set("refresh_token", refreshToken)
+
+	home, err := homedir.Dir()
+	if err != nil {
+		er(err)
+	}
+	err = viper.WriteConfigAs(fmt.Sprintf("%s/%s.%s", home, kytCliConfigFile, kytCliConfigFileType))
+	if err != nil {
+		er(err)
+	}
 }
