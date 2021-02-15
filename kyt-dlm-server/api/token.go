@@ -117,21 +117,35 @@ func tokenExtractor(token *jwt.Token) (interface{}, error) {
 
 type claimsType struct {
 	*jwt.StandardClaims
+	// Scopes contain API permissions
 	Scopes string `json:"scp,omitempty"`
+	// ObjectID contains the ID that is mapped to the user. Currently used as tenantID
+	ObjectID string `json:"oid,omitempty"`
 }
 
-// checks if the token that came in with a request is valid.
-// valid means:
-// - token is not expired.
-// - signature is validated to ensure that the token hasnt been changed since it was issued.
-func validateToken(r *http.Request) (bool, []string, error) {
+// ReadToken reads the token from a http request
+func ReadToken(r *http.Request) (*jwt.Token, error) {
 	token, err := request.ParseFromRequestWithClaims(r, request.OAuth2Extractor, &claimsType{}, tokenExtractor)
 	if err != nil {
 		fmt.Println(err)
-		return false, nil, err
+		return nil, err
 	}
+	return token, nil
+}
+
+// ValidateToken checks if the token that came in with a request is valid.
+// valid means:
+// - token is not expired.
+// - signature is validated to ensure that the token hasnt been changed since it was issued.
+func ValidateToken(token *jwt.Token) (bool, []string, error) {
 	claims := tokenizeClaims(token.Claims.(*claimsType).Scopes)
 	return token.Valid, claims, nil
+}
+
+// tenantIDFromToken extracts the tenantID from the token.
+// Currently this is the object ID from the user
+func tenantIDFromToken(token *jwt.Token) string {
+	return token.Claims.(*claimsType).ObjectID
 }
 
 func tokenizeClaims(claims string) []string {

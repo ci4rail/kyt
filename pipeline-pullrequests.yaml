@@ -112,27 +112,6 @@ jobs:
                 path: pull-request
                 status: failure
 
-          - task: build-kyt-dlm-test-server
-            image: image-golang
-            config:
-              platform: linux
-              inputs:
-                - name: pull-request
-              run:
-                path: /bin/bash
-                args:
-                  - -ec
-                  - |
-                    ROOT=$(pwd)
-                    cd ${ROOT}/pull-request/kyt-dlm-server/test-server
-                    make
-                    go test
-            on_failure:
-              put: pull-request
-              params:
-                path: pull-request
-                status: failure
-
           - task: build-kyt-dlm-server-docker-image
             privileged: true
             config:

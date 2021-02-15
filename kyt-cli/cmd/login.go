@@ -86,14 +86,15 @@ func login(cmd *cobra.Command, args []string) {
 		if str, ok := givenNameClaims.(string); ok {
 			givenName = str
 		}
-
 	}
+
 	familyName := ""
 	if familyNameClaims, ok := claims["family_name"]; ok {
 		if str, ok := familyNameClaims.(string); ok {
 			familyName = str
 		}
 	}
+
 	name := fmt.Sprintf("%s %s", givenName, familyName)
 	if len(name) > 0 {
 		fmt.Printf("Logged in as: %s\n", name)

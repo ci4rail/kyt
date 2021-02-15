@@ -128,10 +128,6 @@ func SendRefreshTokenRequest(req *http.Request) ([]byte, error) {
 		panic(err)
 	}
 
-	// if res.StatusCode == 400 {
-	// 	return nil, fmt.Errorf("invalid username or password\n")
-	// }
-
 	if res.StatusCode != 200 {
 		fmt.Fprintf(os.Stderr, "Error response from token endpoint (HTTP Status %d):\n", res.StatusCode)
 		fmt.Fprintln(os.Stderr, string(body))

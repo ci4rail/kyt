@@ -21,19 +21,18 @@ import (
 	"fmt"
 
 	"github.com/amenzhinsky/iothub/iotservice"
-	"github.com/ci4rail/kyt/kyt-dlm-server/internal/controllerif"
 )
 
 // IOTHubServiceClient is an Azure IoT Hub service client.
 type IOTHubServiceClient struct {
-	controllerif.IOTHubServices
 	iotClient   *iotservice.Client
 	deviceIDArr []string // filled by callback of ListDeviceIDs
+	tenantID    string
 }
 
 // NewIOTHubServiceClient creates a new IOTHubServiceClient based on the connection string
 // connection string can be determined with "az iot hub connection-string show"
-func NewIOTHubServiceClient(connectionString string) (controllerif.IOTHubServices, error) {
+func NewIOTHubServiceClient(connectionString string) (*IOTHubServiceClient, error) {
 	c := &IOTHubServiceClient{}
 
 	iotClient, err := iotservice.NewFromConnectionString(connectionString)
@@ -47,14 +46,16 @@ func NewIOTHubServiceClient(connectionString string) (controllerif.IOTHubService
 }
 
 // ListDeviceIDs returns a list with the device IDs of all devices of that IoT Hub
-func (c *IOTHubServiceClient) ListDeviceIDs() (*[]string, error) {
+func (c *IOTHubServiceClient) ListDeviceIDs(tenantID string) (*[]string, error) {
 	ctx := context.Background()
 
+	c.tenantID = tenantID
 	c.deviceIDArr = nil
 
 	// this query selects all devices and returns only the deviceId
 	// Unfortunately, QueryDevices does not support paging
-	err := c.iotClient.QueryDevices(ctx, "SELECT deviceId FROM DEVICES", c.listDeviceIDsCB)
+	query := "SELECT deviceId FROM DEVICES"
+	err := c.iotClient.QueryDevices(ctx, query, c.listDeviceIDs)
 
 	if err != nil {
 		return nil, fmt.Errorf("Error IoT Hub QueryDevices %s", err)
@@ -63,23 +64,31 @@ func (c *IOTHubServiceClient) ListDeviceIDs() (*[]string, error) {
 }
 
 // this gets called from QueryDevices once for each record (device)
-func (c *IOTHubServiceClient) listDeviceIDsCB(v map[string]interface{}) error {
+func (c *IOTHubServiceClient) listDeviceIDs(v map[string]interface{}) error {
 	// This is the place where things read from IoT Hub get entered into &Device{}
 	deviceID := fmt.Sprintf("%v", v["deviceId"])
-	c.deviceIDArr = append(c.deviceIDArr, deviceID)
+	belongs, err := c.deviceBelongsToTenant(deviceID, c.tenantID)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	if belongs {
+		c.deviceIDArr = append(c.deviceIDArr, deviceID)
+	}
 	return nil
 }
 
 // ListDeviceByID returns a list with the device IDs of all devices of that IoT Hub
-func (c *IOTHubServiceClient) ListDeviceByID(id string) (*string, error) {
+func (c *IOTHubServiceClient) ListDeviceByID(tenantID string, deviceID string) (*string, error) {
 	ctx := context.Background()
 
+	c.tenantID = tenantID
 	c.deviceIDArr = nil
 
 	// this query selects all devices and returns only the deviceId
 	// Unfortunately, QueryDevices does not support paging
-	query := fmt.Sprintf("SELECT * FROM DEVICES WHERE deviceId = '%s'", id)
-	err := c.iotClient.QueryDevices(ctx, query, c.listDeviceIDsCB)
+	query := fmt.Sprintf("SELECT * FROM DEVICES WHERE deviceId = '%s'", deviceID)
+	err := c.iotClient.QueryDevices(ctx, query, c.listDeviceIDs)
 
 	if err != nil {
 		return nil, fmt.Errorf("Error IoT Hub QueryDevices %s", err)
@@ -87,12 +96,24 @@ func (c *IOTHubServiceClient) ListDeviceByID(id string) (*string, error) {
 	if len(c.deviceIDArr) > 0 {
 		return &c.deviceIDArr[0], nil
 	}
-	return nil, fmt.Errorf("No device found with id: %s", id)
+	return nil, fmt.Errorf("No device found with id: %s", deviceID)
+}
+
+func (c *IOTHubServiceClient) deviceBelongsToTenant(deviceID, tenantID string) (bool, error) {
+	ctx := context.Background()
+	twin, err := c.iotClient.GetDeviceTwin(ctx, deviceID)
+	if err != nil {
+		return false, fmt.Errorf("Error reading device twin %s", err)
+	}
+	if twin.Tags["tenantId"] == tenantID {
+		return true, nil
+	}
+	return false, nil
 }
 
 // GetConnectionState gets the connection state from the Device Twin on IoT Hub
 // returns bool: 0 -> disconnected, 1 -> connected
-func (c *IOTHubServiceClient) GetConnectionState(deviceID string) (string, error) {
+func (c *IOTHubServiceClient) GetConnectionState(tenantID string, deviceID string) (string, error) {
 	ctx := context.Background()
 	twin, err := c.iotClient.GetDeviceTwin(ctx, deviceID)
 	if err != nil {
@@ -102,7 +123,7 @@ func (c *IOTHubServiceClient) GetConnectionState(deviceID string) (string, error
 }
 
 // GetVersions gets the device versiones stored in IoT Hub device twin
-func (c *IOTHubServiceClient) GetVersions(deviceID string) (map[string]string, error) {
+func (c *IOTHubServiceClient) GetVersions(tenantID string, deviceID string) (map[string]string, error) {
 	versionsMap := make(map[string]string)
 	ctx := context.Background()
 	twin, err := c.iotClient.GetDeviceTwin(ctx, deviceID)
