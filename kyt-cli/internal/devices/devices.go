@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cmd
+package devices
 
 import (
 	"fmt"
@@ -22,6 +22,7 @@ import (
 
 	api "github.com/ci4rail/kyt/kyt-cli/internal/api"
 	e "github.com/ci4rail/kyt/kyt-cli/internal/errors"
+	token "github.com/ci4rail/kyt/kyt-cli/internal/token"
 	openapi "github.com/ci4rail/kyt/kyt-cli/openapidlm"
 	"github.com/spf13/viper"
 )
@@ -50,7 +51,7 @@ func fetchDevicesAll() []openapi.Device {
 	devices, resp, err := apiClient.DeviceApi.DevicesGet(ctx).Execute()
 	// 401 mean 'Unauthorized'. Let's try to refresh the token once.
 	if resp.StatusCode == 401 {
-		err := RefreshToken()
+		err := token.RefreshToken()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -75,7 +76,7 @@ func fetchDevicesByID(deviceID string) (openapi.Device, error) {
 	device, resp, err := apiClient.DeviceApi.DevicesDidGet(ctx, deviceID).Execute()
 	// 401 mean 'Unauthorized'. Let's try to refresh the token once.
 	if resp.StatusCode == 401 {
-		err := RefreshToken()
+		err := token.RefreshToken()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

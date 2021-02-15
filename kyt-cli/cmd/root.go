@@ -19,6 +19,7 @@ package cmd
 import (
 	"fmt"
 
+	common "github.com/ci4rail/kyt/kyt-cli/internal/common"
 	e "github.com/ci4rail/kyt/kyt-cli/internal/errors"
 	"github.com/spf13/cobra"
 
@@ -27,10 +28,8 @@ import (
 )
 
 const (
-	defaultKytServer     = "https://kyt.ci4rail.com/v1"
-	defaultDlmServer     = "https://dlm.ci4rail.com/v1"
-	kytCliConfigFile     = ".kyt-cli"
-	kytCliConfigFileType = "yaml"
+	defaultKytServer = "https://kyt.ci4rail.com/v1"
+	defaultDlmServer = "https://dlm.ci4rail.com/v1"
 )
 
 var (
@@ -77,7 +76,7 @@ func initConfig() {
 	viper.SetDefault("serverURL", defaultKytServer)
 	viper.SetDefault("dlmServerURL", defaultDlmServer)
 
-	viper.SetConfigType(kytCliConfigFileType)
+	viper.SetConfigType(common.KytCliConfigFileType)
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
@@ -90,7 +89,7 @@ func initConfig() {
 
 		// Search config in home directory with name ".kyt-cli" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(kytCliConfigFile)
+		viper.SetConfigName(common.KytCliConfigFile)
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match

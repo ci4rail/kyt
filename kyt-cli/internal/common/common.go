@@ -14,25 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package errors
+package common
 
-import (
-	"fmt"
-	"os"
-
-	"github.com/spf13/viper"
+// Variables that are needed in several packages
+var (
+	Username             string
+	Password             string
+	KytCliConfigFile     = ".kyt-cli"
+	KytCliConfigFileType = "yaml"
 )
-
-// Er logs the error on stderr and terminates with exit code 1
-func Er(msg interface{}) {
-	fmt.Fprintf(os.Stderr, "Error: %v", msg)
-	os.Exit(1)
-}
-
-// TokenConfigCheck checks if a token is present int the config file
-func TokenConfigCheck() {
-	if !viper.IsSet("token") {
-		fmt.Println("No access token set. Please run `login` command.")
-		os.Exit(1)
-	}
-}

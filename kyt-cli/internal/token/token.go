@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cmd
+package token
 
 import (
 	"encoding/json"
@@ -26,6 +26,7 @@ import (
 	"strconv"
 	"strings"
 
+	common "github.com/ci4rail/kyt/kyt-cli/internal/common"
 	configuration "github.com/ci4rail/kyt/kyt-cli/internal/configuration"
 	e "github.com/ci4rail/kyt/kyt-cli/internal/errors"
 	"github.com/dgrijalva/jwt-go"
@@ -50,7 +51,8 @@ func getScopes() string {
 	return scopes
 }
 
-func createAccessTokenRequest(host string, cid string, uid string, upw string) (*http.Request, error) {
+// CreateAccessTokenRequest creates the http request to obtain an access token
+func CreateAccessTokenRequest(host string, cid string, uid string, upw string) (*http.Request, error) {
 	data := url.Values{}
 	data.Add("grant_type", "password")
 	data.Add("username", uid)
@@ -66,7 +68,8 @@ func createAccessTokenRequest(host string, cid string, uid string, upw string) (
 	return req, nil
 }
 
-func createRefreshTokenRequest(host string, cid string, uid string, upw string) (*http.Request, error) {
+// CreateRefreshTokenRequest creates the http request to obtain an refresh token
+func CreateRefreshTokenRequest(host string, cid string, uid string, upw string) (*http.Request, error) {
 	data := url.Values{}
 	data.Add("grant_type", "refresh_token")
 	data.Add("client_id", cid)
@@ -82,7 +85,8 @@ func createRefreshTokenRequest(host string, cid string, uid string, upw string) 
 	return req, nil
 }
 
-func sendAccessTokenRequest(req *http.Request) ([]byte, error) {
+// SendAccessTokenRequest sends the access token request
+func SendAccessTokenRequest(req *http.Request) ([]byte, error) {
 	res, err := http.DefaultClient.Do(req)
 
 	if err != nil {
@@ -109,7 +113,8 @@ func sendAccessTokenRequest(req *http.Request) ([]byte, error) {
 	return body, nil
 }
 
-func sendRefreshTokenRequest(req *http.Request) ([]byte, error) {
+// SendRefreshTokenRequest sends the refresh token request
+func SendRefreshTokenRequest(req *http.Request) ([]byte, error) {
 	res, err := http.DefaultClient.Do(req)
 
 	if err != nil {
@@ -136,7 +141,8 @@ func sendRefreshTokenRequest(req *http.Request) ([]byte, error) {
 	return body, nil
 }
 
-func getTokenClaims(tokenString string) (jwt.MapClaims, error) {
+//GetTokenClaims retrieves the claims from a token
+func GetTokenClaims(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, nil)
 	if token == nil {
 		return nil, err
@@ -145,7 +151,8 @@ func getTokenClaims(tokenString string) (jwt.MapClaims, error) {
 	return claims, nil
 }
 
-func extractAccessToken(body []byte) (string, string, error) {
+// ExtractToken extracts the access token and the refresh token from the http response body
+func ExtractToken(body []byte) (string, string, error) {
 	// This intermediate step is needed, because `expires_in` is one time returned string and
 	// the other time as int from:
 	// `grant_type` == `password` and `token_refresh`
@@ -189,24 +196,26 @@ func extractAccessToken(body []byte) (string, string, error) {
 	return atr.AccessToken, atr.RefreshToken, nil
 }
 
+// RefreshToken handles all stuff that is needed for refreshing the access token
 func RefreshToken() error {
-	req, err := createRefreshTokenRequest(configuration.TokenEndpoint, configuration.ClientId, username, password)
+	req, err := CreateRefreshTokenRequest(configuration.TokenEndpoint, configuration.ClientId, common.Username, common.Password)
 	if err != nil {
 		e.Er(err)
 	}
-	resp, err := sendRefreshTokenRequest(req)
+	resp, err := SendRefreshTokenRequest(req)
 	if err != nil {
 		e.Er(err)
 	}
-	token, refreshToken, err := extractAccessToken(resp)
+	token, refreshToken, err := ExtractToken(resp)
 	if err != nil {
 		e.Er(err)
 	}
-	writeTokensToConfig(token, refreshToken)
+	WriteTokensToConfig(token, refreshToken)
 	return nil
 }
 
-func writeTokensToConfig(token, refreshToken string) {
+// WriteTokensToConfig stores access token and refresh token in the config file for later usage
+func WriteTokensToConfig(token, refreshToken string) {
 	viper.Set("token", token)
 	viper.Set("refresh_token", refreshToken)
 
@@ -214,7 +223,7 @@ func writeTokensToConfig(token, refreshToken string) {
 	if err != nil {
 		e.Er(err)
 	}
-	err = viper.WriteConfigAs(fmt.Sprintf("%s/%s.%s", home, kytCliConfigFile, kytCliConfigFileType))
+	err = viper.WriteConfigAs(fmt.Sprintf("%s/%s.%s", home, common.KytCliConfigFile, common.KytCliConfigFileType))
 	if err != nil {
 		e.Er(err)
 	}

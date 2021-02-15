@@ -22,8 +22,10 @@ import (
 	"fmt"
 	"log"
 
+	common "github.com/ci4rail/kyt/kyt-cli/internal/common"
 	"github.com/ci4rail/kyt/kyt-cli/internal/configuration"
 	e "github.com/ci4rail/kyt/kyt-cli/internal/errors"
+	t "github.com/ci4rail/kyt/kyt-cli/internal/token"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 )
@@ -42,48 +44,45 @@ Not implemented yet.`,
 	Run: login,
 }
 
-var (
-	username string
-	password string
-)
-
 func login(cmd *cobra.Command, args []string) {
 	prompt := promptui.Prompt{
 		Label:    "Username",
 		Validate: nil,
 	}
 
-	username, err := prompt.Run()
+	u, err := prompt.Run()
 	if err != nil {
 		log.Panicln(err)
 	}
+	common.Username = u
+
 	prompt = promptui.Prompt{
 		Label:    "Password",
 		Validate: nil,
 		Mask:     ' ',
 	}
 
-	password, err = prompt.Run()
+	common.Password, err = prompt.Run()
 	if err != nil {
 		log.Panicln(err)
 	}
-	req, err := createAccessTokenRequest(configuration.TokenEndpoint, configuration.ClientId, username, password)
+	req, err := t.CreateAccessTokenRequest(configuration.TokenEndpoint, configuration.ClientId, common.Username, common.Password)
 	if err != nil {
 		e.Er(err)
 	}
-	resp, err := sendAccessTokenRequest(req)
+	resp, err := t.SendAccessTokenRequest(req)
 	if err != nil {
 		e.Er(err)
 	}
-	token, refreshToken, err := extractAccessToken(resp)
+	token, refreshToken, err := t.ExtractToken(resp)
 	if err != nil {
 		e.Er(err)
 	}
-	claims, err := getTokenClaims(token)
+	claims, err := t.GetTokenClaims(token)
 	if err != nil {
 		e.Er(err)
 	}
-	writeTokensToConfig(token, refreshToken)
+	t.WriteTokensToConfig(token, refreshToken)
 
 	fmt.Println("Login Succeeded")
 	givenName := ""

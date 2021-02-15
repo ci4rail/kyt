@@ -19,6 +19,7 @@ package cmd
 import (
 	"fmt"
 
+	d "github.com/ci4rail/kyt/kyt-cli/internal/devices"
 	e "github.com/ci4rail/kyt/kyt-cli/internal/errors"
 	"github.com/spf13/cobra"
 )
@@ -42,10 +43,10 @@ Prints detailed information about kyt-devices.
 func describeDevices(cmd *cobra.Command, args []string) {
 	e.TokenConfigCheck()
 
-	devices := FetchDevices(args)
+	devices := d.FetchDevices(args)
 
 	if len(devices) > 0 {
-		y, err := ConvertToYaml(&devices)
+		y, err := d.ConvertToYaml(&devices)
 		if err != nil {
 			e.Er(err)
 		}
