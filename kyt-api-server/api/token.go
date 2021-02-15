@@ -25,6 +25,7 @@ import (
 	"log"
 	"math/big"
 	"net/http"
+	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
@@ -114,15 +115,25 @@ func tokenExtractor(token *jwt.Token) (interface{}, error) {
 	return cert, nil
 }
 
+type claimsType struct {
+	*jwt.StandardClaims
+	Scopes string `json:"scp,omitempty"`
+}
+
 // checks if the token that came in with a request is valid.
 // valid means:
 // - token is not expired.
 // - signature is validated to ensure that the token hasnt been changed since it was issued.
-func validateToken(r *http.Request) (bool, error) {
-	token, err := request.ParseFromRequest(r, request.OAuth2Extractor, tokenExtractor)
+func validateToken(r *http.Request) (bool, []string, error) {
+	token, err := request.ParseFromRequestWithClaims(r, request.OAuth2Extractor, &claimsType{}, tokenExtractor)
 	if err != nil {
 		fmt.Println(err)
-		return false, err
+		return false, nil, err
 	}
-	return token.Valid, nil
+	claims := tokenizeClaims(token.Claims.(*claimsType).Scopes)
+	return token.Valid, claims, nil
+}
+
+func tokenizeClaims(claims string) []string {
+	return strings.Split(claims, " ")
 }

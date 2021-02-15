@@ -23,6 +23,7 @@ import (
 
 	iothubservice "github.com/ci4rail/kyt/kyt-api-server/internal/iothubservice"
 	"github.com/gin-gonic/gin"
+	"github.com/golangci/golangci-lint/pkg/sliceutil"
 )
 
 // DevicesDidGet -
@@ -51,7 +52,7 @@ func DevicesDidGet(c *gin.Context) {
 	}
 	versions, err := client.GetVersions(deviceIdFilter)
 	if err != nil {
-		fmt.Printf("Info: device %s didn't repoart a version yet\n", deviceIdFilter)
+		fmt.Printf("Info: device didn't repoart a version yet: %s\n", deviceIdFilter)
 	}
 	var firmwareVersion = ""
 	f, ok := versions["firmwareVersion"]
@@ -68,7 +69,17 @@ func DevicesDidGet(c *gin.Context) {
 
 // DevicesGet - List devices for a tenant
 func DevicesGet(c *gin.Context) {
-	tokenValid, err := validateToken(c.Request)
+	tokenValid, claims, err := validateToken(c.Request)
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err})
+		return
+	}
+	if !sliceutil.Contains(claims, "DevicesGet.read") {
+		err = fmt.Errorf("Error: not allowed.")
+		c.JSON(http.StatusForbidden, gin.H{"error": err})
+		return
+	}
 
 	// If token is not valid it means that either it has expired or the signature cannot be validated.
 	// In both cases return `Unauthorized`.
@@ -108,7 +119,7 @@ func DevicesGet(c *gin.Context) {
 		}
 		versions, err := client.GetVersions(deviceID)
 		if err != nil {
-			fmt.Printf("Info: device %s didn't repoart a version yet\n", deviceID)
+			fmt.Printf("Info: device didn't repoart a version yet: %s\n", deviceID)
 		}
 		var firmwareVersion = ""
 		f, ok := versions["firmwareVersion"]

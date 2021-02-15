@@ -54,9 +54,13 @@ func fetchDevicesAll() []openapi.Device {
 		}
 		apiClient, ctx := api.NewAPIWithToken(serverURL, viper.GetString("token"))
 		devices, _, err = apiClient.DeviceApi.DevicesGet(ctx).Execute()
-		if err.Error() != "" {
+		if resp.StatusCode == 403 {
+			er("Forbidden\n")
+		} else if err.Error() != "" {
 			er(fmt.Sprintf("Error calling DeviceApi.DevicesGet: %v\n", err))
 		}
+	} else if resp.StatusCode == 403 {
+		er("Forbidden\n")
 	} else if err.Error() != "" {
 		er(fmt.Sprintf("Error calling DeviceApi.DevicesGet: %v\n", err))
 	}
@@ -83,8 +87,10 @@ func fetchDevicesById(deviceId string) (openapi.Device, error) {
 		}
 	} else if resp.StatusCode == 404 {
 		return openapi.Device{}, fmt.Errorf("No device found with deviceID: %s", deviceId)
+	} else if resp.StatusCode == 403 {
+		er("Forbidden\n")
 	} else if resp.StatusCode == 401 {
-		fmt.Printf("Unable to refresh access token. Please run `login` command again.")
+		er("Unable to refresh access token. Please run `login` command again.\n")
 	} else if err.Error() != "" {
 		er(fmt.Sprintf("Error calling DeviceApi.DevicesGet: %v\n", err))
 	}

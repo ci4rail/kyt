@@ -42,7 +42,7 @@ type accessTokenResponse struct {
 }
 
 func getScopes() string {
-	scopes := "offline_access openid "
+	scopes := "offline_access "
 	for _, v := range configuration.GetConstScopes() {
 		scopes += v + " "
 	}

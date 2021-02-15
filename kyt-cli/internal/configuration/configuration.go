@@ -21,6 +21,9 @@ const (
 	ClientId      = "2c9a4ac6-c0ad-4bd4-bc3d-544ff94a2471"
 )
 
+// GetConstScopes returns the scopes that are configured for the application. At least one scope is needed for a successfull login.
+// If no scopes are defined, there will be no token assigned and returns with error code 400.
 func GetConstScopes() []string {
-	return []string{"https://ci4railtesting.onmicrosoft.com/794d32c1-8515-4daf-be13-4c914593bbfc/demo.read"}
+	return []string{"https://ci4railtesting.onmicrosoft.com/794d32c1-8515-4daf-be13-4c914593bbfc/DevicesGet.read",
+		"https://ci4railtesting.onmicrosoft.com/794d32c1-8515-4daf-be13-4c914593bbfc/DevicesDidGet.read"}
 }

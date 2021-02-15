@@ -66,7 +66,6 @@ func login(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Panicln(err)
 	}
-
 	req, err := createAccessTokenRequest(configuration.TokenEndpoint, configuration.ClientId, username, password)
 	if err != nil {
 		er(err)
