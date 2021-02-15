@@ -36,11 +36,7 @@ var loginCmd = &cobra.Command{
 	Short: "Login to Ci4Rail services",
 	Long: `Login to Ci4Rail services
 
-Log in with user name and password.
-
-Log in interactively.
-
-Not implemented yet.`,
+Log in with user name and password.`,
 	Run: login,
 }
 

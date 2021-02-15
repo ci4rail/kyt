@@ -20,16 +20,12 @@ import (
 	"fmt"
 
 	common "github.com/ci4rail/kyt/kyt-cli/internal/common"
+	configuration "github.com/ci4rail/kyt/kyt-cli/internal/configuration"
 	e "github.com/ci4rail/kyt/kyt-cli/internal/errors"
 	"github.com/spf13/cobra"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
-)
-
-const (
-	defaultKytServer = "https://kyt.ci4rail.com/v1"
-	defaultDlmServer = "https://dlm.ci4rail.com/v1"
 )
 
 var (
@@ -73,8 +69,7 @@ func initConfig() {
 	// priority 1: servers from config file
 	// priority 2: default servers
 	// If a config file is found, read it in.
-	viper.SetDefault("serverURL", defaultKytServer)
-	viper.SetDefault("dlmServerURL", defaultDlmServer)
+	viper.SetDefault("dlmServerURL", configuration.DefaultDlmServer)
 
 	viper.SetConfigType(common.KytCliConfigFileType)
 	if cfgFile != "" {

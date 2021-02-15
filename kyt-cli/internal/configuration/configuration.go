@@ -17,6 +17,10 @@ limitations under the License.
 package configuration
 
 const (
+	DefaultDlmServer = "https://dlm.ci4rail.com/v1"
+)
+
+const (
 	TokenEndpoint = "https://ci4railtesting.b2clogin.com/ci4railtesting.onmicrosoft.com/B2C_1_signin_native/oauth2/v2.0/token"
 	ClientId      = "2c9a4ac6-c0ad-4bd4-bc3d-544ff94a2471"
 )
