@@ -41,7 +41,7 @@ func DevicesDidGet(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err})
 		return
 	}
-	if !sliceutil.Contains(claims, "DevicesGet.read") {
+	if !sliceutil.Contains(claims, "DevicesDidGet.read") {
 		err = fmt.Errorf("Error: not allowed.")
 		c.JSON(http.StatusForbidden, gin.H{"error": err})
 		return
