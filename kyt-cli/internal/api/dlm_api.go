@@ -19,36 +19,21 @@ package api
 import (
 	"context"
 
-	openapiclient "github.com/ci4rail/kyt/kyt-cli/openapidlm"
+	api "github.com/ci4rail/kyt/kyt-cli/openapidlm"
 )
-
-// NewDlmAPI generates a new APIClient object to issue further API calls
-// It considers "server" command line parameter
-func NewDlmAPI(serverURL string) (*openapiclient.APIClient, context.Context) {
-	configuration := openapiclient.NewConfiguration()
-
-	if serverURL != "" {
-		configuration.Servers[0].URL = serverURL
-	}
-
-	apiClient := openapiclient.NewAPIClient(configuration)
-
-	return apiClient, context.Background()
-}
 
 // NewDlmAPIWithToken generates a new APIClient object to issue further API calls with a specific token
 // It considers "server"argument and a specified token
-func NewDlmAPIWithToken(serverURL string, token string) (*openapiclient.APIClient, context.Context) {
-	configuration := openapiclient.NewConfiguration()
+func NewDlmAPIWithToken(serverURL string, token string) (*api.APIClient, context.Context) {
+	configuration := api.NewConfiguration()
 
-	// configuration.AddDefaultHeader("X-Auth-Token", token)
 	configuration.AddDefaultHeader("Authorization", token)
 	configuration.AddDefaultHeader("Content-Type", "Content-Type")
 	if serverURL != "" {
 		configuration.Servers[0].URL = serverURL
 	}
 
-	apiClient := openapiclient.NewAPIClient(configuration)
+	apiClient := api.NewAPIClient(configuration)
 
 	return apiClient, context.Background()
 }
