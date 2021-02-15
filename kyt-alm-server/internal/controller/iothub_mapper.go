@@ -14,14 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllerif
+package controller
 
-// NewIOTHubServiceClient points to the actual creator function
-type NewIOTHubServiceClient func(connectionString string) (IOTHubServices, error)
+import (
+	"fmt"
+	"os"
+)
 
-// IOTHubServices has all the services the IOTHub Controller offers
-type IOTHubServices interface {
-	ListRuntimeIDs() (*[]string, error)
-	ListRuntimeByID(string) (*string, error)
-	GetConnectionState(string) (string, error)
+// MapTenantToIOTHubSAS returns the SAS token of the IOT Hub for the specified tenant
+// TODO: Either take the SAS from a DB or get it via "az iot hub connection-string show"
+// TODO: tenant is currently ignored
+func MapTenantToIOTHubSAS(tenant string) (string, error) {
+	envName := fmt.Sprintf("IOTHUB_SERVICE_CONNECTION_STRING")
+	val, ok := os.LookupEnv(envName)
+
+	if !ok {
+		return "", fmt.Errorf("IOTHUB_SERVICE_CONNECTION_STRING not set")
+	}
+	return val, nil
 }

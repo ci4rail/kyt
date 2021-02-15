@@ -17,23 +17,9 @@ limitations under the License.
 package api
 
 import (
-	"log"
 	"net/http"
-	"time"
 
-	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
-)
-
-type user struct {
-	UserName  string
-	FirstName string
-	LastName  string
-}
-
-var (
-	// authMiddleware *jwt.GinJWTMiddleware
-	identityKey = "id"
 )
 
 // Route is the information for every URI.
@@ -54,55 +40,7 @@ type Routes []Route
 // NewRouter returns a new router.
 func NewRouter() *gin.Engine {
 	router := gin.Default()
-	// the jwt middleware
-	// only check that a token is available and is valid
-	authMiddleware, err := jwt.New(&jwt.GinJWTMiddleware{
-		Realm:       "test zone",
-		Key:         []byte("du8Soo8g"),
-		Timeout:     time.Minute * 5,
-		MaxRefresh:  time.Hour,
-		IdentityKey: identityKey,
-		PayloadFunc: func(data interface{}) jwt.MapClaims {
-			if v, ok := data.(*user); ok {
-				return jwt.MapClaims{
-					identityKey: v.UserName,
-				}
-			}
-			return jwt.MapClaims{}
-		},
-		Unauthorized: func(c *gin.Context, code int, message string) {
-			c.JSON(code, gin.H{
-				"code":    code,
-				"message": message,
-			})
-		},
-		// TokenLookup is a string in the form of "<source>:<name>" that is used
-		// to extract token from the request.
-		// Optional. Default value "header:Authorization".
-		// Possible values:
-		// - "header:<name>"
-		// - "query:<name>"
-		// - "cookie:<name>"
-		// - "param:<name>"
-		TokenLookup: "header: Authorization, query: token, cookie: jwt",
-		// TokenLookup: "query:token",
-		// TokenLookup: "cookie:token",
-		// TokenHeadName is a string in the header. Default value is "Bearer"
-		TokenHeadName: "Bearer",
-		// TimeFunc provides the current time. You can override it to use another time value. This is useful for testing or if your server uses a different time zone than your tokens.
-		TimeFunc: time.Now,
-	})
-	if err != nil {
-		log.Fatal("JWT Error:" + err.Error())
-	}
-	// When you use jwt.New(), the function is already automatically called for checking,
-	// which means you don't need to call it again.
-	errInit := authMiddleware.MiddlewareInit()
-	if errInit != nil {
-		log.Fatal("authMiddleware.MiddlewareInit() Error:" + errInit.Error())
-	}
 
-	router.Use(authMiddleware.MiddlewareFunc())
 	for _, route := range routes {
 		switch route.Method {
 		case http.MethodGet:

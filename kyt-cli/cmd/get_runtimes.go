@@ -20,37 +20,36 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ci4rail/kyt/kyt-cli/internal/alm"
-	"github.com/ci4rail/kyt/kyt-cli/internal/auth"
 	e "github.com/ci4rail/kyt/kyt-cli/internal/errors"
+	r "github.com/ci4rail/kyt/kyt-cli/internal/runtimes"
 	"github.com/spf13/cobra"
 )
 
 // runtimesCmd represents the runtimes command
 var getRuntimesCmd = &cobra.Command{
 	Use:   "runtimes",
-	Short: "Display alm-runtimes",
-	Long: `Display alm-runtimes
+	Short: "Display runtimes-runtimes",
+	Long: `Display runtimes-runtimes
 
-Prints a table of the most important information of alm-runtimes`,
+Prints a table of the most important information of runtimes-runtimes`,
 	Run: getRuntimes,
 }
 
 func getRuntimes(cmd *cobra.Command, args []string) {
-	auth.TokenConfigCheck()
+	e.TokenConfigCheck()
 
-	runtimes := alm.FetchRuntimes(args)
+	runtimes := r.FetchRuntimes(args)
 
 	if len(runtimes) > 0 {
 		switch o := output; o {
 		case "json", "j":
-			j, err := alm.ConvertToJSON(&runtimes)
+			j, err := r.ConvertToJSON(&runtimes)
 			if err != nil {
 				e.Er(err)
 			}
 			fmt.Println(j)
 		case "yaml", "y":
-			y, err := alm.ConvertToYaml(&runtimes)
+			y, err := r.ConvertToYaml(&runtimes)
 			if err != nil {
 				e.Er(err)
 			}

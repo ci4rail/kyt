@@ -14,15 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package alm
+package runtimes
 
 import (
 	"fmt"
 	"os"
 
 	api "github.com/ci4rail/kyt/kyt-cli/internal/api"
-	"github.com/ci4rail/kyt/kyt-cli/internal/auth"
 	e "github.com/ci4rail/kyt/kyt-cli/internal/errors"
+	"github.com/ci4rail/kyt/kyt-cli/internal/token"
 	openapi "github.com/ci4rail/kyt/kyt-cli/openapialm"
 	"github.com/spf13/viper"
 )
@@ -51,7 +51,7 @@ func fetchRuntimesAll() []openapi.Runtime {
 	runtimes, resp, err := apiClient.AlmApi.RuntimesGet(ctx).Execute()
 	// 401 mean 'Unauthorized'. Let's try to refresh the token once.
 	if resp.StatusCode == 401 {
-		err := auth.RefreshToken()
+		err := token.RefreshToken()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -72,7 +72,7 @@ func fetchRuntimesByID(runtimeID string) (openapi.Runtime, error) {
 	runtime, resp, err := apiClient.AlmApi.RuntimesRidGet(ctx, runtimeID).Execute()
 	// 401 mean 'Unauthorized'. Let's try to refresh the token once.
 	if resp.StatusCode == 401 {
-		err := auth.RefreshToken()
+		err := token.RefreshToken()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

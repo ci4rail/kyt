@@ -14,13 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package iothubservice
+package api
 
-import (
-	"github.com/ci4rail/kyt/kyt-alm-server/internal/controller"
-	"github.com/ci4rail/kyt/kyt-alm-server/internal/controllerif"
+const (
+	userFlow        = "b2c_1_signin_native"
+	azureB2CTenant  = "ci4railtesting"
+	azureB2CKeysURI = "https://" + azureB2CTenant + ".b2clogin.com/" + azureB2CTenant + ".onmicrosoft.com/" + userFlow + "/discovery/v2.0/keys"
 )
-
-// ControllerNewIOTHubServiceClient points to the actual controller's NewIOTHubServiceClient function.
-// Can be re-assigned to a stub for testing
-var ControllerNewIOTHubServiceClient controllerif.NewIOTHubServiceClient = controller.NewIOTHubServiceClient

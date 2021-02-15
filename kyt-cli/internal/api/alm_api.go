@@ -19,35 +19,21 @@ package api
 import (
 	"context"
 
-	openapiclient "github.com/ci4rail/kyt/kyt-cli/openapialm"
+	api "github.com/ci4rail/kyt/kyt-cli/openapialm"
 )
-
-// NewAlmAPI generates a new APIClient object to issue further API calls
-// It considers "server" command line parameter
-func NewAlmAPI(serverURL string) (*openapiclient.APIClient, context.Context) {
-	configuration := openapiclient.NewConfiguration()
-
-	if serverURL != "" {
-		configuration.Servers[0].URL = serverURL
-	}
-
-	apiClient := openapiclient.NewAPIClient(configuration)
-
-	return apiClient, context.Background()
-}
 
 // NewAlmAPIWithToken generates a new APIClient object to issue further API calls with a specific token
 // It considers "server"argument and a specified token
-func NewAlmAPIWithToken(serverURL string, token string) (*openapiclient.APIClient, context.Context) {
-	configuration := openapiclient.NewConfiguration()
+func NewAlmAPIWithToken(serverURL string, token string) (*api.APIClient, context.Context) {
+	configuration := api.NewConfiguration()
 
-	configuration.AddDefaultHeader("Authorization", "Bearer "+token)
+	configuration.AddDefaultHeader("Authorization", token)
 	configuration.AddDefaultHeader("Content-Type", "Content-Type")
 	if serverURL != "" {
 		configuration.Servers[0].URL = serverURL
 	}
 
-	apiClient := openapiclient.NewAPIClient(configuration)
+	apiClient := api.NewAPIClient(configuration)
 
 	return apiClient, context.Background()
 }
