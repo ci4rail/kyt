@@ -52,7 +52,7 @@ func DevicesDidGet(c *gin.Context) {
 	}
 	versions, err := client.GetVersions(deviceIDFilter)
 	if err != nil {
-		fmt.Printf("Info: device didn't repoart a version yet: %s\n", deviceIdFilter)
+		fmt.Printf("Info: device didn't repoart a version yet: %s\n", deviceIDFilter)
 	}
 	var firmwareVersion = ""
 	f, ok := versions["firmwareVersion"]
