@@ -39,26 +39,34 @@ type accessTokenResponse struct {
 	AccessToken  string `json:"access_token"`
 	ExpiresIn    int    `json:"expires_in"`
 	Scope        string `json:"scope"`
-	IdToken      string `json:"id_token"`
+	IDToken      string `json:"id_token"`
 	RefreshToken string `json:"refresh_token"`
 }
 
-func getScopes() string {
+func getScopes(ressource string) (string, error) {
 	scopes := "offline_access "
-	for _, v := range configuration.GetConstScopes() {
+	constScopes, err := configuration.GetConstScopes(ressource)
+	if err != nil {
+		return "", err
+	}
+	for _, v := range constScopes {
 		scopes += v + " "
 	}
-	return scopes
+	return scopes, nil
 }
 
 // CreateAccessTokenRequest creates the http request to obtain an access token
-func CreateAccessTokenRequest(host string, cid string, uid string, upw string) (*http.Request, error) {
+func CreateAccessTokenRequest(host string, cid string, uid string, upw string, ressource string) (*http.Request, error) {
 	data := url.Values{}
 	data.Add("grant_type", "password")
 	data.Add("username", uid)
 	data.Add("password", upw)
 	data.Add("client_id", cid)
-	data.Add("scope", getScopes())
+	scopes, err := getScopes(ressource)
+	if err != nil {
+		return nil, err
+	}
+	data.Add("scope", scopes)
 	req, err := http.NewRequest("POST", host, strings.NewReader(data.Encode()))
 	if err != nil {
 		return nil, err
@@ -69,12 +77,16 @@ func CreateAccessTokenRequest(host string, cid string, uid string, upw string) (
 }
 
 // CreateRefreshTokenRequest creates the http request to obtain an refresh token
-func CreateRefreshTokenRequest(host string, cid string, uid string, upw string) (*http.Request, error) {
+func CreateRefreshTokenRequest(host string, cid string, uid string, upw string, ressource string) (*http.Request, error) {
 	data := url.Values{}
 	data.Add("grant_type", "refresh_token")
 	data.Add("client_id", cid)
-	data.Add("scope", getScopes())
-	data.Add("refresh_token", viper.GetString("refresh_token"))
+	scopes, err := getScopes(ressource)
+	if err != nil {
+		return nil, err
+	}
+	data.Add("scope", scopes)
+	data.Add("refresh_token", viper.GetString(ressource+"_refresh_token"))
 
 	req, err := http.NewRequest("POST", host, strings.NewReader(data.Encode()))
 	if err != nil {
@@ -101,7 +113,7 @@ func SendAccessTokenRequest(req *http.Request) ([]byte, error) {
 	}
 
 	if res.StatusCode == 400 {
-		return nil, fmt.Errorf("invalid username or password\n")
+		return nil, fmt.Errorf("invalid username or password")
 	}
 
 	if res.StatusCode != 200 {
@@ -157,7 +169,7 @@ func ExtractToken(body []byte) (string, string, error) {
 		AccessToken  string      `json:"access_token"`
 		ExpiresIn    interface{} `json:"expires_in"`
 		Scope        string      `json:"scope"`
-		IdToken      string      `json:"id_token"`
+		IDToken      string      `json:"id_token"`
 		RefreshToken string      `json:"refresh_token"`
 	}{}
 
@@ -172,7 +184,7 @@ func ExtractToken(body []byte) (string, string, error) {
 		Type:         raw.Type,
 		AccessToken:  raw.AccessToken,
 		Scope:        raw.Scope,
-		IdToken:      raw.IdToken,
+		IDToken:      raw.IDToken,
 		RefreshToken: raw.RefreshToken,
 	}
 
@@ -193,8 +205,8 @@ func ExtractToken(body []byte) (string, string, error) {
 }
 
 // RefreshToken handles all stuff that is needed for refreshing the access token
-func RefreshToken() error {
-	req, err := CreateRefreshTokenRequest(configuration.TokenEndpoint, configuration.ClientId, common.Username, common.Password)
+func RefreshToken(ressource string) error {
+	req, err := CreateRefreshTokenRequest(configuration.TokenEndpoint, configuration.ClientID, common.Username, common.Password, ressource)
 	if err != nil {
 		e.Er(err)
 	}
@@ -206,14 +218,37 @@ func RefreshToken() error {
 	if err != nil {
 		e.Er(err)
 	}
-	WriteTokensToConfig(token, refreshToken)
+	WriteTokensToConfig(token, refreshToken, ressource)
 	return nil
 }
 
+// GetAccessToken handles all stuff that is needed for getting an access token
+func GetAccessToken(ressource string) (jwt.MapClaims, error) {
+	req, err := CreateAccessTokenRequest(configuration.TokenEndpoint, configuration.ClientID, common.Username, common.Password, ressource)
+	if err != nil {
+		e.Er(err)
+	}
+	resp, err := SendAccessTokenRequest(req)
+	if err != nil {
+		e.Er(err)
+	}
+	token, refreshToken, err := ExtractToken(resp)
+	if err != nil {
+		e.Er(err)
+	}
+	claims, err := GetTokenClaims(token)
+	if err != nil {
+		e.Er(err)
+	}
+	WriteTokensToConfig(token, refreshToken, ressource)
+
+	return claims, nil
+}
+
 // WriteTokensToConfig stores access token and refresh token in the config file for later usage
-func WriteTokensToConfig(token, refreshToken string) {
-	viper.Set("token", token)
-	viper.Set("refresh_token", refreshToken)
+func WriteTokensToConfig(token, refreshToken string, ressource string) {
+	viper.Set(ressource+"_token", token)
+	viper.Set(ressource+"_refresh_token", refreshToken)
 
 	home, err := homedir.Dir()
 	if err != nil {

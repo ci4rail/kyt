@@ -31,8 +31,8 @@ func Er(msg interface{}) {
 
 // TokenConfigCheck checks if a token is present int the config file
 func TokenConfigCheck() {
-	if !viper.IsSet("token") {
-		fmt.Println("No access token set. Please run `login` command.")
+	if !viper.IsSet("alm_token") || !viper.IsSet("dlm_token") {
+		fmt.Println("Required access token not found. Please run `login` command.")
 		os.Exit(1)
 	}
 }

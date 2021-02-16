@@ -47,16 +47,16 @@ func FetchDevices(list []string) []openapi.Device {
 }
 
 func fetchDevicesAll() []openapi.Device {
-	apiClient, ctx := api.NewDlmAPIWithToken(viper.GetString("dlmServerURL"), viper.GetString("token"))
+	apiClient, ctx := api.NewDlmAPIWithToken(viper.GetString("dlmServerURL"), viper.GetString("dlm_token"))
 	devices, resp, err := apiClient.DeviceApi.DevicesGet(ctx).Execute()
 	// 401 mean 'Unauthorized'. Let's try to refresh the token once.
 	if resp.StatusCode == 401 {
-		err := token.RefreshToken()
+		err := token.RefreshToken("dlm")
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		apiClient, ctx := api.NewDlmAPIWithToken(viper.GetString("dlmServerURL"), viper.GetString("token"))
+		apiClient, ctx := api.NewDlmAPIWithToken(viper.GetString("dlmServerURL"), viper.GetString("dlm_token"))
 		devices, _, err = apiClient.DeviceApi.DevicesGet(ctx).Execute()
 		if resp.StatusCode == 403 {
 			e.Er("Forbidden\n")
@@ -72,16 +72,16 @@ func fetchDevicesAll() []openapi.Device {
 }
 
 func fetchDevicesByID(deviceID string) (openapi.Device, error) {
-	apiClient, ctx := api.NewDlmAPIWithToken(viper.GetString("dlmServerURL"), viper.GetString("token"))
+	apiClient, ctx := api.NewDlmAPIWithToken(viper.GetString("dlmServerURL"), viper.GetString("dlm_token"))
 	device, resp, err := apiClient.DeviceApi.DevicesDidGet(ctx, deviceID).Execute()
 	// 401 mean 'Unauthorized'. Let's try to refresh the token once.
 	if resp.StatusCode == 401 {
-		err := token.RefreshToken()
+		err := token.RefreshToken("dlm")
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		apiClient, ctx := api.NewDlmAPIWithToken(viper.GetString("dlmServerURL"), viper.GetString("token"))
+		apiClient, ctx := api.NewDlmAPIWithToken(viper.GetString("dlmServerURL"), viper.GetString("dlm_token"))
 		device, resp, err = apiClient.DeviceApi.DevicesDidGet(ctx, deviceID).Execute()
 		if resp.StatusCode == 404 {
 			return openapi.Device{}, fmt.Errorf("No device found with deviceID: %s", deviceID)
