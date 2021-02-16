@@ -105,7 +105,7 @@ func (c *IOTHubServiceClient) deviceBelongsToTenantAndAlm(deviceID, tenantID str
 	if err != nil {
 		return false, fmt.Errorf("Error reading device twin %s", err)
 	}
-	if twin.Tags["tenantId"] == tenantID && twin.Tags["alm"] == "true" {
+	if twin.Tags["tenantId"] == tenantID && twin.Tags["alm"] == true {
 		return true, nil
 	}
 	return false, nil
