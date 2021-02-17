@@ -18,26 +18,22 @@ package controller
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestIotHubNameFromConnecetionStringValid(t *testing.T) {
+	assert := assert.New(t)
 	connectionString := "HostName=myHub.azure-devices.net;SharedAccessKeyName=myPolicy;SharedAccessKey=asdfasdfasdfasdfasdfasdfBasdfasdfasdfasdfas="
 	cs, err := IotHubNameFromConnecetionString(connectionString)
-	if err != nil {
-		t.Error(err)
-	}
-	if cs != "myHub.azure-devices.net" {
-		t.Errorf("expected 'myHub.azure-devices.net', got '%s'", cs)
-	}
+	assert.Nil(err, "should be nil")
+	assert.Equal(cs, "myHub.azure-devices.net", "should be equal")
 }
 
 func TestIotHubNameFromConnecetionStringInvalid(t *testing.T) {
+	assert := assert.New(t)
 	connectionString := "SharedAccessKeyName=myPolicy;SharedAccessKey=asdfasdfasdfasdfasdfasdfBasdfasdfasdfasdfas="
 	cs, err := IotHubNameFromConnecetionString(connectionString)
-	if err != nil {
-		t.Error(err)
-	}
-	if cs != "myHub.azure-devices.net" {
-		t.Errorf("expected 'myHub.azure-devices.net', got '%s'", cs)
-	}
+	assert.NotNil(err, "should not be nil")
+	assert.Empty(cs, "should be empty")
 }

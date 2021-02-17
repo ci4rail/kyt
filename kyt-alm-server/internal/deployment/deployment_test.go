@@ -45,9 +45,9 @@ func TestNewDeployment(t *testing.T) {
 		t.Error(err)
 	}
 	assert.Equal(d.connectionString, "HostName=myHub.azure-devices.net;SharedAccessKeyName=myPolicy;SharedAccessKey=asdfasdfasdfasdfasdfasdfBasdfasdfasdfasdfas=", "They should be equal")
-	assert.Equal(d.name, "myDeployment", "They should be equal")
+	assert.Equal(d.name, "myDeployment", "they should be equal")
 	var u testManifest
-	json.Unmarshal([]byte(d.manifest), &u)
-
-	assert.Equal(u.Key, "myValue", "They should be equal")
+	err = json.Unmarshal([]byte(d.manifest), &u)
+	assert.Nil(err, "should be nil")
+	assert.Equal(u.Key, "myValue", "they should be equal")
 }
