@@ -22,6 +22,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 	"syscall"
 
 	"github.com/ci4rail/kyt/kyt-alm-server/internal/controller"
@@ -30,6 +31,12 @@ import (
 const (
 	defaultPriority = 1
 )
+
+type DeploymentInterface interface {
+	ApplyDeployment() (bool, error)
+	ListDeployments(string) ([]string, error)
+	GetLatestDeployment(string, string, string, string) (string, error)
+}
 
 type Deployment struct {
 	name             string
@@ -93,6 +100,35 @@ func (d *Deployment) ApplyDeployment() (bool, error) {
 		}
 	}
 	return true, nil
+}
+
+// ApplyDeployment applies the deployment to the backend service
+func ListDeployments(connectionString string) ([]string, error) {
+	c, err := controller.NewIOTHubServiceClient(connectionString)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	deployments, err := c.ListDeployments()
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	result := []string{}
+	for _, d := range deployments {
+		result = append(result, d.ID)
+	}
+	return result, nil
+}
+
+func GetLatestDeployment(deployments []string, tenantId string, application string) (string, error) {
+	appName := fmt.Sprintf("%s.%s", tenantId, application)
+	for _, d := range deployments {
+		if strings.Contains(d, appName) {
+			return d, nil
+		}
+	}
+	return "", nil
 }
 
 func (d *Deployment) createManifestFile() (*os.File, error) {

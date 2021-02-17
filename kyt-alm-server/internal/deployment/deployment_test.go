@@ -24,7 +24,28 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
+
+type MyMockedObject struct {
+	mock.Mock
+}
+
+func (m *MyMockedObject) ListDeployments(connectionString string) ([]string, error) {
+	return []string{
+		"myTenant1.application1.module1.1613595000",
+		"myTenant1.application1.module2.1613595000",
+		"myTenant1.application2.module1.1613594000",
+		"myTenant2.application1.module1.1613593000",
+		"myTenant2.application1.module2.1613593000",
+		"myTenant3.application1.module1.1613592000",
+		"myTenant3.application2.module1.1613591000",
+		"myTenant3.application2.module2.1613591000",
+		"myTenant3.application2.module3.1613591000",
+		"myTenant4.application1.module1.1613590000",
+		"myTenant4.application1.module2.1613590000",
+	}, nil
+}
 
 type testManifest struct {
 	Key string `json:"key"`
@@ -100,4 +121,28 @@ func TestApplyDeploymentNoConnectionString(t *testing.T) {
 	deploymentStr := "{\"emptyjson\": true}"
 	_, err := NewDeployment(deploymentStr, "test_deployment", "deviceId='myDeviceId'")
 	assert.NotNil(err)
+}
+
+func TestListDeploymentsFound(t *testing.T) {
+	assert := assert.New(t)
+	testObj := new(MyMockedObject)
+	connectionString := "HostName=kyt-dev-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=7m+i8rSSQCyIJGjdBVcFjmjdBOxVPBcbb34iFrxeEcA="
+	d, err := testObj.ListDeployments(connectionString)
+	assert.Nil(err)
+	fmt.Println(d)
+	latest, err := GetLatestDeployment(d, "myTenant1", "application1")
+	assert.Nil(err)
+	assert.Equal(latest, "myTenant1.application1.module1.1613595000")
+}
+
+func TestListDeploymentsNotFound(t *testing.T) {
+	assert := assert.New(t)
+	testObj := new(MyMockedObject)
+	connectionString := "HostName=kyt-dev-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=7m+i8rSSQCyIJGjdBVcFjmjdBOxVPBcbb34iFrxeEcA="
+	d, err := testObj.ListDeployments(connectionString)
+	assert.Nil(err)
+	fmt.Println(d)
+	latest, err := GetLatestDeployment(d, "myTenant9", "application1")
+	assert.Nil(err)
+	assert.Equal(latest, "")
 }

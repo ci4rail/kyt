@@ -38,8 +38,14 @@ func TestIotHubNameFromConnecetionStringInvalid(t *testing.T) {
 	assert.Empty(cs)
 }
 
-func TestSplitSubdomain(t *testing.T) {
+func TestSplitSubdomainValid(t *testing.T) {
 	assert := assert.New(t)
 	sub := splitSubdomain("mysubdomain.example.com")
 	assert.Equal(sub, "mysubdomain")
+}
+
+func TestSplitSubdomainInvalid(t *testing.T) {
+	assert := assert.New(t)
+	sub := splitSubdomain("mysubdomain")
+	assert.Equal(sub, "")
 }

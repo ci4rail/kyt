@@ -121,3 +121,13 @@ func (c *IOTHubServiceClient) GetConnectionState(tenantID string, deviceID strin
 	}
 	return string(twin.ConnectionState), nil
 }
+
+// ListDeployments gets all deployments for a given IoT Hub
+func (c *IOTHubServiceClient) ListDeployments() ([]*iotservice.Configuration, error) {
+	ctx := context.Background()
+	deployments, err := c.iotClient.ListConfigurations(ctx)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return deployments, nil
+}
