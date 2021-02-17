@@ -26,14 +26,20 @@ func TestIotHubNameFromConnecetionStringValid(t *testing.T) {
 	assert := assert.New(t)
 	connectionString := "HostName=myHub.azure-devices.net;SharedAccessKeyName=myPolicy;SharedAccessKey=asdfasdfasdfasdfasdfasdfBasdfasdfasdfasdfas="
 	cs, err := IotHubNameFromConnecetionString(connectionString)
-	assert.Nil(err, "should be nil")
-	assert.Equal(cs, "myHub.azure-devices.net", "should be equal")
+	assert.Nil(err)
+	assert.Equal(cs, "myHub")
 }
 
 func TestIotHubNameFromConnecetionStringInvalid(t *testing.T) {
 	assert := assert.New(t)
 	connectionString := "SharedAccessKeyName=myPolicy;SharedAccessKey=asdfasdfasdfasdfasdfasdfBasdfasdfasdfasdfas="
 	cs, err := IotHubNameFromConnecetionString(connectionString)
-	assert.NotNil(err, "should not be nil")
-	assert.Empty(cs, "should be empty")
+	assert.NotNil(err)
+	assert.Empty(cs)
+}
+
+func TestSplitSubdomain(t *testing.T) {
+	assert := assert.New(t)
+	sub := splitSubdomain("mysubdomain.example.com")
+	assert.Equal(sub, "mysubdomain")
 }

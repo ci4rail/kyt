@@ -17,17 +17,36 @@ limitations under the License.
 package deployment
 
 import (
+	"fmt"
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"strconv"
+	"syscall"
+
 	"github.com/ci4rail/kyt/kyt-alm-server/internal/controller"
+)
+
+const (
+	defaultPriority = 1
 )
 
 type Deployment struct {
 	name             string
 	connectionString string
 	manifest         string
+	hubName          string
+	priority         int
+	targetCondition  string
 }
 
-func NewDeployment(manifest string, name string) (*Deployment, error) {
+// NewDeployment is used to define a new deployment
+func NewDeployment(manifest string, name string, targetCondition string) (*Deployment, error) {
 	c, err := controller.MapTenantToIOTHubSAS("")
+	if err != nil {
+		return nil, err
+	}
+	h, err := controller.IotHubNameFromConnecetionString(c)
 	if err != nil {
 		return nil, err
 	}
@@ -35,9 +54,57 @@ func NewDeployment(manifest string, name string) (*Deployment, error) {
 		name:             name,
 		connectionString: c,
 		manifest:         manifest,
+		hubName:          h,
+		priority:         defaultPriority,
+		targetCondition:  targetCondition,
 	}, nil
 }
 
-// func (d *Deployment) ApplyDeployment() (bool, error) {
+// ApplyDeployment applies the deployment to the backend service
+func (d *Deployment) ApplyDeployment() (bool, error) {
+	manifestFile, err := d.createManifestFile()
+	if err != nil {
+		return false, err
+	}
+	defer os.Remove(manifestFile.Name())
 
-// }
+	azExecutable, err := exec.LookPath("az")
+	if err != nil {
+		return false, err
+	}
+
+	priority := strconv.Itoa(defaultPriority)
+	cmdArgs := fmt.Sprintf("%s iot edge deployment create --hub-name %s --content %s --priority %s --layered --target-condition \"%s\" --deployment-id %s --login '%s'", azExecutable, d.hubName, manifestFile.Name(), priority, d.targetCondition, d.name, d.connectionString)
+	fmt.Println("sh", "-c", cmdArgs)
+	cmd := exec.Command("sh", "-c", cmdArgs)
+
+	err = cmd.Start()
+	if err != nil {
+		return false, err
+	}
+	if err := cmd.Wait(); err != nil {
+		if exiterr, ok := err.(*exec.ExitError); ok {
+			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
+				err = fmt.Errorf("Exit Status: %d", status.ExitStatus())
+				return false, err
+			}
+		} else {
+			return false, err
+		}
+	}
+	return true, nil
+}
+
+func (d *Deployment) createManifestFile() (*os.File, error) {
+	tmpfile, err := ioutil.TempFile("", "manifest")
+	if err != nil {
+		return nil, err
+	}
+	if _, err := tmpfile.Write([]byte(d.manifest)); err != nil {
+		return nil, err
+	}
+	if err := tmpfile.Close(); err != nil {
+		return nil, err
+	}
+	return tmpfile, nil
+}

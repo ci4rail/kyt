@@ -20,8 +20,13 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	iothub "github.com/amenzhinsky/iothub/common"
+)
+
+const (
+	envConnectionString = "IOTHUB_SERVICE_CONNECTION_STRING"
 )
 
 // MapTenantToIOTHubSAS returns the SAS token of the IOT Hub for the specified tenant
@@ -31,23 +36,33 @@ func MapTenantToIOTHubSAS(tenant string) (string, error) {
 	return ReadConnectionStringFromEnv()
 }
 
+//ReadConnectionStringFromEnv tries to look up the environment variable for the IoT Hub connection string
 func ReadConnectionStringFromEnv() (string, error) {
-	envName := fmt.Sprintf("IOTHUB_SERVICE_CONNECTION_STRING")
-	val, ok := os.LookupEnv(envName)
+	val, ok := os.LookupEnv(envConnectionString)
 
 	if !ok {
-		return "", fmt.Errorf("IOTHUB_SERVICE_CONNECTION_STRING not set")
+		return "", fmt.Errorf("%s not set", envConnectionString)
 	}
 	return val, nil
 }
 
+// IotHubNameFromConnecetionString returns the pure name of the IoT Hub that is part of the connection string.
 func IotHubNameFromConnecetionString(connectionString string) (string, error) {
 	csMap, err := iothub.ParseConnectionString(connectionString)
 	if err != nil {
 		log.Panicln(err)
 	}
 	if value, ok := csMap["HostName"]; ok {
-		return value, nil
+		return splitSubdomain(value), nil
 	}
 	return "", fmt.Errorf("Error: 'HostName' not found in connection string")
+}
+
+func splitSubdomain(uri string) string {
+	uri = strings.TrimSpace(uri)
+	uriParts := strings.Split(uri, ".")
+	if len(uriParts) > 2 {
+		return uriParts[0]
+	}
+	return ""
 }
