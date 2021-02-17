@@ -1,5 +1,5 @@
 /*
-Copyright © 2021 Ci4Rail GmbH <engineering@ci4rail.com>
+Copyright © 2021 Ci4Rail GmbH
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,21 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cmd
+package controller
 
 import (
-	"github.com/spf13/cobra"
+	"fmt"
+	"os"
 )
 
-// dlmCmd represents the dlm command
-var dlmCmd = &cobra.Command{
-	Use:     "dlm",
-	Aliases: []string{"d"},
-	Short:   "Control device livecycle management (dlm) services",
-	Long:    `Control device livecycle management (dlm) services`,
-}
+// MapTenantToIOTHubSAS returns the SAS token of the IOT Hub for the specified tenant
+// TODO: Either take the SAS from a DB or get it via "az iot hub connection-string show"
+// TODO: tenant is currently ignored
+func MapTenantToIOTHubSAS(tenant string) (string, error) {
+	envName := fmt.Sprintf("IOTHUB_SERVICE_CONNECTION_STRING")
+	val, ok := os.LookupEnv(envName)
 
-func init() {
-	rootCmd.AddCommand(dlmCmd)
-
+	if !ok {
+		return "", fmt.Errorf("IOTHUB_SERVICE_CONNECTION_STRING not set")
+	}
+	return val, nil
 }

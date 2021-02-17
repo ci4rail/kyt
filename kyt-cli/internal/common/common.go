@@ -14,21 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cmd
+package common
 
-import (
-	"github.com/spf13/cobra"
+// Variables that are needed in several packages
+var (
+	Username             string
+	Password             string
+	KytCliConfigFile     = ".kyt-cli"
+	KytCliConfigFileType = "yaml"
 )
-
-// dlmCmd represents the dlm command
-var dlmCmd = &cobra.Command{
-	Use:     "dlm",
-	Aliases: []string{"d"},
-	Short:   "Control device livecycle management (dlm) services",
-	Long:    `Control device livecycle management (dlm) services`,
-}
-
-func init() {
-	rootCmd.AddCommand(dlmCmd)
-
-}

@@ -1,11 +1,8 @@
 parameters:
   excl: &excl |
-            (?x)(
-              ^kyt-cli/openapi/|
-              ^kyt-api-server/api/|
-              ^kyt-api-server/.openapi-generator/|
-              ^kyt-api-server/openapi/model.*.go
-            )
+    (?x)(
+      ^kyt-cli/openapidlm/
+    )
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v3.2.0

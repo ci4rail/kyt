@@ -1,5 +1,5 @@
 /*
-Copyright © 2021 Ci4Rail GmbH <engineering@ci4rail.com>
+Copyright © 2021 Ci4Rail GmbH
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,21 +14,32 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cmd
+package main
 
 import (
-	"github.com/spf13/cobra"
+	"log"
+	"os"
+
+	"github.com/ci4rail/kyt/kyt-dlm-server/cmd"
 )
 
-// dlmCmd represents the dlm command
-var dlmCmd = &cobra.Command{
-	Use:     "dlm",
-	Aliases: []string{"d"},
-	Short:   "Control device livecycle management (dlm) services",
-	Long:    `Control device livecycle management (dlm) services`,
-}
+const (
+	envIotHubConnectionsString = "IOTHUB_SERVICE_CONNECTION_STRING"
+)
 
-func init() {
-	rootCmd.AddCommand(dlmCmd)
+func main() {
+	versionArgFound := false
+	for _, v := range os.Args {
+		if v == "version" || v == "help" || v == "--help" || v == "-h" {
+			versionArgFound = true
+		}
+	}
+	if !versionArgFound {
+		_, ok := os.LookupEnv(envIotHubConnectionsString)
 
+		if !ok {
+			log.Fatalf("Error: environment variable %s missing", envIotHubConnectionsString)
+		}
+	}
+	cmd.Execute()
 }

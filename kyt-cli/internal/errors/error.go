@@ -14,21 +14,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cmd
+package errors
 
 import (
-	"github.com/spf13/cobra"
+	"fmt"
+	"os"
+
+	"github.com/spf13/viper"
 )
 
-// dlmCmd represents the dlm command
-var dlmCmd = &cobra.Command{
-	Use:     "dlm",
-	Aliases: []string{"d"},
-	Short:   "Control device livecycle management (dlm) services",
-	Long:    `Control device livecycle management (dlm) services`,
+// Er logs the error on stderr and terminates with exit code 1
+func Er(msg interface{}) {
+	fmt.Fprintf(os.Stderr, "Error: %v", msg)
+	os.Exit(1)
 }
 
-func init() {
-	rootCmd.AddCommand(dlmCmd)
-
+// TokenConfigCheck checks if a token is present int the config file
+func TokenConfigCheck() {
+	if !viper.IsSet("token") {
+		fmt.Println("No access token set. Please run `login` command.")
+		os.Exit(1)
+	}
 }

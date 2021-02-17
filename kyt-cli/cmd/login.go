@@ -19,17 +19,15 @@ package cmd
 import (
 	// "fmt"
 
-	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 
-	api "github.com/ci4rail/kyt/kyt-cli/internal/api"
-	"github.com/ci4rail/kyt/kyt-cli/openapi"
+	common "github.com/ci4rail/kyt/kyt-cli/internal/common"
+	"github.com/ci4rail/kyt/kyt-cli/internal/configuration"
+	e "github.com/ci4rail/kyt/kyt-cli/internal/errors"
+	t "github.com/ci4rail/kyt/kyt-cli/internal/token"
 	"github.com/manifoldco/promptui"
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // loginCmd represents the login command
@@ -38,11 +36,7 @@ var loginCmd = &cobra.Command{
 	Short: "Login to Ci4Rail services",
 	Long: `Login to Ci4Rail services
 
-Log in with user name and password.
-
-Log in interactively.
-
-Not implemented yet.`,
+Log in with user name and password.`,
 	Run: login,
 }
 
@@ -52,59 +46,61 @@ func login(cmd *cobra.Command, args []string) {
 		Validate: nil,
 	}
 
-	username, err := prompt.Run()
+	u, err := prompt.Run()
 	if err != nil {
 		log.Panicln(err)
 	}
+	common.Username = u
+
 	prompt = promptui.Prompt{
 		Label:    "Password",
 		Validate: nil,
 		Mask:     ' ',
 	}
 
-	password, err := prompt.Run()
+	common.Password, err = prompt.Run()
 	if err != nil {
 		log.Panicln(err)
 	}
-	inlineObject := &openapi.InlineObject{
-		Username: &username,
-		Password: &password,
-	}
-	apiClient, _ := api.NewAPI(serverURL)
-	resp, openapierr := apiClient.AuthApi.AuthLoginPost(context.Background()).InlineObject(*inlineObject).Execute()
-	if openapierr.Error() != "" {
-		log.Fatalf("Error when calling `DefaultApi.LoginPost``: %v\n", openapierr)
-	}
-	var data map[string]interface{}
-	err = json.NewDecoder(resp.Body).Decode(&data)
+	req, err := t.CreateAccessTokenRequest(configuration.TokenEndpoint, configuration.ClientId, common.Username, common.Password)
 	if err != nil {
-		log.Fatalf("Error: %e", err)
+		e.Er(err)
+	}
+	resp, err := t.SendAccessTokenRequest(req)
+	if err != nil {
+		e.Er(err)
+	}
+	token, refreshToken, err := t.ExtractToken(resp)
+	if err != nil {
+		e.Er(err)
+	}
+	claims, err := t.GetTokenClaims(token)
+	if err != nil {
+		e.Er(err)
+	}
+	t.WriteTokensToConfig(token, refreshToken)
+
+	fmt.Println("Login Succeeded")
+	givenName := ""
+	if givenNameClaims, ok := claims["given_name"]; ok {
+		if str, ok := givenNameClaims.(string); ok {
+			givenName = str
+		}
 	}
 
-	token := data["token"]
-	viper.Set("token", token)
-	// Find home directory.
-	home, err := homedir.Dir()
-	if err != nil {
-		er(err)
+	familyName := ""
+	if familyNameClaims, ok := claims["family_name"]; ok {
+		if str, ok := familyNameClaims.(string); ok {
+			familyName = str
+		}
 	}
-	err = viper.WriteConfigAs(fmt.Sprintf("%s/%s.%s", home, kytCliConfigFile, kytCliConfigFileType))
-	if err != nil {
-		log.Println("Cannot save config file")
+
+	name := fmt.Sprintf("%s %s", givenName, familyName)
+	if len(name) > 0 {
+		fmt.Printf("Logged in as: %s\n", name)
 	}
-	fmt.Println("Login Succeeded")
 }
 
 func init() {
 	rootCmd.AddCommand(loginCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// loginCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// loginCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

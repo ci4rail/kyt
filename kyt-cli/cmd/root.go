@@ -18,28 +18,19 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
+	common "github.com/ci4rail/kyt/kyt-cli/internal/common"
+	configuration "github.com/ci4rail/kyt/kyt-cli/internal/configuration"
+	e "github.com/ci4rail/kyt/kyt-cli/internal/errors"
 	"github.com/spf13/cobra"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 )
 
-const (
-	defaultKytServer     = "https://kyt.ci4rail.com/v1"
-	defaultToken         = ""
-	kytCliConfigFile     = ".kyt-cli"
-	kytCliConfigFileType = "yaml"
-)
-
 var (
-	cfgFile            string
-	serverURL          string
-	token              string
-	serverURLParameter string
-	tokenParameter     string
-	viperConfig        map[string]interface{}
+	cfgFile     string
+	viperConfig map[string]interface{}
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -54,16 +45,11 @@ Control the kyt-servies application lifecycle management (alm), device lifecycle
 	// Run: func(cmd *cobra.Command, args []string) {},
 }
 
-func er(msg interface{}) {
-	fmt.Fprintf(os.Stderr, "Error: %v", msg)
-	os.Exit(1)
-}
-
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		er(err)
+		e.Er(err)
 	}
 }
 
@@ -74,13 +60,18 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.kyt-cli.yaml)")
-	rootCmd.PersistentFlags().StringVar(&serverURLParameter, "server", defaultKytServer, "use alternative server URL")
-	rootCmd.PersistentFlags().StringVar(&tokenParameter, "token", "", "bearer token for accessing the kyt server")
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	viper.SetConfigType(kytCliConfigFileType)
+
+	// override default server config with config file
+	// priority 1: servers from config file
+	// priority 2: default servers
+	// If a config file is found, read it in.
+	viper.SetDefault("dlmServerURL", configuration.DefaultDlmServer)
+
+	viper.SetConfigType(common.KytCliConfigFileType)
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
@@ -88,49 +79,20 @@ func initConfig() {
 		// Find home directory.
 		home, err := homedir.Dir()
 		if err != nil {
-			er(err)
+			e.Er(err)
 		}
 
 		// Search config in home directory with name ".kyt-cli" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(kytCliConfigFile)
+		viper.SetConfigName(common.KytCliConfigFile)
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
 
-	// override default server config with config file
-	// priority 1: '--server' argument that differs from defailt
-	// priority 2: 'server' from config file
-	// priority 3: default server
-	// If a config file is found, read it in.
-	tokenFound := false
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 
-		serverConfig := viper.GetString("server")
-		if len(serverConfig) > 0 {
-			serverURL = serverConfig
-		} else {
-			serverURL = defaultKytServer
-		}
-
-		tokenConfig := viper.GetString("token")
-		if len(tokenConfig) > 0 {
-			token = tokenConfig
-			tokenFound = true
-		}
-	}
-
-	if serverURLParameter != defaultKytServer {
-		serverURL = serverURLParameter
-	}
-
-	if !tokenFound && tokenParameter == defaultToken {
-		// log.Fatalln("No valid token. Run `login` command first!")
 	} else {
-		token = tokenParameter
+		e.Er(err)
 	}
-	viperConfig = viper.AllSettings()
-	viperConfig["serverURL"] = serverURL
-	viperConfig["token"] = token
 }

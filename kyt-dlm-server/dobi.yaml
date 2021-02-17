@@ -1,0 +1,48 @@
+# ===================================================
+# mounts
+# ===================================================
+mount=mount-kyt-dlm-server-src:
+  bind: "kyt-dlm-server/"
+  path: "/src"
+  read-only: false
+
+mount=mount-kyt-dlm-server-bin:
+  bind: "bin/"
+  path: "/install"
+  read-only: false
+
+# ===================================================
+# jobs
+# ===================================================
+
+job=build-kyt-dlm-server:
+  use: image-go-builder
+  command: bash -c 'cd /src && make -j${nproc}'
+  mounts:
+    - mount-kyt-dlm-server-src
+    - mount-kyt-dlm-server-bin
+    - mount-go-pkg
+  sources:
+    - kyt-dlm-server
+  artifact:
+    - bin/kyt-dlm-server
+  user: "{user.uid}:{user.gid}"
+  env:
+    - VERSION={env.GitVersion_InformationalVersion}
+    - BIN_DIR=/install
+    - GOCACHE=/tmp/cache
+  annotations:
+    description: "-> build kyt-dlm-server"
+    tags:
+      - build
+
+image=image-kyt-dlm-server:
+  image: "{env.DLM_SERVER_REPO:ci4rail/kyt/kyt-dlm-server}"
+  context: "."
+  dockerfile: kyt-dlm-server/Dockerfile
+  tags:
+    - "{env.GitVersion_InformationalVersion}"
+  args:
+    VERSION: "{env.GitVersion_InformationalVersion}"
+  annotations:
+    description: "-> build kyt-dlm-server docker image"

@@ -1,21 +1,20 @@
 # ===================================================
 # mounts
 # ===================================================
-mount=mount-kyt-api-gen:
-  bind: "kyt-cli/openapi"
-  path: "/openapi"
+mount=mount-kyt-dlm-api-gen:
+  bind: "kyt-cli/openapidlm"
+  path: "/openapidlm"
   read-only: false
 
 mount=mount-kyt-cli-src:
   bind: "kyt-cli/"
   path: "/src"
-  read-only: false  # allow go.mod update
+  read-only: false # allow go.mod update
 
 mount=mount-kyt-cli-bin:
   bind: "bin/"
   path: "/install"
   read-only: false
-
 
 # ===================================================
 # jobs
@@ -23,23 +22,37 @@ mount=mount-kyt-cli-bin:
 job=generate-client-sources:
   use: image-openapi-generator
   command: bash -c 'java -Xmx1024M -DloggerPath=conf/log4j.properties -jar
-          /opt/openapi-generator/modules/openapi-generator-cli/target/openapi-generator-cli.jar
-          generate -i /kyt-api-spec/kytapi.yaml -g go -o /openapi;
-          rm -f /openapi/go.mod /openapi/go.sum'
+    /opt/openapi-generator/modules/openapi-generator-cli/target/openapi-generator-cli.jar
+    generate -i /kyt-api-spec/kytdlmapi.yaml -g go -o /openapidlm --package-name openapidlm;
+    rm -f /openapidlm/go.mod /openapidlm/go.sum'
   interactive: true
   mounts:
     - mount-project-root
     - mount-kyt-api-spec
-    - mount-kyt-api-gen
+    - mount-kyt-dlm-api-gen
   sources:
-    - kyt-api-spec/kytapi.yaml
+    - kyt-api-spec/kytdlmapi.yaml
   artifact:
-    - kyt-cli/openapi/client.go
+    - kyt-cli/openapidlm/client.go
   user: "{user.uid}:{user.gid}"
   annotations:
     description: "-> generate kyt-api-client sources"
     tags:
       - generate-sources
+
+job=openapi-shell:
+  use: image-openapi-generator
+  command: bash
+  interactive: true
+  mounts:
+    - mount-project-root
+    - mount-kyt-api-spec
+    - mount-kyt-dlm-api-gen
+  user: "{user.uid}:{user.gid}"
+  annotations:
+    description: "-> interactive openapi shell"
+    tags:
+      - debug
 
 job=build-kyt-cli:
   use: image-go-builder
@@ -52,6 +65,7 @@ job=build-kyt-cli:
     - generate-client-sources
   sources:
     - kyt-cli/cmd
+    - kyt-cli/internal
     - kyt-cli/main.go
   artifact:
     - bin/kyt

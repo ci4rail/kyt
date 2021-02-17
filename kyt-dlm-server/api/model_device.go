@@ -1,5 +1,5 @@
 /*
-Copyright © 2021 Ci4Rail GmbH <engineering@ci4rail.com>
+Copyright © 2021 Ci4Rail GmbH
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,21 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cmd
+package api
 
-import (
-	"github.com/spf13/cobra"
-)
-
-// dlmCmd represents the dlm command
-var dlmCmd = &cobra.Command{
-	Use:     "dlm",
-	Aliases: []string{"d"},
-	Short:   "Control device livecycle management (dlm) services",
-	Long:    `Control device livecycle management (dlm) services`,
-}
-
-func init() {
-	rootCmd.AddCommand(dlmCmd)
-
+// Device struct containing supported device information
+type Device struct {
+	ID              string `json:"id"`
+	Name            string `json:"name,omitempty"`
+	Network         string `json:"network,omitempty"`
+	FirmwareVersion string `json:"firmware_version,omitempty"`
 }

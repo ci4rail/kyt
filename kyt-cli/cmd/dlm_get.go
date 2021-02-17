@@ -20,15 +20,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// dlmCmd represents the dlm command
-var dlmCmd = &cobra.Command{
-	Use:     "dlm",
-	Aliases: []string{"d"},
-	Short:   "Control device livecycle management (dlm) services",
-	Long:    `Control device livecycle management (dlm) services`,
+// getCmd represents the get command
+var dlmGetCmd = &cobra.Command{
+	Use:   "get",
+	Short: "Display specified resources",
+	Long: `Display specified resources
+
+Prints a table of the most important information of the specified resources.`,
 }
 
 func init() {
-	rootCmd.AddCommand(dlmCmd)
-
+	dlmCmd.AddCommand(dlmGetCmd)
 }
