@@ -36,6 +36,7 @@ type DeploymentInterface interface {
 	ApplyDeployment() (bool, error)
 	ListDeployments(string) ([]string, error)
 	GetLatestDeployment(string, string, string, string) (string, error)
+	createManifestFile() (*os.File, error)
 }
 
 type Deployment struct {
@@ -102,7 +103,34 @@ func (d *Deployment) ApplyDeployment() (bool, error) {
 	return true, nil
 }
 
-// ApplyDeployment applies the deployment to the backend service
+// DeleteDeployment deletes a specified deployment to the backend service
+func (d *Deployment) DeleteDeployment() (bool, error) {
+	azExecutable, err := exec.LookPath("az")
+	if err != nil {
+		return false, err
+	}
+	cmdArgs := fmt.Sprintf("%s iot edge deployment delete --hub-name %s --deployment-id %s --login '%s'", azExecutable, d.hubName, d.name, d.connectionString)
+	fmt.Println("sh", "-c", cmdArgs)
+	cmd := exec.Command("sh", "-c", cmdArgs)
+
+	err = cmd.Start()
+	if err != nil {
+		return false, err
+	}
+	if err := cmd.Wait(); err != nil {
+		if exiterr, ok := err.(*exec.ExitError); ok {
+			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
+				err = fmt.Errorf("Exit Status: %d", status.ExitStatus())
+				return false, err
+			}
+		} else {
+			return false, err
+		}
+	}
+	return true, nil
+}
+
+// ListDeployments gets all deployments from the backend service
 func ListDeployments(connectionString string) ([]string, error) {
 	c, err := controller.NewIOTHubServiceClient(connectionString)
 	if err != nil {
@@ -121,6 +149,7 @@ func ListDeployments(connectionString string) ([]string, error) {
 	return result, nil
 }
 
+// GetLatestDeployment gets the last deployment from tenandId with application
 func GetLatestDeployment(deployments []string, tenantId string, application string) (string, error) {
 	appName := fmt.Sprintf("%s.%s", tenantId, application)
 	for _, d := range deployments {
