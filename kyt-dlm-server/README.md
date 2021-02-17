@@ -1,6 +1,6 @@
 # Go API Server for kyt-dlm-server
 
-This is the KYT API Server
+This is the KYT DLM Server
 
 ## Overview
 
