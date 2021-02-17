@@ -59,6 +59,10 @@ jobs:
                     /opt/openapi-generator/modules/openapi-generator-cli/target/openapi-generator-cli.jar \
                     generate -i pull-request/kyt-api-spec/kytdlmapi.yaml -g go -o openapi/openapidlm --package-name openapidlm
                     rm -f openapi/openapidlm/go.mod openapi/openapidlm/go.sum
+                    java -Xmx1024M -DloggerPath=conf/log4j.properties -jar \
+                    /opt/openapi-generator/modules/openapi-generator-cli/target/openapi-generator-cli.jar \
+                    generate -i pull-request/kyt-api-spec/kytalmapi.yaml -g go -o openapi/openapialm --package-name openapialm
+                    rm -f openapi/openapialm/go.mod openapi/openapialm/go.sum
             on_failure:
               put: pull-request
               params:
@@ -82,6 +86,7 @@ jobs:
                   - |
                     ROOT=$(pwd)
                     cp -r openapi/openapidlm ${ROOT}/pull-request/kyt-cli/
+                    cp -r openapi/openapialm ${ROOT}/pull-request/kyt-cli/
                     cd ${ROOT}/pull-request/kyt-cli
                     make
                     go test
@@ -112,6 +117,27 @@ jobs:
                 path: pull-request
                 status: failure
 
+          - task: build-kyt-alm-server
+            image: image-golang
+            config:
+              platform: linux
+              inputs:
+                - name: pull-request
+              run:
+                path: /bin/bash
+                args:
+                  - -ec
+                  - |
+                    ROOT=$(pwd)
+                    cd ${ROOT}/pull-request/kyt-alm-server
+                    make
+                    go test
+            on_failure:
+              put: pull-request
+              params:
+                path: pull-request
+                status: failure
+
           - task: build-kyt-dlm-server-docker-image
             privileged: true
             config:
@@ -129,6 +155,29 @@ jobs:
               params:
                 CONTEXT: pull-request/
                 DOCKERFILE: pull-request/kyt-dlm-server/Dockerfile
+            on_failure:
+              put: pull-request
+              params:
+                path: pull-request
+                status: failure
+
+          - task: build-kyt-alm-server-docker-image
+            privileged: true
+            config:
+              platform: linux
+              image_resource:
+                type: registry-image
+                source:
+                  repository: vito/oci-build-task
+              inputs:
+                - name: pull-request
+              outputs:
+                - name: image
+              run:
+                path: build
+              params:
+                CONTEXT: pull-request/
+                DOCKERFILE: pull-request/kyt-alm-server/Dockerfile
             on_failure:
               put: pull-request
               params:

@@ -22,7 +22,7 @@ Get the IoT Hub connection string from the Azure Portal. Select the IoT Hub, the
 
 To run the docker image with a specific `<tag>` use:
 ```bash
-docker run --rm -p 8080:8080 -e IOTHUB_SERVICE_CONNECTION_STRING="HostName=ci4rail-eval-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=6..." harbor.ci4rail.com/ci4rail/kyt/kyt-dlm-server:<tag>
+docker run --rm -p 8080:8080 -e IOTHUB_SERVICE_CONNECTION_STRING="HostName=kyt-dev-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=7..." harbor.ci4rail.com/ci4rail/kyt/kyt-dlm-server:<tag>
 ```
 Have a look at available tags for the image: https://harbor.ci4rail.com/harbor/projects/7/repositories/kyt%2Fkyt-dlm-server
 
@@ -37,7 +37,7 @@ $ ./dobi.sh build-kyt-dlm-server
 Run the kyt-dlm-server:
 
 ```bash
-$ export IOTHUB_SERVICE_CONNECTION_STRING="HostName=ci4rail-eval-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=6...="
+$ export IOTHUB_SERVICE_CONNECTION_STRING="HostName=kyt-dev-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=7...="
 $ bin/kyt-dlm-server --addr :8080
 ```
 
@@ -48,12 +48,43 @@ $ cd kyt-dlm-server
 $ go run main.go  --addr :8080
 ```
 
-#### Test-Server
+### kyt-alm-server
 
-Folder `kyt-dlm-server/test-server` contains a test-server that answers API request with dummy data.
+#### Docker image
+
+To build (and deploy) the `kyt-alm-server` docker image you can use the following commands:
+```bash
+$ ./dobi.sh image-kyt-alm-server        # build only
+$ ./dobi.sh image-kyt-alm-server:push   # build and push do docker registry
+```
+
+Get the IoT Hub connection string from the Azure Portal. Select the IoT Hub, then "shared access policies". Copy from `iothubowner` the connection string `Connection string—primary key`.
+
+To run the docker image with a specific `<tag>` use:
+```bash
+docker run --rm -p 8080:8080 -e IOTHUB_SERVICE_CONNECTION_STRING="HostName=kyt-dev-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=7..." harbor.ci4rail.com/ci4rail/kyt/kyt-alm-server:<tag>
+```
+Have a look at available tags for the image: https://harbor.ci4rail.com/harbor/projects/7/repositories/kyt%2Fkyt-alm-server
+
+#### Plain binary
+
+Containerized Build of the kyt-alm-server tool. Builds x86 version for linux.
 
 ```bash
-$ cd kyt-dlm-server/test-server
+$ ./dobi.sh build-kyt-alm-server
+```
+
+Run the kyt-alm-server:
+
+```bash
+$ export IOTHUB_SERVICE_CONNECTION_STRING="HostName=kyt-dev-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=7...="
+$ bin/kyt-alm-server --addr :8080
+```
+
+Or, build/run it with your local go installation:
+
+```bash
+$ cd kyt-alm-server
 $ go run main.go  --addr :8080
 ```
 
@@ -206,7 +237,7 @@ Preconditions:
 * Get kubeconfig from azure kubernetes service by executing `./dobi.sh get-aks-config`
 * File kyt-service-deployment/.env is required with iot hub connection scring (can be obtained by executing the command `az iot hub connection-string show`)
     ```
-    IOTHUB_SERVICE_CONNECTION_STRING="HostName=ci4rail-eval-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=6...="
+    IOTHUB_SERVICE_CONNECTION_STRING="HostName=kyt-dev-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=7...="
     ```
 
 # Repo Notes
