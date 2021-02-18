@@ -14,25 +14,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package errors
+package cmd
 
 import (
 	"fmt"
-	"os"
 
-	"github.com/spf13/viper"
+	"github.com/spf13/cobra"
 )
 
-// Er logs the error on stderr and terminates with exit code 1
-func Er(msg interface{}) {
-	fmt.Fprintf(os.Stderr, "Error: %v", msg)
-	os.Exit(1)
+var version = "dev"
+
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Print version information and quit.",
+	Long:  `This command displays version information for the kyt-alm-server.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Printf("kyt-alm-server %s\n", version)
+	},
 }
 
-// TokenConfigCheck checks if a token is present int the config file
-func TokenConfigCheck() {
-	if !viper.IsSet("alm_token") || !viper.IsSet("dlm_token") {
-		fmt.Println("Required access token not found. Please run `login` command.")
-		os.Exit(1)
-	}
+func init() {
+	rootCmd.AddCommand(versionCmd)
 }

@@ -1,5 +1,5 @@
 /*
-Copyright © 2021 Ci4Rail GmbH <engineering@ci4rail.com>
+Copyright © 2021 Ci4Rail GmbH
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,25 +14,32 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package errors
+package main
 
 import (
-	"fmt"
+	"log"
 	"os"
 
-	"github.com/spf13/viper"
+	"github.com/ci4rail/kyt/kyt-alm-server/cmd"
 )
 
-// Er logs the error on stderr and terminates with exit code 1
-func Er(msg interface{}) {
-	fmt.Fprintf(os.Stderr, "Error: %v", msg)
-	os.Exit(1)
-}
+const (
+	envIotHubConnectionsString = "IOTHUB_SERVICE_CONNECTION_STRING"
+)
 
-// TokenConfigCheck checks if a token is present int the config file
-func TokenConfigCheck() {
-	if !viper.IsSet("alm_token") || !viper.IsSet("dlm_token") {
-		fmt.Println("Required access token not found. Please run `login` command.")
-		os.Exit(1)
+func main() {
+	versionArgFound := false
+	for _, v := range os.Args {
+		if v == "version" || v == "help" || v == "--help" || v == "-h" {
+			versionArgFound = true
+		}
 	}
+	if !versionArgFound {
+		_, ok := os.LookupEnv(envIotHubConnectionsString)
+
+		if !ok {
+			log.Fatalf("Error: environment variable %s missing", envIotHubConnectionsString)
+		}
+	}
+	cmd.Execute()
 }

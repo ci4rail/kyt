@@ -90,7 +90,7 @@ func tokenValidateConvert(js string) (*rsa.PublicKey, error) {
 		e = 65537
 	} else {
 		// need to decode "e" as a big-endian int
-		return &rsa.PublicKey{}, fmt.Errorf("need to deocde e: %s", jwk.E)
+		return &rsa.PublicKey{}, fmt.Errorf("Need to deocde e: %s ", jwk.E)
 	}
 
 	pk := &rsa.PublicKey{

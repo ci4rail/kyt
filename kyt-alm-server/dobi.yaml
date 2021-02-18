@@ -1,0 +1,48 @@
+# ===================================================
+# mounts
+# ===================================================
+mount=mount-kyt-alm-server-src:
+  bind: "kyt-alm-server/"
+  path: "/src"
+  read-only: false
+
+mount=mount-kyt-alm-server-bin:
+  bind: "bin/"
+  path: "/install"
+  read-only: false
+
+# ===================================================
+# jobs
+# ===================================================
+
+job=build-kyt-alm-server:
+  use: image-go-builder
+  command: bash -c 'cd /src && make -j${nproc}'
+  mounts:
+    - mount-kyt-alm-server-src
+    - mount-kyt-alm-server-bin
+    - mount-go-pkg
+  sources:
+    - kyt-alm-server
+  artifact:
+    - bin/kyt-alm-server
+  user: "{user.uid}:{user.gid}"
+  env:
+    - VERSION={env.GitVersion_InformationalVersion}
+    - BIN_DIR=/install
+    - GOCACHE=/tmp/cache
+  annotations:
+    description: "-> build kyt-alm-server"
+    tags:
+      - build
+
+image=image-kyt-alm-server:
+  image: "{env.ALM_SERVER_REPO:ci4rail/kyt/kyt-dlm-server}"
+  context: "."
+  dockerfile: kyt-alm-server/Dockerfile
+  tags:
+    - "{env.GitVersion_InformationalVersion}"
+  args:
+    VERSION: "{env.GitVersion_InformationalVersion}"
+  annotations:
+    description: "-> build kyt-alm-server docker image"

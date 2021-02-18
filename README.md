@@ -22,7 +22,7 @@ Get the IoT Hub connection string from the Azure Portal. Select the IoT Hub, the
 
 To run the docker image with a specific `<tag>` use:
 ```bash
-docker run --rm -p 8080:8080 -e IOTHUB_SERVICE_CONNECTION_STRING="HostName=ci4rail-eval-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=6..." harbor.ci4rail.com/ci4rail/kyt/kyt-dlm-server:<tag>
+docker run --rm -p 8080:8080 -e IOTHUB_SERVICE_CONNECTION_STRING="HostName=kyt-dev-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=7..." harbor.ci4rail.com/ci4rail/kyt/kyt-dlm-server:<tag>
 ```
 Have a look at available tags for the image: https://harbor.ci4rail.com/harbor/projects/7/repositories/kyt%2Fkyt-dlm-server
 
@@ -31,30 +31,60 @@ Have a look at available tags for the image: https://harbor.ci4rail.com/harbor/p
 Containerized Build of the kyt-dlm-server tool. Builds x86 version for linux.
 
 ```bash
-$ ./dobi.sh build-kyt-apiserver
+$ ./dobi.sh build-kyt-dlm-server
 ```
 
 Run the kyt-dlm-server:
 
 ```bash
-$ export IOTHUB_SERVICE_CONNECTION_STRING="HostName=ci4rail-eval-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=6...="
+$ export IOTHUB_SERVICE_CONNECTION_STRING="HostName=kyt-dev-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=7...="
 $ bin/kyt-dlm-server --addr :8080
 ```
 
 Or, build/run it with your local go installation:
 
 ```bash
-$ ./dobi.sh generate-server-sources
 $ cd kyt-dlm-server
 $ go run main.go  --addr :8080
 ```
 
-#### Test-Server
+### kyt-alm-server
 
-Folder `kyt-dlm-server/test-server` contains a test-server that answers API request with dummy data.
+#### Docker image
+
+To build (and deploy) the `kyt-alm-server` docker image you can use the following commands:
+```bash
+$ ./dobi.sh image-kyt-alm-server        # build only
+$ ./dobi.sh image-kyt-alm-server:push   # build and push do docker registry
+```
+
+Get the IoT Hub connection string from the Azure Portal. Select the IoT Hub, then "shared access policies". Copy from `iothubowner` the connection string `Connection string—primary key`.
+
+To run the docker image with a specific `<tag>` use:
+```bash
+docker run --rm -p 8080:8080 -e IOTHUB_SERVICE_CONNECTION_STRING="HostName=kyt-dev-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=7..." harbor.ci4rail.com/ci4rail/kyt/kyt-alm-server:<tag>
+```
+Have a look at available tags for the image: https://harbor.ci4rail.com/harbor/projects/7/repositories/kyt%2Fkyt-alm-server
+
+#### Plain binary
+
+Containerized Build of the kyt-alm-server tool. Builds x86 version for linux.
 
 ```bash
-$ cd kyt-dlm-server/test-server
+$ ./dobi.sh build-kyt-alm-server
+```
+
+Run the kyt-alm-server:
+
+```bash
+$ export IOTHUB_SERVICE_CONNECTION_STRING="HostName=kyt-dev-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=7...="
+$ bin/kyt-alm-server --addr :8080
+```
+
+Or, build/run it with your local go installation:
+
+```bash
+$ cd kyt-alm-server
 $ go run main.go  --addr :8080
 ```
 
@@ -93,7 +123,7 @@ The `pipeline.yaml` is the CI/CD pipeline that builds kyt-cli called `kyt` and k
 
 ### Usage
 
-Copy `ci/credentials.template.yaml` to `ci/credentials.yaml` and enter the credentials needed. The `github_access_token` needs `write:packages` rights on Github.
+Copy `ci/credentials.template.yaml` to `ci/credentials.yaml` and enter the credentials needed (for docker registry credetials `yoda harbor robot user` from bitwarden can be used, for `github_access_token` `yoda-ci4rail github releases access token` from bitwarden can be used). The `github_access_token` needs `write:packages` rights on Github.
 Apply the CI/CD pipeline to Concourse CI using
 ```bash
 $ fly -t prod set-pipeline -p kyt-services -c pipeline.yaml -l ci/config.yaml  -l ci/credentials.yaml
@@ -105,7 +135,7 @@ The `pipeline-pullrequests.yaml` defines a pipeline that runs basic quality chec
 
 ### Usage
 
-Copy `ci/credentials-pullrequests.template.yaml` to `ci/credentials-pullrequests.yaml` and enter the Github `access_token` with `repo:status` rights. Enter the `webhook_token` key, you want to use.
+Copy `ci/credentials-pullrequests.template.yaml` to `ci/credentials-pullrequests.yaml` and enter the Github `access_token` with `repo:status` rights and enter the `webhook_token` key, you want to use (`yoda-ci4rail github pullrequest token` from bitwarden can be used).
 Configure a Webhook on github using this URL and the same webhook_token:
 `https://concourse.ci4rail.com/api/v1/teams/main/pipelines/kyt-services-pull-requests/resources/pull-request/check/webhook?webhook_token=<webhook_token>`
 
@@ -149,7 +179,7 @@ Preconditions:
   ```
   PUBLIC_IP=$(az network public-ip show -g kyt-dev -n kyt-dev-publikip --query "ipAddress" -o tsv)
   ```
-* Link ip adresses `PUBLIC_IP` to domains `KYT_DOMAIN` and `DLM_DOMAIN` in DNS settings of domain provider.
+* Link ip adresses `PUBLIC_IP` to domains `KYT_DOMAIN`, `DLM_DOMAIN` and `ALM_DOMAIN` in DNS settings of domain provider.
 * Delegate permissions to AKS service principal to enable access to public ip (replace <appId> with output from step above, enter <subscriptionId>)
   ```
   az role assignment create \
@@ -207,7 +237,7 @@ Preconditions:
 * Get kubeconfig from azure kubernetes service by executing `./dobi.sh get-aks-config`
 * File kyt-service-deployment/.env is required with iot hub connection scring (can be obtained by executing the command `az iot hub connection-string show`)
     ```
-    IOTHUB_SERVICE_CONNECTION_STRING="HostName=ci4rail-eval-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=6...="
+    IOTHUB_SERVICE_CONNECTION_STRING="HostName=kyt-dev-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=7...="
     ```
 
 # Repo Notes

@@ -64,6 +64,32 @@ job=deploy-kyt-dlm-server:
     tags:
       - deploy
 
+job=deploy-kyt-alm-server:
+  use: image-kubectl
+  command: |
+    bash -c 'source /deployment/.env &&
+             cat /deployment/kyt-alm-server.yaml.tmpl | \
+             sed -e "s|ALM_SERVER_IMAGE|$ALM_SERVER_IMAGE|" | \
+             sed -e "s|CONNECTION_STRING_VALUE|$IOTHUB_SERVICE_CONNECTION_STRING|" | \
+             sed -e "s|SECRET_NAME|$SECRET_NAME|" | \
+             sed -e "s|SERVICE_NAMESPACE|$SERVICE_NAMESPACE|" | \
+             sed -e "s|ALM_DOMAIN|$ALM_DOMAIN|" | \
+             kubectl apply -f -'
+  mounts:
+    - mount-kubeconfig-kyt-dev-aks
+    - mount-kyt-service-deployment-dir
+  user: "{user.uid}:{user.gid}"
+  entrypoint: ""
+  env:
+    - ALM_SERVER_IMAGE={env.ALM_SERVER_IMAGE}
+    - SECRET_NAME={env.DOCKER_REGISTRY_SECRET_NAME}
+    - SERVICE_NAMESPACE={env.SERVICE_NAMESPACE}
+    - ALM_DOMAIN={env.ALM_DOMAIN}
+  annotations:
+    description: "-> deploy kyt alm service to azure kubernetes service"
+    tags:
+      - deploy
+
 job=deploy-cert-manager:
   use: image-helm
   command: |

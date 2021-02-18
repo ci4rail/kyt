@@ -1,6 +1,6 @@
-# Go API Server for kyt-dlm-server
+# Go API Server for kyt-alm-server
 
-This is the KYT DLM Server
+This is the KYT ALM Server
 
 ## Overview
 
@@ -14,12 +14,12 @@ go run main.go
 
 To run the server in a docker container
 ```
-docker build --network=host -t  .
+docker build --network=host -t kyt-alm-server .
 ```
 
 Once the image is built, just run
 ```
-docker run --rm -it kyt-dlm-server
+docker run --rm -it kyt-alm-server
 ```
 
 ### Known Issue

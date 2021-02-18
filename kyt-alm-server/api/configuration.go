@@ -1,5 +1,5 @@
 /*
-Copyright © 2021 Ci4Rail GmbH <engineering@ci4rail.com>
+Copyright © 2021 Ci4Rail GmbH
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,25 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package errors
+package api
 
-import (
-	"fmt"
-	"os"
-
-	"github.com/spf13/viper"
+const (
+	userFlow        = "b2c_1_signin_native"
+	azureB2CTenant  = "ci4railtesting"
+	azureB2CKeysURI = "https://" + azureB2CTenant + ".b2clogin.com/" + azureB2CTenant + ".onmicrosoft.com/" + userFlow + "/discovery/v2.0/keys"
 )
-
-// Er logs the error on stderr and terminates with exit code 1
-func Er(msg interface{}) {
-	fmt.Fprintf(os.Stderr, "Error: %v", msg)
-	os.Exit(1)
-}
-
-// TokenConfigCheck checks if a token is present int the config file
-func TokenConfigCheck() {
-	if !viper.IsSet("alm_token") || !viper.IsSet("dlm_token") {
-		fmt.Println("Required access token not found. Please run `login` command.")
-		os.Exit(1)
-	}
-}
