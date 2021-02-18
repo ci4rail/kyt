@@ -43,7 +43,7 @@ func apply(cmd *cobra.Command, args []string) {
 
 	customerManifest := a.ReadCustomerManifest(filename)
 
-	a.CustomerManifest(customerManifest)
+	a.CustomerManifest(*customerManifest)
 
 }
 
@@ -51,5 +51,8 @@ func init() {
 	almCmd.AddCommand(almApplyCmd)
 
 	almApplyCmd.Flags().StringVarP(&filename, "filename", "f", "", "that contains the configuration to apply (required)")
-	almApplyCmd.MarkFlagRequired("filename")
+	err := almApplyCmd.MarkFlagRequired("filename")
+	if err != nil {
+		e.Er(err)
+	}
 }

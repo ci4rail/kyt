@@ -2,8 +2,9 @@ package manifest
 
 import (
 	"bytes"
-	"html/template"
+	"fmt"
 	"strings"
+	"text/template"
 )
 
 // CustomerManifest describes the format the customer defines modules
@@ -80,5 +81,6 @@ func CreateLayeredManifest(c *CustomerManifest, tenantId string) (string, error)
 	if err != nil {
 		return "", err
 	}
+	fmt.Println(result.String())
 	return result.String(), nil
 }

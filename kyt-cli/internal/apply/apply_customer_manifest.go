@@ -17,13 +17,43 @@ limitations under the License.
 package apply
 
 import (
+	"fmt"
+	"os"
+
+	"github.com/ci4rail/kyt/kyt-cli/internal/api"
+	e "github.com/ci4rail/kyt/kyt-cli/internal/errors"
+	"github.com/ci4rail/kyt/kyt-cli/internal/token"
 	openapi "github.com/ci4rail/kyt/kyt-cli/openapialm"
+	"github.com/spf13/viper"
 )
 
 // CustomerManifest -
-func CustomerManifest(*openapi.CustomerManifest) error {
-
-	return nil
+func CustomerManifest(c openapi.CustomerManifest) {
+	apiClient, ctx := api.NewAlmAPIWithToken(viper.GetString("almServerURL"), viper.GetString("alm_token"))
+	resp, err := apiClient.DeploymentApi.ApplyPut(ctx).CustomerManifest(c).Execute()
+	// 401 mean 'Unauthorized'. Let's try to refresh the token once.
+	if resp.StatusCode == 401 {
+		err := token.RefreshToken("alm")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		apiClient, ctx := api.NewAlmAPIWithToken(viper.GetString("almServerURL"), viper.GetString("alm_token"))
+		resp, err = apiClient.DeploymentApi.ApplyPut(ctx).CustomerManifest(c).Execute()
+		if resp.StatusCode == 401 {
+			e.Er("Unable to refresh access token. Please run `login` command again.\n")
+		} else if resp.StatusCode == 403 {
+			e.Er("Forbidden\n")
+		} else if resp.StatusCode == 500 {
+			e.Er("Internal server error\n")
+		} else if err.Error() != "" {
+			e.Er(fmt.Sprintf("Error calling DeploymentApi.ApplyPut: %v\n", err))
+		}
+	} else if resp.StatusCode == 403 {
+		e.Er("Forbidden\n")
+	} else if err.Error() != "" {
+		e.Er(fmt.Sprintf("Error calling DeploymentApi.ApplyPut: %v\n", err))
+	}
 }
 
 // func apply_file() {

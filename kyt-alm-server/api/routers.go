@@ -82,7 +82,7 @@ var routes = Routes{
 	},
 	{
 		"DeploymentApply",
-		http.MethodGet,
+		http.MethodPut,
 		"/v1/apply/",
 		ApplyPut,
 	},

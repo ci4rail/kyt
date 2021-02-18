@@ -33,7 +33,7 @@ func ApplyPut(c *gin.Context) {
 	token, err := ReadToken(c.Request)
 	if err != nil {
 		fmt.Println(err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err})
 		return
 	}
 	tokenValid, claims, err := ValidateToken(token)
