@@ -17,6 +17,8 @@ limitations under the License.
 package cmd
 
 import (
+	"fmt"
+
 	a "github.com/ci4rail/kyt/kyt-cli/internal/apply"
 	e "github.com/ci4rail/kyt/kyt-cli/internal/errors"
 
@@ -44,7 +46,7 @@ func apply(cmd *cobra.Command, args []string) {
 	customerManifest := a.ReadCustomerManifest(filename)
 
 	a.CustomerManifest(*customerManifest)
-
+	fmt.Printf("Successfully deployed: %s\n", customerManifest.Application)
 }
 
 func init() {

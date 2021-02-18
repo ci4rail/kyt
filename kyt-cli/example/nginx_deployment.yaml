@@ -1,5 +1,5 @@
 ---
-application: manynginxn
+application: manynginx
 modules:
   - name: nginx
     image: nginx:1.19.5
