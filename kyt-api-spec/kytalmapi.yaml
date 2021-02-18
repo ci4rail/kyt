@@ -16,7 +16,7 @@ paths:
   "/runtimes/":
     get:
       tags:
-        - alm
+        - runtimes
       summary: List runtimes for a tenant
       description: Returns a list of runtimes
       responses:
@@ -37,10 +37,27 @@ paths:
       - $ref: "#/components/parameters/Rid"
     get:
       tags:
-        - alm
+        - runtimes
       responses:
         200:
           $ref: "#/components/responses/Runtime"
+      security:
+        - bearerAuth: []
+  "/apply/":
+    put:
+      tags:
+        - deployment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerManifest"
+      responses:
+        "200":
+          description: OK
+        "201":
+          description: Created
       security:
         - bearerAuth: []
 components:
@@ -78,6 +95,58 @@ components:
         id: runtime234
         name: runtime1
         network: offline
+
+    CustomerManifest:
+      type: object
+      required:
+        - application
+        - modules
+      properties:
+        application:
+          type: string
+        modules:
+          type: array
+          items:
+            $ref: "#/components/schemas/ModuleType"
+
+    ModuleType:
+      type: object
+      required:
+        - name
+        - image
+      properties:
+        name:
+          type: string
+        image:
+          type: string
+        createOptions:
+          type: string
+          default: "{}"
+        imagePullPolicy:
+          type: string
+          enum:
+            - on-create
+            - never
+          default: on-create
+        restartPolicy:
+          type: string
+          enum:
+            - always
+            - never
+            - on-failure
+            - on-unhealthy
+          default: always
+        status:
+          type: string
+          enum:
+            - running
+            - stopped
+          default: running
+        startupOrder:
+          type: integer
+          minimum: 100
+          maximum: 199
+          default: 100
 
   securitySchemes:
     bearerAuth:
