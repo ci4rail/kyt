@@ -24,7 +24,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ci4rail/kyt/kyt-alm-server/internal/deployment/manifest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -255,37 +254,4 @@ func TestValidateDeploymentNameInvalid3(t *testing.T) {
 	assert := assert.New(t)
 	ok := deploymentNameValid("c5399437e2e_447815d9c_myapplication-1613639624")
 	assert.False(ok)
-}
-
-func TestCreateFromCustomerDeployment(t *testing.T) {
-	assert := assert.New(t)
-	err := os.Setenv("IOTHUB_SERVICE_CONNECTION_STRING", "HostName=kyt-dev-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=7m+i8rSSQCyIJGjdBVcFjmjdBOxVPBcbb34iFrxeEcA=")
-	assert.Nil(err)
-	c := &manifest.CustomerManifest{
-		Application: "myApplication",
-		Modules: []manifest.ModuleType{
-			{
-				Name:            "module1",
-				Image:           "image1",
-				CreateOptions:   "{}",
-				ImagePullPolicy: "image_pull_1",
-				RestartPolicy:   "policy1",
-				Status:          "status1",
-				StartupOrder:    1,
-			},
-			{
-				Name:            "module2",
-				Image:           "image2",
-				CreateOptions:   "{}",
-				ImagePullPolicy: "image_pull_2",
-				RestartPolicy:   "policy2",
-				Status:          "status2",
-				StartupOrder:    2,
-			},
-		},
-	}
-
-	ok, err := createFromCustomerDeployment("c5399437-e3d8-4f26-a011-e2e447815d9c", c)
-	assert.Nil(err)
-	assert.True(ok)
 }
