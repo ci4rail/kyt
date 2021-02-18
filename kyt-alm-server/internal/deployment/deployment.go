@@ -37,9 +37,9 @@ const (
 )
 
 type DeploymentInterface interface {
-	ApplyDeployment() (bool, error)
+	applyDeployment() (bool, error)
 	ListDeployments(string) ([]string, error)
-	GetLatestDeployment(string, string, string, string) (string, error)
+	getLatestDeployment(string, string, string, string) (string, error)
 	createManifestFile() (*os.File, error)
 }
 
@@ -74,35 +74,37 @@ func NewDeployment(manifest string, name string, targetCondition string, now int
 	}, nil
 }
 
-// ApplyDeployment applies the deployment to the backend service
-func (d *Deployment) ApplyDeployment() (bool, error) {
-	manifestFile, err := d.createManifestFile()
+// CreateOrUpdateFromCustomerDeployment creates a new deployment and deletes the old one if it was
+// already present.
+func CreateOrUpdateFromCustomerDeployment(tenantId string, c *manifest.CustomerManifest) (bool, error) {
+	cs, err := controller.ReadConnectionStringFromEnv()
 	if err != nil {
 		return false, err
 	}
-	defer os.Remove(manifestFile.Name())
-
-	azExecutable, err := exec.LookPath("az")
+	// Get all deployments fron backend service
+	deployments, err := ListDeployments(cs)
 	if err != nil {
 		return false, err
 	}
-	nameWithTimestamp := fmt.Sprintf("%s_%s", d.name, d.now)
-	priority := strconv.Itoa(defaultPriority)
-	cmdArgs := fmt.Sprintf("%s iot edge deployment create --hub-name %s --content %s --priority %s --layered --target-condition \"%s\" --deployment-id %s --login '%s'", azExecutable, d.hubName, manifestFile.Name(), priority, d.targetCondition, nameWithTimestamp, d.connectionString)
-	fmt.Println("sh", "-c", cmdArgs)
-	cmd := exec.Command("sh", "-c", cmdArgs)
-
-	err = cmd.Start()
+	// Get latest deployment for specific tenantId
+	latestToBeDeletedOnSuccess, err := getLatestDeployment(deployments, tenantId, c.Application)
+	if err != nil {
+		fmt.Println(err)
+	}
+	// The new deployment needs to be created first to start the update process
+	_, err = createFromCustomerDeployment(tenantId, c)
 	if err != nil {
 		return false, err
 	}
-	if err := cmd.Wait(); err != nil {
-		if exiterr, ok := err.(*exec.ExitError); ok {
-			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
-				err = fmt.Errorf("Exit Status: %d", status.ExitStatus())
-				return false, err
-			}
-		} else {
+	// Delete old deployment with the same name to finish the update process
+	if len(latestToBeDeletedOnSuccess) > 0 {
+		// create new dummy deployment with specific name to be deleted
+		deleteDeployment, err := NewDeployment("{}", latestToBeDeletedOnSuccess, "", 0)
+		if err != nil {
+			return false, err
+		}
+		_, err = deleteDeployment.DeleteDeployment()
+		if err != nil {
 			return false, err
 		}
 	}
@@ -155,16 +157,29 @@ func ListDeployments(connectionString string) ([]string, error) {
 	return result, nil
 }
 
-func deploymentNameValid(name string) bool {
-	re := regexp.MustCompile(`^[a-z0-9-]+_[a-z0-9-]+_[0-9]+$`)
-	if ok := re.MatchString(name); ok {
-		return true
+// createFromCustomerDeployment creates and applies from a customer deployment
+func createFromCustomerDeployment(tenantId string, c *manifest.CustomerManifest) (bool, error) {
+	now := time.Now().Unix()
+	layered, err := manifest.CreateLayeredManifest(c, tenantId)
+	if err != nil {
+		return false, err
 	}
-	return false
+	deploymentName := fmt.Sprintf("%s_%s", tenantId, c.Application)
+	// Currently the target condition is fixed to the tenant's ID
+	targetCondition := fmt.Sprintf("tags.alm=true AND tags.tenantId='%s'", tenantId)
+	d, err := NewDeployment(layered, deploymentName, targetCondition, now)
+	if err != nil {
+		return false, err
+	}
+	ok, err := d.applyDeployment()
+	if err != nil {
+		return false, err
+	}
+	return ok, nil
 }
 
-// GetLatestDeployment gets the last deployment from tenandId with application
-func GetLatestDeployment(deployments []string, tenantId string, application string) (string, error) {
+// getLatestDeployment gets the last deployment from tenandId with application
+func getLatestDeployment(deployments []string, tenantId string, application string) (string, error) {
 	appName := fmt.Sprintf("%s_%s", tenantId, application)
 	tenantDeployments := []string{}
 	for _, d := range deployments {
@@ -184,6 +199,51 @@ func GetLatestDeployment(deployments []string, tenantId string, application stri
 	return "", fmt.Errorf("Info: no latest deployment found")
 }
 
+// applyDeployment writes the deployment to the backend service
+func (d *Deployment) applyDeployment() (bool, error) {
+	manifestFile, err := d.createManifestFile()
+	if err != nil {
+		return false, err
+	}
+	defer os.Remove(manifestFile.Name())
+
+	azExecutable, err := exec.LookPath("az")
+	if err != nil {
+		return false, err
+	}
+	nameWithTimestamp := fmt.Sprintf("%s_%s", d.name, d.now)
+	priority := strconv.Itoa(defaultPriority)
+	cmdArgs := fmt.Sprintf("%s iot edge deployment create --hub-name %s --content %s --priority %s --layered --target-condition \"%s\" --deployment-id %s --login '%s'", azExecutable, d.hubName, manifestFile.Name(), priority, d.targetCondition, nameWithTimestamp, d.connectionString)
+	fmt.Println("sh", "-c", cmdArgs)
+	cmd := exec.Command("sh", "-c", cmdArgs)
+
+	err = cmd.Start()
+	if err != nil {
+		return false, err
+	}
+	if err := cmd.Wait(); err != nil {
+		if exiterr, ok := err.(*exec.ExitError); ok {
+			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
+				err = fmt.Errorf("Exit Status: %d", status.ExitStatus())
+				return false, err
+			}
+		} else {
+			return false, err
+		}
+	}
+	return true, nil
+}
+
+// deploymentNameValid checks if the deployment name has the right pattern
+func deploymentNameValid(name string) bool {
+	re := regexp.MustCompile(`^[a-z0-9-]+_[a-z0-9-]+_[0-9]+$`)
+	if ok := re.MatchString(name); ok {
+		return true
+	}
+	return false
+}
+
+//createManifestFile writes the manifest string to a temp file
 func (d *Deployment) createManifestFile() (*os.File, error) {
 	tmpfile, err := ioutil.TempFile("", "manifest")
 	if err != nil {
@@ -198,6 +258,7 @@ func (d *Deployment) createManifestFile() (*os.File, error) {
 	return tmpfile, nil
 }
 
+// getTimestampFromDeployment returns the timestamp from the deployment name
 func getTimestampFromDeployment(deployment string) (int, error) {
 	// This regex pattern finds any numbers with leading `_` in a string.
 	// e.g. tenant.application.321553 results in -> `_321553`
@@ -213,61 +274,4 @@ func getTimestampFromDeployment(deployment string) (int, error) {
 	} else {
 		return 0, fmt.Errorf("Error: no timestamp found")
 	}
-}
-
-// CreateOrUpdateFromCustomerDeployment creates a new deployment and deletes the old one if it was
-// already present.
-func CreateOrUpdateFromCustomerDeployment(tenantId string, c *manifest.CustomerManifest) (bool, error) {
-	cs, err := controller.ReadConnectionStringFromEnv()
-	if err != nil {
-		return false, err
-	}
-	// Get all deployments fron backend service
-	deployments, err := ListDeployments(cs)
-	if err != nil {
-		return false, err
-	}
-	// Get latest deployment for specific tenantId
-	latestToBeDeletedOnSuccess, err := GetLatestDeployment(deployments, tenantId, c.Application)
-	if err != nil {
-		fmt.Println(err)
-	}
-	// The new deployment needs to be created first to start the update process
-	_, err = CreateDeploymentFromCustomerDeployment(tenantId, c)
-	if err != nil {
-		return false, err
-	}
-	// Delete old deployment with the same name to finish the update process
-	if len(latestToBeDeletedOnSuccess) > 0 {
-		// create new dummy deployment with specific name to be deleted
-		deleteDeployment, err := NewDeployment("{}", latestToBeDeletedOnSuccess, "", 0)
-		if err != nil {
-			return false, err
-		}
-		_, err = deleteDeployment.DeleteDeployment()
-		if err != nil {
-			return false, err
-		}
-	}
-	return true, nil
-}
-
-func CreateDeploymentFromCustomerDeployment(tenantId string, c *manifest.CustomerManifest) (bool, error) {
-	now := time.Now().Unix()
-	layered, err := manifest.CreateLayeredManifest(c, tenantId)
-	if err != nil {
-		return false, err
-	}
-	deploymentName := fmt.Sprintf("%s_%s", tenantId, c.Application)
-	// Currently the target condition is fixed to the tenant's ID
-	targetCondition := fmt.Sprintf("tags.alm=true AND tags.tenantId='%s'", tenantId)
-	d, err := NewDeployment(layered, deploymentName, targetCondition, now)
-	if err != nil {
-		return false, err
-	}
-	ok, err := d.ApplyDeployment()
-	if err != nil {
-		return false, err
-	}
-	return ok, nil
 }

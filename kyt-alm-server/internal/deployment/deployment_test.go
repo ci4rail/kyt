@@ -143,7 +143,7 @@ func TestGetLatestDeploymentFound(t *testing.T) {
 	d, err := testObj.ListDeployments("")
 	assert.Nil(err)
 	fmt.Println(d)
-	latest, err := GetLatestDeployment(d, "c5399437-e3d8-4f26-a011-e2e447815d9c", "myapplication")
+	latest, err := getLatestDeployment(d, "c5399437-e3d8-4f26-a011-e2e447815d9c", "myapplication")
 	assert.Nil(err)
 	assert.Equal(latest, "c5399437-e3d8-4f26-a011-e2e447815d9c_myapplication_1613640525")
 }
@@ -154,7 +154,7 @@ func TestGetLatestDeploymentNotFound(t *testing.T) {
 	d, err := testObj.ListDeployments("")
 	assert.Nil(err)
 	fmt.Println(d)
-	latest, err := GetLatestDeployment(d, "myTenant1", "application9")
+	latest, err := getLatestDeployment(d, "myTenant1", "application9")
 	assert.NotNil(err)
 	assert.Equal(latest, "")
 }
@@ -166,7 +166,7 @@ func TestListDeploymentsTenantNotFound(t *testing.T) {
 	d, err := testObj.ListDeployments(connectionString)
 	assert.Nil(err)
 	fmt.Println(d)
-	latest, err := GetLatestDeployment(d, "myTenant9", "application1")
+	latest, err := getLatestDeployment(d, "myTenant9", "application1")
 	assert.NotNil(err)
 	assert.Equal(latest, "")
 }
@@ -257,7 +257,7 @@ func TestValidateDeploymentNameInvalid3(t *testing.T) {
 	assert.False(ok)
 }
 
-func TestCreateDeploymentFromCustomerDeployment(t *testing.T) {
+func TestCreateFromCustomerDeployment(t *testing.T) {
 	assert := assert.New(t)
 	err := os.Setenv("IOTHUB_SERVICE_CONNECTION_STRING", "HostName=kyt-dev-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=7m+i8rSSQCyIJGjdBVcFjmjdBOxVPBcbb34iFrxeEcA=")
 	assert.Nil(err)
@@ -285,7 +285,7 @@ func TestCreateDeploymentFromCustomerDeployment(t *testing.T) {
 		},
 	}
 
-	ok, err := CreateDeploymentFromCustomerDeployment("c5399437-e3d8-4f26-a011-e2e447815d9c", c)
+	ok, err := createFromCustomerDeployment("c5399437-e3d8-4f26-a011-e2e447815d9c", c)
 	assert.Nil(err)
 	assert.True(ok)
 }
