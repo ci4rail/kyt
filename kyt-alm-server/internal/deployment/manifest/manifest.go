@@ -3,6 +3,7 @@ package manifest
 import (
 	"bytes"
 	"html/template"
+	"strings"
 )
 
 // CustomerManifest describes the format the customer defines modules
@@ -66,7 +67,7 @@ const (
 // CreateLayeredManifest creates a new LayeredManifest from a CustomerManifest
 func CreateLayeredManifest(c *CustomerManifest, tenantId string) (string, error) {
 	ct := &CustomerManifestWithTenant{
-		Application: c.Application,
+		Application: strings.ToLower(c.Application),
 		Modules:     c.Modules,
 		Tenant:      tenantId,
 	}

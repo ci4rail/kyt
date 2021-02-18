@@ -64,7 +64,7 @@ func NewDeployment(manifest string, name string, targetCondition string, now int
 		return nil, err
 	}
 	return &Deployment{
-		name:             name,
+		name:             strings.ToLower(name),
 		connectionString: c,
 		manifest:         manifest,
 		hubName:          h,
@@ -155,21 +155,33 @@ func ListDeployments(connectionString string) ([]string, error) {
 	return result, nil
 }
 
+func deploymentNameValid(name string) bool {
+	re := regexp.MustCompile(`^[a-z0-9-]+_[a-z0-9-]+_[0-9]+$`)
+	if ok := re.MatchString(name); ok {
+		return true
+	}
+	return false
+}
+
 // GetLatestDeployment gets the last deployment from tenandId with application
 func GetLatestDeployment(deployments []string, tenantId string, application string) (string, error) {
 	appName := fmt.Sprintf("%s_%s", tenantId, application)
 	tenantDeployments := []string{}
 	for _, d := range deployments {
 		if strings.Contains(d, appName) {
-			tenantDeployments = append(tenantDeployments, d)
+			if deploymentNameValid(d) {
+				tenantDeployments = append(tenantDeployments, d)
+			}
 		}
 	}
-	sort.Sort(ByTimestamp(tenantDeployments))
+	sorted := make([]string, len(tenantDeployments))
+	copy(sorted, tenantDeployments)
+	sort.Sort(ByTimestamp(sorted))
 
-	if len(tenantDeployments) > 0 {
-		return tenantDeployments[0], nil
+	if len(sorted) > 0 {
+		return sorted[0], nil
 	}
-	return "", fmt.Errorf("Error: no deployments found")
+	return "", fmt.Errorf("Info: no latest deployment found")
 }
 
 func (d *Deployment) createManifestFile() (*os.File, error) {
@@ -203,16 +215,42 @@ func getTimestampFromDeployment(deployment string) (int, error) {
 	}
 }
 
-// func CreateOrUpdateFromCustomerDeployment(tenantId string, c *manifest.CustomerManifest) (bool, error) {
-// 	deploymentName := fmt.Sprintf("%s_%s", tenantId, c.Application)
-// 	// Currently the target condition is fixed to the tenant's ID
-// 	targetCondition := fmt.Sprintf("tags.tenantId='%s'", tenantId)
-// ReadConnectionStringFromEnv
-// 	ListDeployments()
-// 	latest, err := GetLatestDeployment()
-
-// 	d, err := NewDeployment(layered, deploymentName, targetCondition, now)
-// }
+// CreateOrUpdateFromCustomerDeployment creates a new deployment and deletes the old one if it was
+// already present.
+func CreateOrUpdateFromCustomerDeployment(tenantId string, c *manifest.CustomerManifest) (bool, error) {
+	cs, err := controller.ReadConnectionStringFromEnv()
+	if err != nil {
+		return false, err
+	}
+	// Get all deployments fron backend service
+	deployments, err := ListDeployments(cs)
+	if err != nil {
+		return false, err
+	}
+	// Get latest deployment for specific tenantId
+	latestToBeDeletedOnSuccess, err := GetLatestDeployment(deployments, tenantId, c.Application)
+	if err != nil {
+		fmt.Println(err)
+	}
+	// The new deployment needs to be created first to start the update process
+	_, err = CreateDeploymentFromCustomerDeployment(tenantId, c)
+	if err != nil {
+		return false, err
+	}
+	// Delete old deployment with the same name to finish the update process
+	if len(latestToBeDeletedOnSuccess) > 0 {
+		// create new dummy deployment with specific name to be deleted
+		deleteDeployment, err := NewDeployment("{}", latestToBeDeletedOnSuccess, "", 0)
+		if err != nil {
+			return false, err
+		}
+		_, err = deleteDeployment.DeleteDeployment()
+		if err != nil {
+			return false, err
+		}
+	}
+	return true, nil
+}
 
 func CreateDeploymentFromCustomerDeployment(tenantId string, c *manifest.CustomerManifest) (bool, error) {
 	now := time.Now().Unix()
