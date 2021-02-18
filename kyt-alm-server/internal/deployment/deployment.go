@@ -26,8 +26,10 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/ci4rail/kyt/kyt-alm-server/internal/controller"
+	"github.com/ci4rail/kyt/kyt-alm-server/internal/deployment/manifest"
 )
 
 const (
@@ -48,10 +50,11 @@ type Deployment struct {
 	hubName          string
 	priority         int
 	targetCondition  string
+	now              string
 }
 
 // NewDeployment is used to define a new deployment
-func NewDeployment(manifest string, name string, targetCondition string) (*Deployment, error) {
+func NewDeployment(manifest string, name string, targetCondition string, now int64) (*Deployment, error) {
 	c, err := controller.MapTenantToIOTHubSAS("")
 	if err != nil {
 		return nil, err
@@ -67,6 +70,7 @@ func NewDeployment(manifest string, name string, targetCondition string) (*Deplo
 		hubName:          h,
 		priority:         defaultPriority,
 		targetCondition:  targetCondition,
+		now:              fmt.Sprintf("%d", now),
 	}, nil
 }
 
@@ -82,9 +86,9 @@ func (d *Deployment) ApplyDeployment() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-
+	nameWithTimestamp := fmt.Sprintf("%s_%s", d.name, d.now)
 	priority := strconv.Itoa(defaultPriority)
-	cmdArgs := fmt.Sprintf("%s iot edge deployment create --hub-name %s --content %s --priority %s --layered --target-condition \"%s\" --deployment-id %s --login '%s'", azExecutable, d.hubName, manifestFile.Name(), priority, d.targetCondition, d.name, d.connectionString)
+	cmdArgs := fmt.Sprintf("%s iot edge deployment create --hub-name %s --content %s --priority %s --layered --target-condition \"%s\" --deployment-id %s --login '%s'", azExecutable, d.hubName, manifestFile.Name(), priority, d.targetCondition, nameWithTimestamp, d.connectionString)
 	fmt.Println("sh", "-c", cmdArgs)
 	cmd := exec.Command("sh", "-c", cmdArgs)
 
@@ -153,7 +157,7 @@ func ListDeployments(connectionString string) ([]string, error) {
 
 // GetLatestDeployment gets the last deployment from tenandId with application
 func GetLatestDeployment(deployments []string, tenantId string, application string) (string, error) {
-	appName := fmt.Sprintf("%s.%s", tenantId, application)
+	appName := fmt.Sprintf("%s_%s", tenantId, application)
 	tenantDeployments := []string{}
 	for _, d := range deployments {
 		if strings.Contains(d, appName) {
@@ -183,12 +187,12 @@ func (d *Deployment) createManifestFile() (*os.File, error) {
 }
 
 func getTimestampFromDeployment(deployment string) (int, error) {
-	// This regex pattern finds any numbers with leading `.` in a string.
-	// e.g. tenant.application.321553 results in -> `.321553`
-	re := regexp.MustCompile(`([.][0-9]+)$`)
+	// This regex pattern finds any numbers with leading `_` in a string.
+	// e.g. tenant.application.321553 results in -> `_321553`
+	re := regexp.MustCompile(`([_][0-9]+)$`)
 	if ok := re.MatchString(deployment); ok {
 		matches := re.FindAllString(deployment, -1)
-		trimmed := strings.Replace(matches[0], ".", "", -1)
+		trimmed := strings.Replace(matches[0], "_", "", -1)
 		timestamp, err := strconv.Atoi(trimmed)
 		if err != nil {
 			return 0, err
@@ -197,4 +201,35 @@ func getTimestampFromDeployment(deployment string) (int, error) {
 	} else {
 		return 0, fmt.Errorf("Error: no timestamp found")
 	}
+}
+
+// func CreateOrUpdateFromCustomerDeployment(tenantId string, c *manifest.CustomerManifest) (bool, error) {
+// 	deploymentName := fmt.Sprintf("%s_%s", tenantId, c.Application)
+// 	// Currently the target condition is fixed to the tenant's ID
+// 	targetCondition := fmt.Sprintf("tags.tenantId='%s'", tenantId)
+// ReadConnectionStringFromEnv
+// 	ListDeployments()
+// 	latest, err := GetLatestDeployment()
+
+// 	d, err := NewDeployment(layered, deploymentName, targetCondition, now)
+// }
+
+func CreateDeploymentFromCustomerDeployment(tenantId string, c *manifest.CustomerManifest) (bool, error) {
+	now := time.Now().Unix()
+	layered, err := manifest.CreateLayeredManifest(c, tenantId)
+	if err != nil {
+		return false, err
+	}
+	deploymentName := fmt.Sprintf("%s_%s", tenantId, c.Application)
+	// Currently the target condition is fixed to the tenant's ID
+	targetCondition := fmt.Sprintf("tags.alm=true AND tags.tenantId='%s'", tenantId)
+	d, err := NewDeployment(layered, deploymentName, targetCondition, now)
+	if err != nil {
+		return false, err
+	}
+	ok, err := d.ApplyDeployment()
+	if err != nil {
+		return false, err
+	}
+	return ok, nil
 }

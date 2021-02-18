@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -33,18 +34,18 @@ type MyMockedObject struct {
 
 func (m *MyMockedObject) ListDeployments(connectionString string) ([]string, error) {
 	return []string{
-		"myTenant1.application1.1600000000",
-		"myTenant1.application1.1600000001",
-		"myTenant1.application2.1600000002",
-		"myTenant2.application1.1600000003",
-		"myTenant2.application1.1600000004",
-		"myTenant3.application1.1600000005",
-		"myTenant3.application2.1600000006",
-		"myTenant3.application2.1600000007",
-		"myTenant3.application2.1600000008",
-		"myTenant4.application1.1600000009",
-		"myTenant4.application1.1600000010",
-		"myTenant1.application1.1600000011",
+		"myTenant1_application1_1600000000",
+		"myTenant1_application1_1600000001",
+		"myTenant1_application2_1600000002",
+		"myTenant2_application1_1600000003",
+		"myTenant2_application1_1600000004",
+		"myTenant3_application1_1600000005",
+		"myTenant3_application2_1600000006",
+		"myTenant3_application2_1600000007",
+		"myTenant3_application2_1600000008",
+		"myTenant4_application1_1600000009",
+		"myTenant4_application1_1600000010",
+		"myTenant1_application1_1600000011",
 	}, nil
 }
 
@@ -65,7 +66,7 @@ func newDeploymentForTest() *Deployment {
 		fmt.Println(err)
 		return nil
 	}
-	d, err := NewDeployment(string(j), "myDeployment", "tag='myTag'")
+	d, err := NewDeployment(string(j), "myDeployment", "tag='myTag'", time.Now().Unix())
 	if err != nil {
 		fmt.Println(err)
 		return nil
@@ -97,7 +98,7 @@ func TestNewDeploymentNoEnv(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	_, err = NewDeployment(string(j), "myDeployment", "tag='myTag'")
+	_, err = NewDeployment(string(j), "myDeployment", "tag='myTag'", time.Now().Unix())
 	assert.NotNil(err, "should not be nil")
 }
 
@@ -120,27 +121,25 @@ func TestCreateManifestFile(t *testing.T) {
 func TestApplyDeploymentNoConnectionString(t *testing.T) {
 	assert := assert.New(t)
 	deploymentStr := "{\"emptyjson\": true}"
-	_, err := NewDeployment(deploymentStr, "test_deployment", "deviceId='myDeviceId'")
+	_, err := NewDeployment(deploymentStr, "test_deployment", "deviceId='myDeviceId'", time.Now().Unix())
 	assert.NotNil(err)
 }
 
-func TestListDeploymentsFound(t *testing.T) {
+func TestGetLatestDeploymentFound(t *testing.T) {
 	assert := assert.New(t)
 	testObj := new(MyMockedObject)
-	connectionString := "HostName=HostName=myHub.azure-devices.net;SharedAccessKeyName=myPolicy;SharedAccessKey=asdfasdfasdfasdfasdfasdfBasdfasdfasdfasdfas="
-	d, err := testObj.ListDeployments(connectionString)
+	d, err := testObj.ListDeployments("")
 	assert.Nil(err)
 	fmt.Println(d)
 	latest, err := GetLatestDeployment(d, "myTenant1", "application1")
 	assert.Nil(err)
-	assert.Equal(latest, "myTenant1.application1.1600000011")
+	assert.Equal(latest, "myTenant1_application1_1600000011")
 }
 
-func TestListDeploymentsApplicationNotFound(t *testing.T) {
+func TestGetLatestDeploymentNotFound(t *testing.T) {
 	assert := assert.New(t)
 	testObj := new(MyMockedObject)
-	connectionString := "HostName=HostName=myHub.azure-devices.net;SharedAccessKeyName=myPolicy;SharedAccessKey=asdfasdfasdfasdfasdfasdfBasdfasdfasdfasdfas="
-	d, err := testObj.ListDeployments(connectionString)
+	d, err := testObj.ListDeployments("")
 	assert.Nil(err)
 	fmt.Println(d)
 	latest, err := GetLatestDeployment(d, "myTenant1", "application9")
@@ -162,7 +161,7 @@ func TestListDeploymentsTenantNotFound(t *testing.T) {
 
 func TestGetTimestampFromDeploymentValid1(t *testing.T) {
 	assert := assert.New(t)
-	deploymentName := "myTenant1.application1.1613595000"
+	deploymentName := "myTenant1_application1_1613595000"
 	timestamp, err := getTimestampFromDeployment(deploymentName)
 	assert.Nil(err)
 	assert.Equal(timestamp, 1613595000)
@@ -170,7 +169,7 @@ func TestGetTimestampFromDeploymentValid1(t *testing.T) {
 
 func TestGetTimestampFromDeploymentValid2(t *testing.T) {
 	assert := assert.New(t)
-	deploymentName := "application1.1324"
+	deploymentName := "application1_1324"
 	timestamp, err := getTimestampFromDeployment(deploymentName)
 	assert.Nil(err)
 	assert.Equal(timestamp, 1324)
@@ -178,7 +177,7 @@ func TestGetTimestampFromDeploymentValid2(t *testing.T) {
 
 func TestGetTimestampFromDeploymentValid3(t *testing.T) {
 	assert := assert.New(t)
-	deploymentName := ".1324"
+	deploymentName := "_1324"
 	timestamp, err := getTimestampFromDeployment(deploymentName)
 	assert.Nil(err)
 	assert.Equal(timestamp, 1324)
@@ -186,7 +185,7 @@ func TestGetTimestampFromDeploymentValid3(t *testing.T) {
 
 func TestGetTimestampFromDeploymentInvalid1(t *testing.T) {
 	assert := assert.New(t)
-	deploymentName := "application1.adsf"
+	deploymentName := "application1_adsf"
 	timestamp, err := getTimestampFromDeployment(deploymentName)
 	assert.NotNil(err)
 	assert.Equal(timestamp, 0)
@@ -202,7 +201,7 @@ func TestGetTimestampFromDeploymentInvalid2(t *testing.T) {
 
 func TestGetTimestampFromDeploymentInvalid3(t *testing.T) {
 	assert := assert.New(t)
-	deploymentName := "application1."
+	deploymentName := "application1_"
 	timestamp, err := getTimestampFromDeployment(deploymentName)
 	assert.NotNil(err)
 	assert.Equal(timestamp, 0)

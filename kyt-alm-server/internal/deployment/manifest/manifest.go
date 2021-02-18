@@ -2,9 +2,7 @@ package manifest
 
 import (
 	"bytes"
-	"fmt"
 	"html/template"
-	"time"
 )
 
 // CustomerManifest describes the format the customer defines modules
@@ -27,7 +25,7 @@ type ModuleType struct {
 type CustomerManifestWithTenant struct {
 	Application string       `json:"application"`
 	Modules     []ModuleType `json:"modules"`
-	Tenant      string       `json:"tenand_id"`
+	Tenant      string       `json:"tenandId"`
 	Now         string       `json:"now"`
 }
 
@@ -44,11 +42,10 @@ const (
             "modulesContent": {
                 "$edgeAgent": {
 					{{ $tenant := .Tenant }}
-					{{ $now := .Now }}
 					{{ $application := .Application }}
                     {{ $n := len .Modules }}
                     {{ range $i, $element := .Modules }}
-                    "properties.desired.modules.{{$tenant}}.{{$application}}.{{$element.Name}}.{{$now}}": {
+                    "properties.desired.modules.{{$tenant}}_{{$application}}_{{$element.Name}}": {
                         "settings": {
                             "image": "{{ $element.Image }}",
                             "createOptions": "{{ $element.CreateOptions }}"
@@ -72,7 +69,6 @@ func CreateLayeredManifest(c *CustomerManifest, tenantId string) (string, error)
 		Application: c.Application,
 		Modules:     c.Modules,
 		Tenant:      tenantId,
-		Now:         fmt.Sprintf("%d", time.Now().Unix()),
 	}
 	t, err := template.New("LayeredDeployment").Funcs(fns).Parse(LayeredManifestTemplate)
 	if err != nil {

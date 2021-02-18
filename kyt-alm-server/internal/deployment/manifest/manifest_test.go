@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -45,11 +44,10 @@ func TestCreateLayeredManifest(t *testing.T) {
 		panic(err)
 	}
 	fmt.Println(objs)
-	now := fmt.Sprintf("%d", time.Now().Unix())
 	content := objs["content"].(map[string]interface{})
 	modulesContent := content["modulesContent"].(map[string]interface{})
 	edgeAgent := modulesContent["$edgeAgent"].(map[string]interface{})
-	module1 := edgeAgent["properties.desired.modules.myTenantId.myApplication.module1."+now].(map[string]interface{})
+	module1 := edgeAgent["properties.desired.modules.myTenantId_myApplication_module1"].(map[string]interface{})
 	assert.Equal(module1["type"], "docker")
 	assert.Equal(module1["status"], "status1")
 	assert.Equal(module1["restartPolicy"], "policy1")
@@ -60,7 +58,7 @@ func TestCreateLayeredManifest(t *testing.T) {
 	assert.Equal(settings1["image"], "image1")
 	assert.Equal(settings1["createOptions"], "{createOptions1}")
 
-	module2 := edgeAgent["properties.desired.modules.myTenantId.myApplication.module2."+now].(map[string]interface{})
+	module2 := edgeAgent["properties.desired.modules.myTenantId_myApplication_module2"].(map[string]interface{})
 	assert.Equal(module2["type"], "docker")
 	assert.Equal(module2["status"], "status2")
 	assert.Equal(module2["restartPolicy"], "policy2")
