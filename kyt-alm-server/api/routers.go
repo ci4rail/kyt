@@ -80,4 +80,10 @@ var routes = Routes{
 		"/v1/runtimes/",
 		RuntimesGet,
 	},
+	{
+		"DeploymentApply",
+		http.MethodGet,
+		"/v1/apply/",
+		ApplyPut,
+	},
 }
