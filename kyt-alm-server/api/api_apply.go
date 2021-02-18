@@ -42,7 +42,7 @@ func ApplyPut(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err})
 		return
 	}
-	if !sliceutil.Contains(claims, "RuntimesGet.read") {
+	if !sliceutil.Contains(claims, "Apply.write") {
 		err = fmt.Errorf("Error: not allowed")
 		c.JSON(http.StatusForbidden, gin.H{"error": err})
 		return

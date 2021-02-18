@@ -41,7 +41,8 @@ func GetConstScopes(ressource string) ([]string, error) {
 
 	} else if ressource == "alm" {
 		return []string{"https://ci4railtesting.onmicrosoft.com/0c2e91da-821c-4d38-aa8c-02ee539cdd3e/RuntimesGet.read",
-			"https://ci4railtesting.onmicrosoft.com/0c2e91da-821c-4d38-aa8c-02ee539cdd3e/RuntimesRidGet.read"}, nil
+			"https://ci4railtesting.onmicrosoft.com/0c2e91da-821c-4d38-aa8c-02ee539cdd3e/RuntimesRidGet.read",
+			"https://ci4railtesting.onmicrosoft.com/0c2e91da-821c-4d38-aa8c-02ee539cdd3e/Apply.write"}, nil
 	} else {
 		return nil, fmt.Errorf("scopes for invalid ressource requested")
 	}
