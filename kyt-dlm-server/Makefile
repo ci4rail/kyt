@@ -4,7 +4,8 @@ GO_LDFLAGS = -ldflags "-X github.com/ci4rail/kyt/kyt-dlm-server/cmd.version=$(VE
 
 build:
 	GOOS=linux GOARCH=386 go build $(GO_LDFLAGS) -o ${BIN_DIR}/kyt-dlm-server main.go
-
+test:
+	go test ./...
 clean:
 	rm -f ${BIN_DIR}/kyt-dlm-server
 

@@ -88,8 +88,8 @@ jobs:
                     cp -r openapi/openapidlm ${ROOT}/pull-request/kyt-cli/
                     cp -r openapi/openapialm ${ROOT}/pull-request/kyt-cli/
                     cd ${ROOT}/pull-request/kyt-cli
+                    make test
                     make
-                    go test
             on_failure:
               put: pull-request
               params:
@@ -109,8 +109,8 @@ jobs:
                   - |
                     ROOT=$(pwd)
                     cd ${ROOT}/pull-request/kyt-dlm-server
+                    make test
                     make
-                    go test
             on_failure:
               put: pull-request
               params:
@@ -130,8 +130,8 @@ jobs:
                   - |
                     ROOT=$(pwd)
                     cd ${ROOT}/pull-request/kyt-alm-server
+                    make test
                     make
-                    go test
             on_failure:
               put: pull-request
               params:

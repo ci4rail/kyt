@@ -6,7 +6,7 @@ WORKDIR /go/src/github.com/ci4rail/kyt/kyt-alm-server
 ENV CGO_ENABLED=0
 ENV GOPATH=/go
 ARG VERSION=dev
-RUN VERSION=${VERSION} make BIN_DIR=/install
+RUN make test && VERSION=${VERSION} make BIN_DIR=/install
 
 FROM mcr.microsoft.com/azure-cli:2.19.1
 RUN az extension add --name azure-iot
