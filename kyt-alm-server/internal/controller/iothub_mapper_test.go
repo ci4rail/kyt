@@ -17,6 +17,7 @@ limitations under the License.
 package controller
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -48,4 +49,44 @@ func TestSplitSubdomainInvalid(t *testing.T) {
 	assert := assert.New(t)
 	sub := splitSubdomain("mysubdomain")
 	assert.Equal(sub, "")
+}
+
+func TestReadConnectionStringFromEnvValid(t *testing.T) {
+	assert := assert.New(t)
+	err := os.Setenv("IOTHUB_SERVICE_CONNECTION_STRING", "HostName=myHub.azure-devices.net;SharedAccessKeyName=myPolicy;SharedAccessKey=asdfasdfasdfasdfasdfasdfBasdfasdfasdfasdfas=")
+	assert.Nil(err)
+	c, err := ReadConnectionStringFromEnv()
+	assert.Nil(err)
+	assert.Equal(c, "HostName=myHub.azure-devices.net;SharedAccessKeyName=myPolicy;SharedAccessKey=asdfasdfasdfasdfasdfasdfBasdfasdfasdfasdfas=")
+}
+
+func TestReadConnectionStringFromEnvInvalid(t *testing.T) {
+	assert := assert.New(t)
+	err := os.Setenv("IOTHUB_SERVICE_CONNECTION_STRING", "HostName=myHub.azure-devices.net;SharedAccessKeyName=myPolicy;SharedAccessKey=asdfasdfasdfasdfasdfasdfBasdfasdfasdfasdfas=")
+	assert.Nil(err)
+	err = os.Unsetenv("IOTHUB_SERVICE_CONNECTION_STRING")
+	assert.Nil(err)
+	c, err := ReadConnectionStringFromEnv()
+	assert.NotNil(err)
+	assert.Equal(c, "")
+}
+
+func TestMapTenantToIOTHubSASValid(t *testing.T) {
+	assert := assert.New(t)
+	err := os.Setenv("IOTHUB_SERVICE_CONNECTION_STRING", "HostName=myHub.azure-devices.net;SharedAccessKeyName=myPolicy;SharedAccessKey=asdfasdfasdfasdfasdfasdfBasdfasdfasdfasdfas=")
+	assert.Nil(err)
+	s, err := MapTenantToIOTHubSAS("")
+	assert.Nil(err)
+	assert.Equal(s, "HostName=myHub.azure-devices.net;SharedAccessKeyName=myPolicy;SharedAccessKey=asdfasdfasdfasdfasdfasdfBasdfasdfasdfasdfas=")
+}
+
+func TestMapTenantToIOTHubSASInvalid(t *testing.T) {
+	assert := assert.New(t)
+	err := os.Setenv("IOTHUB_SERVICE_CONNECTION_STRING", "HostName=myHub.azure-devices.net;SharedAccessKeyName=myPolicy;SharedAccessKey=asdfasdfasdfasdfasdfasdfBasdfasdfasdfasdfas=")
+	assert.Nil(err)
+	err = os.Unsetenv("IOTHUB_SERVICE_CONNECTION_STRING")
+	assert.Nil(err)
+	s, err := MapTenantToIOTHubSAS("")
+	assert.NotNil(err)
+	assert.Equal(s, "")
 }

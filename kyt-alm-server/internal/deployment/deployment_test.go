@@ -33,17 +33,18 @@ type MyMockedObject struct {
 
 func (m *MyMockedObject) ListDeployments(connectionString string) ([]string, error) {
 	return []string{
-		"myTenant1.application1.module1.1613595000",
-		"myTenant1.application1.module2.1613595000",
-		"myTenant1.application2.module1.1613594000",
-		"myTenant2.application1.module1.1613593000",
-		"myTenant2.application1.module2.1613593000",
-		"myTenant3.application1.module1.1613592000",
-		"myTenant3.application2.module1.1613591000",
-		"myTenant3.application2.module2.1613591000",
-		"myTenant3.application2.module3.1613591000",
-		"myTenant4.application1.module1.1613590000",
-		"myTenant4.application1.module2.1613590000",
+		"myTenant1.application1.1600000000",
+		"myTenant1.application1.1600000001",
+		"myTenant1.application2.1600000002",
+		"myTenant2.application1.1600000003",
+		"myTenant2.application1.1600000004",
+		"myTenant3.application1.1600000005",
+		"myTenant3.application2.1600000006",
+		"myTenant3.application2.1600000007",
+		"myTenant3.application2.1600000008",
+		"myTenant4.application1.1600000009",
+		"myTenant4.application1.1600000010",
+		"myTenant1.application1.1600000011",
 	}, nil
 }
 
@@ -126,23 +127,91 @@ func TestApplyDeploymentNoConnectionString(t *testing.T) {
 func TestListDeploymentsFound(t *testing.T) {
 	assert := assert.New(t)
 	testObj := new(MyMockedObject)
-	connectionString := "HostName=kyt-dev-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=7m+i8rSSQCyIJGjdBVcFjmjdBOxVPBcbb34iFrxeEcA="
+	connectionString := "HostName=HostName=myHub.azure-devices.net;SharedAccessKeyName=myPolicy;SharedAccessKey=asdfasdfasdfasdfasdfasdfBasdfasdfasdfasdfas="
 	d, err := testObj.ListDeployments(connectionString)
 	assert.Nil(err)
 	fmt.Println(d)
 	latest, err := GetLatestDeployment(d, "myTenant1", "application1")
 	assert.Nil(err)
-	assert.Equal(latest, "myTenant1.application1.module1.1613595000")
+	assert.Equal(latest, "myTenant1.application1.1600000011")
 }
 
-func TestListDeploymentsNotFound(t *testing.T) {
+func TestListDeploymentsApplicationNotFound(t *testing.T) {
 	assert := assert.New(t)
 	testObj := new(MyMockedObject)
-	connectionString := "HostName=kyt-dev-iot-hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=7m+i8rSSQCyIJGjdBVcFjmjdBOxVPBcbb34iFrxeEcA="
+	connectionString := "HostName=HostName=myHub.azure-devices.net;SharedAccessKeyName=myPolicy;SharedAccessKey=asdfasdfasdfasdfasdfasdfBasdfasdfasdfasdfas="
+	d, err := testObj.ListDeployments(connectionString)
+	assert.Nil(err)
+	fmt.Println(d)
+	latest, err := GetLatestDeployment(d, "myTenant1", "application9")
+	assert.NotNil(err)
+	assert.Equal(latest, "")
+}
+
+func TestListDeploymentsTenantNotFound(t *testing.T) {
+	assert := assert.New(t)
+	testObj := new(MyMockedObject)
+	connectionString := "HostName=HostName=myHub.azure-devices.net;SharedAccessKeyName=myPolicy;SharedAccessKey=asdfasdfasdfasdfasdfasdfBasdfasdfasdfasdfas="
 	d, err := testObj.ListDeployments(connectionString)
 	assert.Nil(err)
 	fmt.Println(d)
 	latest, err := GetLatestDeployment(d, "myTenant9", "application1")
-	assert.Nil(err)
+	assert.NotNil(err)
 	assert.Equal(latest, "")
+}
+
+func TestGetTimestampFromDeploymentValid1(t *testing.T) {
+	assert := assert.New(t)
+	deploymentName := "myTenant1.application1.1613595000"
+	timestamp, err := getTimestampFromDeployment(deploymentName)
+	assert.Nil(err)
+	assert.Equal(timestamp, 1613595000)
+}
+
+func TestGetTimestampFromDeploymentValid2(t *testing.T) {
+	assert := assert.New(t)
+	deploymentName := "application1.1324"
+	timestamp, err := getTimestampFromDeployment(deploymentName)
+	assert.Nil(err)
+	assert.Equal(timestamp, 1324)
+}
+
+func TestGetTimestampFromDeploymentValid3(t *testing.T) {
+	assert := assert.New(t)
+	deploymentName := ".1324"
+	timestamp, err := getTimestampFromDeployment(deploymentName)
+	assert.Nil(err)
+	assert.Equal(timestamp, 1324)
+}
+
+func TestGetTimestampFromDeploymentInvalid1(t *testing.T) {
+	assert := assert.New(t)
+	deploymentName := "application1.adsf"
+	timestamp, err := getTimestampFromDeployment(deploymentName)
+	assert.NotNil(err)
+	assert.Equal(timestamp, 0)
+}
+
+func TestGetTimestampFromDeploymentInvalid2(t *testing.T) {
+	assert := assert.New(t)
+	deploymentName := "application1"
+	timestamp, err := getTimestampFromDeployment(deploymentName)
+	assert.NotNil(err)
+	assert.Equal(timestamp, 0)
+}
+
+func TestGetTimestampFromDeploymentInvalid3(t *testing.T) {
+	assert := assert.New(t)
+	deploymentName := "application1."
+	timestamp, err := getTimestampFromDeployment(deploymentName)
+	assert.NotNil(err)
+	assert.Equal(timestamp, 0)
+}
+
+func TestGetTimestampFromDeploymentInvalid4(t *testing.T) {
+	assert := assert.New(t)
+	deploymentName := "32156"
+	timestamp, err := getTimestampFromDeployment(deploymentName)
+	assert.NotNil(err)
+	assert.Equal(timestamp, 0)
 }

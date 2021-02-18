@@ -21,6 +21,8 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"syscall"
@@ -152,12 +154,18 @@ func ListDeployments(connectionString string) ([]string, error) {
 // GetLatestDeployment gets the last deployment from tenandId with application
 func GetLatestDeployment(deployments []string, tenantId string, application string) (string, error) {
 	appName := fmt.Sprintf("%s.%s", tenantId, application)
+	tenantDeployments := []string{}
 	for _, d := range deployments {
 		if strings.Contains(d, appName) {
-			return d, nil
+			tenantDeployments = append(tenantDeployments, d)
 		}
 	}
-	return "", nil
+	sort.Sort(ByTimestamp(tenantDeployments))
+
+	if len(tenantDeployments) > 0 {
+		return tenantDeployments[0], nil
+	}
+	return "", fmt.Errorf("Error: no deployments found")
 }
 
 func (d *Deployment) createManifestFile() (*os.File, error) {
@@ -172,4 +180,21 @@ func (d *Deployment) createManifestFile() (*os.File, error) {
 		return nil, err
 	}
 	return tmpfile, nil
+}
+
+func getTimestampFromDeployment(deployment string) (int, error) {
+	// This regex pattern finds any numbers with leading `.` in a string.
+	// e.g. tenant.application.321553 results in -> `.321553`
+	re := regexp.MustCompile(`([.][0-9]+)$`)
+	if ok := re.MatchString(deployment); ok {
+		matches := re.FindAllString(deployment, -1)
+		trimmed := strings.Replace(matches[0], ".", "", -1)
+		timestamp, err := strconv.Atoi(trimmed)
+		if err != nil {
+			return 0, err
+		}
+		return timestamp, nil
+	} else {
+		return 0, fmt.Errorf("Error: no timestamp found")
+	}
 }
