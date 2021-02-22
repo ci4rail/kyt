@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package api
+package token
 
 import (
 	"crypto/rsa"
@@ -36,7 +36,7 @@ import (
 // validation failed. For now it always downloads on every request.
 func readFlowKey() (string, error) {
 	// read all signing keys from Azure B2C for specific User Flow
-	response, err := http.Get(azureB2CKeysURI)
+	response, err := http.Get(c.azureB2CKeysURI)
 	if err != nil {
 		return "", err
 	}

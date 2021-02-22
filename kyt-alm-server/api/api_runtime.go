@@ -22,7 +22,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ci4rail/kyt/kyt-alm-server/internal/controller"
+	"github.com/ci4rail/kyt/kyt-serveres-common/iothub"
 	"github.com/gin-gonic/gin"
 	"github.com/golangci/golangci-lint/pkg/sliceutil"
 )
@@ -59,12 +59,12 @@ func RuntimesRidGet(c *gin.Context) {
 		return
 	}
 
-	iotHubConnectionString, err := controller.MapTenantToIOTHubSAS("")
+	iotHubConnectionString, err := iothub.MapTenantToIOTHubSAS("")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	client, err := controller.NewIOTHubServiceClient(iotHubConnectionString)
+	client, err := iothub.NewIOTHubServiceClient(iotHubConnectionString)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -123,12 +123,12 @@ func RuntimesGet(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err})
 		return
 	}
-	iotHubConnectionString, err := controller.MapTenantToIOTHubSAS("")
+	iotHubConnectionString, err := iothub.MapTenantToIOTHubSAS("")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	client, err := controller.NewIOTHubServiceClient(iotHubConnectionString)
+	client, err := iothub.NewIOTHubServiceClient(iotHubConnectionString)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
