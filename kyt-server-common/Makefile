@@ -1,7 +1,8 @@
 SUBDIRS := $(wildcard */.)
+all: test
 
-all: $(SUBDIRS)
+test: $(SUBDIRS)
 $(SUBDIRS):
 		cd $@ && go test
 
-.PHONY: all $(SUBDIRS)
+.PHONY: test $(SUBDIRS)

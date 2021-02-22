@@ -14,36 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package iothub_wrapper
 
 import (
 	"context"
 	"fmt"
-
-	"github.com/amenzhinsky/iothub/iotservice"
 )
-
-// IOTHubServiceClient is an Azure IoT Hub service client.
-type IOTHubServiceClient struct {
-	iotClient   *iotservice.Client
-	deviceIDArr []string // filled by callback of ListDeviceIDs
-	tenantID    string
-}
-
-// NewIOTHubServiceClient creates a new IOTHubServiceClient based on the connection string
-// connection string can be determined with "az iot hub connection-string show"
-func NewIOTHubServiceClient(connectionString string) (*IOTHubServiceClient, error) {
-	c := &IOTHubServiceClient{}
-
-	iotClient, err := iotservice.NewFromConnectionString(connectionString)
-
-	if err != nil {
-		return nil, fmt.Errorf("Can't create IoT Hub Client %s", err)
-	}
-
-	c.iotClient = iotClient
-	return c, nil
-}
 
 // ListDeviceIDs returns a list with the device IDs of all devices of that IoT Hub
 func (c *IOTHubServiceClient) ListDeviceIDs(tenantID string) (*[]string, error) {
@@ -109,17 +85,6 @@ func (c *IOTHubServiceClient) deviceBelongsToTenant(deviceID, tenantID string) (
 		return true, nil
 	}
 	return false, nil
-}
-
-// GetConnectionState gets the connection state from the Device Twin on IoT Hub
-// returns bool: 0 -> disconnected, 1 -> connected
-func (c *IOTHubServiceClient) GetConnectionState(tenantID string, deviceID string) (string, error) {
-	ctx := context.Background()
-	twin, err := c.iotClient.GetDeviceTwin(ctx, deviceID)
-	if err != nil {
-		return "", fmt.Errorf("Error reading device twin %s", err)
-	}
-	return string(twin.ConnectionState), nil
 }
 
 // GetVersions gets the device versiones stored in IoT Hub device twin
