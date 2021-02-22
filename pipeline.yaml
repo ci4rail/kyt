@@ -125,7 +125,6 @@ jobs:
                     cd ${ROOT}/source/kyt-cli
                     make test
                     VERSION=$(cat ${ROOT}/gitversion/plain/InformationalVersion) make
-                    # copy the artifacts as a
                     cp ../bin/kyt ../bin/kyt.exe ${ROOT}/install
           - task: generate-build-args-for-kyt-server-images
             image: image-golang

@@ -70,6 +70,25 @@ jobs:
                 status: failure
 
       - in_parallel:
+          - task: test-kyt-server-common
+            image: image-golang
+            config:
+              platform: linux
+              inputs:
+                - name: pull-request
+              run:
+                path: /bin/bash
+                args:
+                  - -ec
+                  - |
+                    ROOT=$(pwd)
+                    cd ${ROOT}/pull-request/kyt-server-common
+                    make test
+            on_failure:
+              put: pull-request
+              params:
+                path: pull-request
+                status: failure
           - task: build-kyt-cli
             image: image-golang
             config:
