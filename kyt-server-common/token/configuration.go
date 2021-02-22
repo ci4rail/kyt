@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package configuration
+package token
 
 const (
 	userFlow        = "b2c_1_signin_native"

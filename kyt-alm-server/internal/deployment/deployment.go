@@ -28,8 +28,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ci4rail/kyt/kyt-alm-server/internal/controller"
 	"github.com/ci4rail/kyt/kyt-alm-server/internal/deployment/manifest"
+	iothub "github.com/ci4rail/kyt/kyt-server-common/iothub_wrapper"
 )
 
 const (
@@ -55,11 +55,11 @@ type Deployment struct {
 
 // NewDeployment is used to define a new deployment
 func NewDeployment(manifest string, name string, targetCondition string, now int64) (*Deployment, error) {
-	c, err := controller.MapTenantToIOTHubSAS("")
+	c, err := iothub.MapTenantToIOTHubSAS("")
 	if err != nil {
 		return nil, err
 	}
-	h, err := controller.IotHubNameFromConnecetionString(c)
+	h, err := iothub.IotHubNameFromConnecetionString(c)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func NewDeployment(manifest string, name string, targetCondition string, now int
 // CreateOrUpdateFromCustomerDeployment creates a new deployment and deletes the old one if it was
 // already present.
 func CreateOrUpdateFromCustomerDeployment(tenantId string, c *manifest.CustomerManifest) (bool, error) {
-	cs, err := controller.ReadConnectionStringFromEnv()
+	cs, err := iothub.ReadConnectionStringFromEnv()
 	if err != nil {
 		return false, err
 	}
@@ -140,7 +140,7 @@ func (d *Deployment) DeleteDeployment() (bool, error) {
 
 // ListDeployments gets all deployments from the backend service
 func ListDeployments(connectionString string) ([]string, error) {
-	c, err := controller.NewIOTHubServiceClient(connectionString)
+	c, err := iothub.NewIOTHubServiceClient(connectionString)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

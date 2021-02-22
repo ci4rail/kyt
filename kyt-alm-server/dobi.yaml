@@ -2,7 +2,7 @@
 # mounts
 # ===================================================
 mount=mount-kyt-alm-server-src:
-  bind: "kyt-alm-server/"
+  bind: "."
   path: "/src"
   read-only: false
 
@@ -17,7 +17,7 @@ mount=mount-kyt-alm-server-bin:
 
 job=build-kyt-alm-server:
   use: image-go-builder
-  command: bash -c 'cd /src && make -j${nproc}'
+  command: bash -c 'cd /src/kyt-alm-server && make -j${nproc}'
   mounts:
     - mount-kyt-alm-server-src
     - mount-kyt-alm-server-bin

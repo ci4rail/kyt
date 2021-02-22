@@ -36,7 +36,7 @@ import (
 // validation failed. For now it always downloads on every request.
 func readFlowKey() (string, error) {
 	// read all signing keys from Azure B2C for specific User Flow
-	response, err := http.Get(c.azureB2CKeysURI)
+	response, err := http.Get(azureB2CKeysURI)
 	if err != nil {
 		return "", err
 	}
@@ -142,9 +142,9 @@ func ValidateToken(token *jwt.Token) (bool, []string, error) {
 	return token.Valid, claims, nil
 }
 
-// tenantIDFromToken extracts the tenantID from the token.
+// TenantIDFromToken extracts the tenantID from the token.
 // Currently this is the object ID from the user
-func tenantIDFromToken(token *jwt.Token) string {
+func TenantIDFromToken(token *jwt.Token) string {
 	return token.Claims.(*claimsType).ObjectID
 }
 
