@@ -17,8 +17,6 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
-
 	common "github.com/ci4rail/kyt/kyt-cli/internal/common"
 	configuration "github.com/ci4rail/kyt/kyt-cli/internal/configuration"
 	e "github.com/ci4rail/kyt/kyt-cli/internal/errors"
@@ -69,8 +67,8 @@ func initConfig() {
 	// priority 1: servers from config file
 	// priority 2: default servers
 	// If a config file is found, read it in.
-	viper.SetDefault("dlmServerURL", configuration.DefaultDlmServer)
-	viper.SetDefault("almServerURL", configuration.DefaultAlmServer)
+	viper.SetDefault("dlm_server_url", configuration.DefaultDlmServer)
+	viper.SetDefault("alm_server_url", configuration.DefaultAlmServer)
 
 	viper.SetConfigType(common.KytCliConfigFileType)
 	if cfgFile != "" {
@@ -86,14 +84,15 @@ func initConfig() {
 		// Search config in home directory with name ".kyt-cli" (without extension).
 		viper.AddConfigPath(home)
 		viper.SetConfigName(common.KytCliConfigFile)
+		err = viper.WriteConfigAs(home + "/" + common.KytCliConfigFile + "." + common.KytCliConfigFileType)
+		if err != nil {
+			e.Er(err)
+		}
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
 
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
-
-	} else {
+	if err := viper.ReadInConfig(); err != nil {
 		e.Er(err)
 	}
 }

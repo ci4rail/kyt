@@ -17,10 +17,7 @@ limitations under the License.
 package cmd
 
 import (
-	// "fmt"
-
 	"fmt"
-	"log"
 
 	common "github.com/ci4rail/kyt/kyt-cli/internal/common"
 	e "github.com/ci4rail/kyt/kyt-cli/internal/errors"
@@ -47,7 +44,7 @@ func login(cmd *cobra.Command, args []string) {
 
 	u, err := prompt.Run()
 	if err != nil {
-		log.Panicln(err)
+		e.Er(err)
 	}
 	common.Username = u
 
@@ -59,7 +56,7 @@ func login(cmd *cobra.Command, args []string) {
 
 	common.Password, err = prompt.Run()
 	if err != nil {
-		log.Panicln(err)
+		e.Er(err)
 	}
 
 	claims, err := t.GetAccessToken("dlm")
