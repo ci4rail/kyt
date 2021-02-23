@@ -1,5 +1,5 @@
 /*
-Copyright © 2021 Ci4Rail GmbH <engineering@ci4rail.com>
+Copyright © 2021 Ci4Rail GmbH
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,24 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cmd
+package version
 
-import (
-	"fmt"
-
-	"github.com/ci4rail/kyt/kyt-server-common/version"
-	"github.com/spf13/cobra"
-)
-
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Print version information and quit.",
-	Long:  `This command displays version information for the kyt-dlm-server.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("kyt-dlm-server %s\n", version.Version)
-	},
-}
-
-func init() {
-	rootCmd.AddCommand(versionCmd)
-}
+// Version will be filled during linking
+var Version = "dev"

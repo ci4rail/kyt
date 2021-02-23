@@ -19,7 +19,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/ci4rail/kyt/kyt-alm-server/internal/version"
+	"github.com/ci4rail/kyt/kyt-server-common/version"
 	"github.com/spf13/cobra"
 )
 

@@ -28,7 +28,7 @@ job=build-kyt-dlm-server:
     - bin/kyt-dlm-server
   user: "{user.uid}:{user.gid}"
   env:
-    - VERSION={env.GitVersion_InformationalVersion}
+    - VERSION={env.GitVersion_Sha}
     - BIN_DIR=/install
     - GOCACHE=/tmp/cache
   annotations:
@@ -43,6 +43,6 @@ image=image-kyt-dlm-server:
   tags:
     - "{env.GitVersion_InformationalVersion}"
   args:
-    VERSION: "{env.GitVersion_InformationalVersion}"
+    VERSION: "{env.GitVersion_Sha}"
   annotations:
     description: "-> build kyt-dlm-server docker image"

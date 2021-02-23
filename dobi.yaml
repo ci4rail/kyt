@@ -19,5 +19,5 @@ mount=mount-go-pkg:
 image=image-go-builder:
   image: golang
   pull: once
-  tags: 
-    - 1.15.6-buster
+  tags:
+    - 1.16-buster

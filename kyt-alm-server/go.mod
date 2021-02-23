@@ -7,6 +7,7 @@ require (
 	github.com/appleboy/gin-jwt/v2 v2.6.4
 	github.com/ci4rail/kyt/kyt-server-common/iothub_wrapper v0.0.0-00010101000000-000000000000
 	github.com/ci4rail/kyt/kyt-server-common/token v0.0.0-00010101000000-000000000000
+	github.com/ci4rail/kyt/kyt-server-common/version v0.0.0-00010101000000-000000000000
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.6.3
 	github.com/golangci/golangci-lint v1.36.0
@@ -16,4 +17,7 @@ require (
 )
 
 replace github.com/ci4rail/kyt/kyt-server-common/token => ../kyt-server-common/token
+
 replace github.com/ci4rail/kyt/kyt-server-common/iothub_wrapper => ../kyt-server-common/iothub_wrapper
+
+replace github.com/ci4rail/kyt/kyt-server-common/version => ../kyt-server-common/version

@@ -40,6 +40,7 @@ github.com/bketelsen/crypt v0.0.3-0.20200106085610-5cbc8cc4026c/go.mod h1:MKsuJm
 github.com/bombsimon/wsl/v3 v3.1.0/go.mod h1:st10JtZYLE4D5sC7b8xV4zTKZwAQjCH/Hy2Pm1FNZIc=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
 github.com/ci4rail/kyt v0.0.0-20210218152744-ac870f47e4a1 h1:DFUZgYB2P1Hnv+5VCUoH01eN819EI1J6J3VF+H5+i6k=
+github.com/ci4rail/kyt v0.0.0-20210223100436-107e84c8d2af h1:vTHb2EAsCDX3tUaIJH7Cc/jKjNLyeMVwEDCrGkbpz8c=
 github.com/ci4rail/kyt-cli v0.0.0-20210218152744-ac870f47e4a1 h1:QDFXQFTjya+iURQW/nrjBZbAgRzCg43ym/ZKw/KYPxA=
 github.com/ci4rail/kyt-cli/kyt-api-server v0.0.0-20210204124813-5534229b74e3 h1:5Y67czl7pRcaA6r0oV7QXl5s3ZKeRSqlRzLwWp5TGa8=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=

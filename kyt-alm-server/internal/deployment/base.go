@@ -24,8 +24,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ci4rail/kyt/kyt-alm-server/internal/version"
 	iothub "github.com/ci4rail/kyt/kyt-server-common/iothub_wrapper"
+	"github.com/ci4rail/kyt/kyt-server-common/version"
 )
 
 // This is not a comment! It is a directive that includes the json file in a string.
