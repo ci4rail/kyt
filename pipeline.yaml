@@ -159,9 +159,9 @@ jobs:
               tag_file: gitversion/plain/InformationalVersion
               build_args_file: kyt-server-build-args/build-args
 
-          - put: gh-release
-            params:
-              name: gitversion/plain/InformationalVersion
-              tag: gitversion/plain/InformationalVersion
-              globs:
-                - install/*
+      - put: gh-release
+        params:
+          name: gitversion/plain/InformationalVersion
+          tag: gitversion/plain/InformationalVersion
+          globs:
+            - install/*
