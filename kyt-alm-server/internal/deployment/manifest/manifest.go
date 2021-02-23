@@ -24,7 +24,7 @@ type ModuleType struct {
 	StartupOrder    int    `json:"startupOrder"`
 }
 
-type CustomerManifestWithTenant struct {
+type customerManifestWithTenant struct {
 	Application string       `json:"application"`
 	Modules     []ModuleType `json:"modules"`
 	Tenant      string       `json:"tenandId"`
@@ -38,8 +38,8 @@ var fns = template.FuncMap{
 }
 
 const (
-	LayeredManifestTemplate = `
-    {    
+	layeredManifestTemplate = `
+    {
         "content": {
             "modulesContent": {
                 "$edgeAgent": {
@@ -66,13 +66,13 @@ const (
 )
 
 // CreateLayeredManifest creates a new LayeredManifest from a CustomerManifest
-func CreateLayeredManifest(c *CustomerManifest, tenantId string) (string, error) {
-	ct := &CustomerManifestWithTenant{
+func CreateLayeredManifest(c *CustomerManifest, tenantID string) (string, error) {
+	ct := &customerManifestWithTenant{
 		Application: strings.ToLower(c.Application),
 		Modules:     c.Modules,
-		Tenant:      tenantId,
+		Tenant:      tenantID,
 	}
-	t, err := template.New("LayeredDeployment").Funcs(fns).Parse(LayeredManifestTemplate)
+	t, err := template.New("LayeredDeployment").Funcs(fns).Parse(layeredManifestTemplate)
 	if err != nil {
 		return "", err
 	}

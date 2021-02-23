@@ -31,7 +31,7 @@ type testManifest struct {
 	Key string `json:"key"`
 }
 
-func newDeploymentForTest() *Deployment {
+func newCustomerDeploymentForTest() *Deployment {
 	if err := os.Setenv("IOTHUB_SERVICE_CONNECTION_STRING", "HostName=myHub.azure-devices.net;SharedAccessKeyName=myPolicy;SharedAccessKey=asdfasdfasdfasdfasdfasdfBasdfasdfasdfasdfas="); err != nil {
 		fmt.Println(err)
 		return nil
@@ -44,7 +44,7 @@ func newDeploymentForTest() *Deployment {
 		fmt.Println(err)
 		return nil
 	}
-	d, err := NewDeployment(string(j), "mydeployment", "tag='myTag'", true, fmt.Sprintf("%d", time.Now().Unix()))
+	d, err := NewDeployment(string(j), "mydeployment", "tag='myTag'", true, fmt.Sprintf("%d", time.Now().Unix()), 123)
 	if err != nil {
 		fmt.Println(err)
 		return nil
@@ -53,13 +53,51 @@ func newDeploymentForTest() *Deployment {
 	return d
 }
 
-func TestNewDeployment(t *testing.T) {
+func newBaseDeploymentForTest() *Deployment {
+	if err := os.Setenv("IOTHUB_SERVICE_CONNECTION_STRING", "HostName=myHub.azure-devices.net;SharedAccessKeyName=myPolicy;SharedAccessKey=asdfasdfasdfasdfasdfasdfBasdfasdfasdfasdfas="); err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	m := &testManifest{
+		Key: "myValue",
+	}
+	j, err := json.Marshal(m)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	d, err := NewDeployment(string(j), "mydeployment", "tag='myTag'", false, fmt.Sprintf("%d", time.Now().Unix()), 123)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	os.Unsetenv("IOTHUB_SERVICE_CONNECTION_STRING")
+	return d
+}
+
+func TestNewCustomerDeployment(t *testing.T) {
 	assert := assert.New(t)
-	d := newDeploymentForTest()
+	d := newCustomerDeploymentForTest()
 	assert.Equal(d.connectionString, "HostName=myHub.azure-devices.net;SharedAccessKeyName=myPolicy;SharedAccessKey=asdfasdfasdfasdfasdfasdfBasdfasdfasdfasdfas=", "They should be equal")
 	assert.Equal(d.name, "mydeployment")
 	assert.Equal(d.hubName, "myHub")
-	assert.Equal(d.priority, defaultPriority)
+	assert.Equal(d.priority, 223)
+	assert.Equal(d.layered, true)
+	assert.Equal(d.targetCondition, "tag='myTag'")
+	var u testManifest
+	err := json.Unmarshal([]byte(d.manifest), &u)
+	assert.Nil(err, "should be nil")
+	assert.Equal(u.Key, "myValue", "they should be equal")
+}
+
+func TestNewBaseDeployment(t *testing.T) {
+	assert := assert.New(t)
+	d := newBaseDeploymentForTest()
+	assert.Equal(d.connectionString, "HostName=myHub.azure-devices.net;SharedAccessKeyName=myPolicy;SharedAccessKey=asdfasdfasdfasdfasdfasdfBasdfasdfasdfasdfas=", "They should be equal")
+	assert.Equal(d.name, "mydeployment")
+	assert.Equal(d.hubName, "myHub")
+	assert.Equal(d.priority, 123)
+	assert.Equal(d.layered, false)
 	assert.Equal(d.targetCondition, "tag='myTag'")
 	var u testManifest
 	err := json.Unmarshal([]byte(d.manifest), &u)
@@ -77,14 +115,14 @@ func TestNewDeploymentNoEnv(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	_, err = NewDeployment(string(j), "mydeployment", "tag='myTag'", true, fmt.Sprintf("%d", time.Now().Unix()))
+	_, err = NewDeployment(string(j), "mydeployment", "tag='myTag'", true, fmt.Sprintf("%d", time.Now().Unix()), 1)
 	assert.NotNil(err, "should not be nil")
 }
 
 func TestCreateManifestFile(t *testing.T) {
 	assert := assert.New(t)
 
-	d := newDeploymentForTest()
+	d := newCustomerDeploymentForTest()
 	tmpFile, err := d.createManifestFile()
 	assert.Nil(err)
 	readFile, err := ioutil.ReadFile(tmpFile.Name())
@@ -100,6 +138,6 @@ func TestCreateManifestFile(t *testing.T) {
 func TestApplyDeploymentNoConnectionString(t *testing.T) {
 	assert := assert.New(t)
 	deploymentStr := "{\"emptyjson\": true}"
-	_, err := NewDeployment(deploymentStr, "test_deployment", "deviceId='myDeviceId'", true, fmt.Sprintf("%d", time.Now().Unix()))
+	_, err := NewDeployment(deploymentStr, "test_deployment", "deviceId='myDeviceId'", true, fmt.Sprintf("%d", time.Now().Unix()), 1)
 	assert.NotNil(err)
 }

@@ -30,7 +30,7 @@ import (
 
 // CreateOrUpdateFromCustomerDeployment creates a new deployment and deletes the old one if it was
 // already present.
-func CreateOrUpdateFromCustomerDeployment(tenantId string, c *manifest.CustomerManifest) (bool, error) {
+func CreateOrUpdateFromCustomerDeployment(tenantID string, c *manifest.CustomerManifest) (bool, error) {
 	cs, err := iothub.ReadConnectionStringFromEnv()
 	if err != nil {
 		return false, err
@@ -40,20 +40,20 @@ func CreateOrUpdateFromCustomerDeployment(tenantId string, c *manifest.CustomerM
 	if err != nil {
 		return false, err
 	}
-	// Get latest deployment for specific tenantId
-	latestToBeDeletedOnSuccess, err := getLatestCustomerDeployment(deployments, tenantId, c.Application)
+	// Get latest deployment for specific tenantID
+	latestToBeDeletedOnSuccess, err := getLatestCustomerDeployment(deployments, tenantID, c.Application)
 	if err != nil {
 		fmt.Println(err)
 	}
 	// The new deployment needs to be created first to start the update process
-	_, err = createFromCustomerDeployment(tenantId, c)
+	_, err = createFromCustomerDeployment(tenantID, c)
 	if err != nil {
 		return false, err
 	}
 	// Delete old deployment with the same name to finish the update process
 	if len(latestToBeDeletedOnSuccess) > 0 {
 		// create new dummy deployment with specific name to be deleted
-		deleteDeployment, err := NewDeployment("{}", latestToBeDeletedOnSuccess, "", true, "0")
+		deleteDeployment, err := NewDeployment("{}", latestToBeDeletedOnSuccess, "", true, "0", 0)
 		if err != nil {
 			return false, err
 		}
@@ -66,16 +66,16 @@ func CreateOrUpdateFromCustomerDeployment(tenantId string, c *manifest.CustomerM
 }
 
 // createFromCustomerDeployment creates and applies from a customer deployment
-func createFromCustomerDeployment(tenantId string, c *manifest.CustomerManifest) (bool, error) {
+func createFromCustomerDeployment(tenantID string, c *manifest.CustomerManifest) (bool, error) {
 	now := fmt.Sprintf("%d", time.Now().Unix())
-	layered, err := manifest.CreateLayeredManifest(c, tenantId)
+	layered, err := manifest.CreateLayeredManifest(c, tenantID)
 	if err != nil {
 		return false, err
 	}
-	deploymentName := fmt.Sprintf("%s_%s", tenantId, c.Application)
+	deploymentName := fmt.Sprintf("%s_%s", tenantID, c.Application)
 	// Currently the target condition is fixed to the tenant's ID
-	targetCondition := fmt.Sprintf("tags.alm=true AND tags.tenantId='%s'", tenantId)
-	d, err := NewDeployment(layered, deploymentName, targetCondition, true, now)
+	targetCondition := fmt.Sprintf("tags.alm=true AND tags.tenantId='%s'", tenantID)
+	d, err := NewDeployment(layered, deploymentName, targetCondition, true, now, 0)
 	if err != nil {
 		return false, err
 	}
@@ -87,8 +87,8 @@ func createFromCustomerDeployment(tenantId string, c *manifest.CustomerManifest)
 }
 
 // getLatestCustomerDeployment gets the last deployment from tenandId with application
-func getLatestCustomerDeployment(deployments []string, tenantId string, application string) (string, error) {
-	appName := fmt.Sprintf("%s_%s", tenantId, application)
+func getLatestCustomerDeployment(deployments []string, tenantID string, application string) (string, error) {
+	appName := fmt.Sprintf("%s_%s", tenantID, application)
 	tenantDeployments := []string{}
 	for _, d := range deployments {
 		if strings.Contains(d, appName) {
@@ -129,7 +129,6 @@ func getTimestampFromDeployment(deployment string) (int, error) {
 			return 0, err
 		}
 		return timestamp, nil
-	} else {
-		return 0, fmt.Errorf("Error: no timestamp found")
 	}
+	return 0, fmt.Errorf("Error: no timestamp found")
 }

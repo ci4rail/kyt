@@ -67,7 +67,7 @@ func CreateOrUpdateBaseDeployment() (bool, error) {
 		for _, deleteName := range baseDeploymentsToBeDeleted {
 			log.Printf("Deleting old base deployment: %s\n", deleteName)
 			// create new dummy deployment with specific name to be deleted
-			deleteDeployment, err := NewDeployment("{}", deleteName, "", false, "0")
+			deleteDeployment, err := NewDeployment("{}", deleteName, "", false, "0", 0)
 			if err != nil {
 				return false, err
 			}
@@ -88,7 +88,7 @@ func CreateOrUpdateBaseDeployment() (bool, error) {
 // createFromCustomerDeployment creates and applies from a customer deployment
 func createBaseDeployment(manifest string) (bool, error) {
 	targetCondition := "tags.alm=true"
-	d, err := NewDeployment(manifest, baseDeploymentName, targetCondition, false, version.Version)
+	d, err := NewDeployment(manifest, baseDeploymentName, targetCondition, false, version.Version, 0)
 	if err != nil {
 		return false, err
 	}

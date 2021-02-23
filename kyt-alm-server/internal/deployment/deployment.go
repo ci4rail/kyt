@@ -21,7 +21,6 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 	"syscall"
 
@@ -29,8 +28,8 @@ import (
 )
 
 const (
-	defaultPriority    = 1
-	baseDeploymentName = "base_deployment"
+	customerDeploymentPriorityOffset = 100
+	baseDeploymentName               = "base_deployment"
 )
 
 // Interface used for unit testing
@@ -54,7 +53,7 @@ type Deployment struct {
 }
 
 // NewDeployment is used to define a new deployment
-func NewDeployment(manifest string, name string, targetCondition string, layered bool, version string) (*Deployment, error) {
+func NewDeployment(manifest string, name string, targetCondition string, layered bool, version string, priority int) (*Deployment, error) {
 	c, err := iothub.MapTenantToIOTHubSAS("")
 	if err != nil {
 		return nil, err
@@ -63,16 +62,21 @@ func NewDeployment(manifest string, name string, targetCondition string, layered
 	if err != nil {
 		return nil, err
 	}
-	return &Deployment{
+	d := &Deployment{
 		name:             strings.ToLower(name),
 		connectionString: c,
 		manifest:         manifest,
 		hubName:          h,
-		priority:         defaultPriority,
+		priority:         priority,
 		targetCondition:  targetCondition,
 		layered:          layered,
 		version:          version,
-	}, nil
+	}
+	// Layered deployments are customer deployments. Customer deployments have priority offset.
+	if d.layered {
+		d.priority += customerDeploymentPriorityOffset
+	}
+	return d, nil
 }
 
 // DeleteDeployment deletes a specified deployment to the backend service
@@ -132,8 +136,7 @@ func (d *Deployment) applyDeployment() (bool, error) {
 		return false, err
 	}
 	nameWithVersion := fmt.Sprintf("%s_%s", d.name, d.version)
-	priority := strconv.Itoa(defaultPriority)
-	cmdArgs := fmt.Sprintf("%s iot edge deployment create --hub-name %s --content %s --priority %s --target-condition \"%s\" --deployment-id %s --login '%s'", azExecutable, d.hubName, manifestFile.Name(), priority, d.targetCondition, nameWithVersion, d.connectionString)
+	cmdArgs := fmt.Sprintf("%s iot edge deployment create --hub-name %s --content %s --priority %d --target-condition \"%s\" --deployment-id %s --login '%s'", azExecutable, d.hubName, manifestFile.Name(), d.priority, d.targetCondition, nameWithVersion, d.connectionString)
 	if d.layered {
 		cmdArgs += " --layered"
 	}
