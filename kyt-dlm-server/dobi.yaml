@@ -2,7 +2,7 @@
 # mounts
 # ===================================================
 mount=mount-kyt-dlm-server-src:
-  bind: "kyt-dlm-server/"
+  bind: "."
   path: "/src"
   read-only: false
 
@@ -17,7 +17,7 @@ mount=mount-kyt-dlm-server-bin:
 
 job=build-kyt-dlm-server:
   use: image-go-builder
-  command: bash -c 'cd /src && make -j${nproc}'
+  command: bash -c 'cd /src/kyt-dlm-server && make -j${nproc}'
   mounts:
     - mount-kyt-dlm-server-src
     - mount-kyt-dlm-server-bin

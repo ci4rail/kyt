@@ -10,7 +10,7 @@ modules:
     startupOrder: 1
   - name: nginx
     image: nginx:1.19.6
-    createOptions: '{\"HostConfig\":{\"PortBindings\":{\"80/tcp\":[{\"HostPort\":\"12000\"}]}}}'
+    createOptions: '{\"HostConfig\":{\"PortBindings\":{\"80/tcp\":[{\"HostPort\":\"12010\"}]}}}'
     imagePullPolicy: on-create
     restartPolicy: always
     status: running

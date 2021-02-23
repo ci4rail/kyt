@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package api
+package token
 
 import (
 	"crypto/rsa"
@@ -90,7 +90,7 @@ func tokenValidateConvert(js string) (*rsa.PublicKey, error) {
 		e = 65537
 	} else {
 		// need to decode "e" as a big-endian int
-		return &rsa.PublicKey{}, fmt.Errorf("need to deocde e: %s", jwk.E)
+		return &rsa.PublicKey{}, fmt.Errorf("Need to deocde e: %s ", jwk.E)
 	}
 
 	pk := &rsa.PublicKey{
@@ -142,9 +142,9 @@ func ValidateToken(token *jwt.Token) (bool, []string, error) {
 	return token.Valid, claims, nil
 }
 
-// tenantIDFromToken extracts the tenantID from the token.
+// TenantIDFromToken extracts the tenantID from the token.
 // Currently this is the object ID from the user
-func tenantIDFromToken(token *jwt.Token) string {
+func TenantIDFromToken(token *jwt.Token) string {
 	return token.Claims.(*claimsType).ObjectID
 }
 

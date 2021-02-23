@@ -43,42 +43,6 @@ paths:
           $ref: "#/components/responses/Device"
       security:
         - bearerAuth: []
-  '/auth/login':
-    post:
-      tags:
-        - auth
-      summary: Login
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                username:
-                  type: string
-                password:
-                  type: string
-              example:
-                username: user
-                password: password
-      responses:
-        '200':
-          description: Ok
-        '401':
-          description: Unauthorized
-  '/auth/refresh_token':
-    get:
-      tags:
-        - auth
-      summary: Refresh token
-      description: Refreshs a token
-      responses:
-        '200':
-          description: Ok
-        '400':
-          description: Error refreshing token
-      security:
-        - bearerAuth: []
 components:
   parameters:
     Did:

@@ -22,20 +22,21 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ci4rail/kyt/kyt-alm-server/internal/controller"
+	iothub "github.com/ci4rail/kyt/kyt-server-common/iothub_wrapper"
+	t "github.com/ci4rail/kyt/kyt-server-common/token"
 	"github.com/gin-gonic/gin"
 	"github.com/golangci/golangci-lint/pkg/sliceutil"
 )
 
 // RuntimesRidGet -
 func RuntimesRidGet(c *gin.Context) {
-	token, err := ReadToken(c.Request)
+	token, err := t.ReadToken(c.Request)
 	if err != nil {
 		fmt.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
-	tokenValid, claims, err := ValidateToken(token)
+	tokenValid, claims, err := t.ValidateToken(token)
 	if err != nil {
 		fmt.Println(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err})
@@ -47,7 +48,7 @@ func RuntimesRidGet(c *gin.Context) {
 		return
 	}
 	var tenantID string
-	if tenantID = tenantIDFromToken(token); tenantID == "" {
+	if tenantID = t.TenantIDFromToken(token); tenantID == "" {
 		err = fmt.Errorf("Error: reading user ID `oid` from token")
 		c.JSON(http.StatusForbidden, gin.H{"error": err})
 		return
@@ -59,12 +60,12 @@ func RuntimesRidGet(c *gin.Context) {
 		return
 	}
 
-	iotHubConnectionString, err := controller.MapTenantToIOTHubSAS("")
+	iotHubConnectionString, err := iothub.MapTenantToIOTHubSAS("")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	client, err := controller.NewIOTHubServiceClient(iotHubConnectionString)
+	client, err := iothub.NewIOTHubServiceClient(iotHubConnectionString)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -90,7 +91,7 @@ func RuntimesRidGet(c *gin.Context) {
 
 // RuntimesGet - List devices for a tenant
 func RuntimesGet(c *gin.Context) {
-	token, err := ReadToken(c.Request)
+	token, err := t.ReadToken(c.Request)
 	if err != nil {
 		fmt.Println(err)
 		if strings.Contains(err.Error(), "expired") {
@@ -100,7 +101,7 @@ func RuntimesGet(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
-	tokenValid, claims, err := ValidateToken(token)
+	tokenValid, claims, err := t.ValidateToken(token)
 	if err != nil {
 		fmt.Println(err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err})
@@ -112,7 +113,7 @@ func RuntimesGet(c *gin.Context) {
 		return
 	}
 	var tenantID string
-	if tenantID = tenantIDFromToken(token); tenantID == "" {
+	if tenantID = t.TenantIDFromToken(token); tenantID == "" {
 		err = fmt.Errorf("Error: reading user ID `oid` from token")
 		c.JSON(http.StatusForbidden, gin.H{"error": err})
 		return
@@ -123,12 +124,12 @@ func RuntimesGet(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err})
 		return
 	}
-	iotHubConnectionString, err := controller.MapTenantToIOTHubSAS("")
+	iotHubConnectionString, err := iothub.MapTenantToIOTHubSAS("")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	client, err := controller.NewIOTHubServiceClient(iotHubConnectionString)
+	client, err := iothub.NewIOTHubServiceClient(iotHubConnectionString)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
