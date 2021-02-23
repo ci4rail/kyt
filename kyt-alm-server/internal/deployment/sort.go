@@ -2,6 +2,7 @@ package deployment
 
 import "fmt"
 
+// ByTimestamp is a custom sort format that can sort customer deployments by their timestamp
 type ByTimestamp []string
 
 func (s ByTimestamp) Len() int {

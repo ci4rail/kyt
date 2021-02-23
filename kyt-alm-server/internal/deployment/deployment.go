@@ -24,7 +24,7 @@ import (
 	"strings"
 	"syscall"
 
-	iothub "github.com/ci4rail/kyt/kyt-server-common/iothub_wrapper"
+	iothub "github.com/ci4rail/kyt/kyt-server-common/iothubwrapper"
 )
 
 const (

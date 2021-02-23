@@ -14,17 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package iothub_wrapper
+package iothubwrapper
 
 import (
 	"context"
 	"fmt"
-
-	"github.com/amenzhinsky/iothub/iotservice"
 )
 
-// ListRuntimeIDs returns a list with the device IDs of all devices of that IoT Hub
-func (c *IOTHubServiceClient) ListRuntimeIDs(tenantID string) (*[]string, error) {
+// ListDeviceIDs returns a list with the device IDs of all devices of that IoT Hub
+func (c *IOTHubServiceClient) ListDeviceIDs(tenantID string) (*[]string, error) {
 	ctx := context.Background()
 
 	c.tenantID = tenantID
@@ -33,7 +31,7 @@ func (c *IOTHubServiceClient) ListRuntimeIDs(tenantID string) (*[]string, error)
 	// this query selects all devices and returns only the deviceId
 	// Unfortunately, QueryDevices does not support paging
 	query := "SELECT deviceId FROM DEVICES"
-	err := c.iotClient.QueryDevices(ctx, query, c.listRuntimeIDs)
+	err := c.iotClient.QueryDevices(ctx, query, c.listDeviceIDs)
 
 	if err != nil {
 		return nil, fmt.Errorf("Error IoT Hub QueryDevices %s", err)
@@ -42,10 +40,10 @@ func (c *IOTHubServiceClient) ListRuntimeIDs(tenantID string) (*[]string, error)
 }
 
 // this gets called from QueryDevices once for each record (device)
-func (c *IOTHubServiceClient) listRuntimeIDs(v map[string]interface{}) error {
+func (c *IOTHubServiceClient) listDeviceIDs(v map[string]interface{}) error {
 	// This is the place where things read from IoT Hub get entered into &Device{}
 	deviceID := fmt.Sprintf("%v", v["deviceId"])
-	belongs, err := c.deviceBelongsToTenantAndAlm(deviceID, c.tenantID)
+	belongs, err := c.deviceBelongsToTenant(deviceID, c.tenantID)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -56,8 +54,8 @@ func (c *IOTHubServiceClient) listRuntimeIDs(v map[string]interface{}) error {
 	return nil
 }
 
-// ListRuntimeByID returns a list with the device IDs of all devices of that IoT Hub
-func (c *IOTHubServiceClient) ListRuntimeByID(tenantID string, deviceID string) (*string, error) {
+// ListDeviceByID returns a list with the device IDs of all devices of that IoT Hub
+func (c *IOTHubServiceClient) ListDeviceByID(tenantID string, deviceID string) (*string, error) {
 	ctx := context.Background()
 
 	c.tenantID = tenantID
@@ -66,7 +64,7 @@ func (c *IOTHubServiceClient) ListRuntimeByID(tenantID string, deviceID string) 
 	// this query selects all devices and returns only the deviceId
 	// Unfortunately, QueryDevices does not support paging
 	query := fmt.Sprintf("SELECT * FROM DEVICES WHERE deviceId = '%s'", deviceID)
-	err := c.iotClient.QueryDevices(ctx, query, c.listRuntimeIDs)
+	err := c.iotClient.QueryDevices(ctx, query, c.listDeviceIDs)
 
 	if err != nil {
 		return nil, fmt.Errorf("Error IoT Hub QueryDevices %s", err)
@@ -77,24 +75,41 @@ func (c *IOTHubServiceClient) ListRuntimeByID(tenantID string, deviceID string) 
 	return nil, fmt.Errorf("No device found with id: %s", deviceID)
 }
 
-func (c *IOTHubServiceClient) deviceBelongsToTenantAndAlm(deviceID, tenantID string) (bool, error) {
+func (c *IOTHubServiceClient) deviceBelongsToTenant(deviceID, tenantID string) (bool, error) {
 	ctx := context.Background()
 	twin, err := c.iotClient.GetDeviceTwin(ctx, deviceID)
 	if err != nil {
 		return false, fmt.Errorf("Error reading device twin %s", err)
 	}
-	if twin.Tags["tenantId"] == tenantID && twin.Tags["alm"] == true {
+	if twin.Tags["tenantId"] == tenantID {
 		return true, nil
 	}
 	return false, nil
 }
 
-// ListDeployments gets all deployments for a given IoT Hub
-func (c *IOTHubServiceClient) ListDeployments() ([]*iotservice.Configuration, error) {
+// GetVersions gets the device versiones stored in IoT Hub device twin
+func (c *IOTHubServiceClient) GetVersions(tenantID string, deviceID string) (map[string]string, error) {
+	versionsMap := make(map[string]string)
 	ctx := context.Background()
-	deployments, err := c.iotClient.ListConfigurations(ctx)
+	twin, err := c.iotClient.GetDeviceTwin(ctx, deviceID)
 	if err != nil {
-		fmt.Println(err)
+		return nil, fmt.Errorf("Error reading device twin %s", err)
 	}
-	return deployments, nil
+	versionJSON, ok := twin.Properties.Reported["versions"]
+	if ok {
+		v, ok := versionJSON.(map[string]interface{})
+		if ok {
+			firmwareVersion, ok := v["firmwareVersion"].(string)
+			if ok {
+				versionsMap["firmwareVersion"] = firmwareVersion
+			} else {
+				return nil, fmt.Errorf("Error IoT Hub GetFirmwareVersion: no key 'version.firmwareVersion' found")
+			}
+		} else {
+			return nil, fmt.Errorf("Error IoT Hub GetFirmwareVersion: no key 'version' found")
+		}
+	} else {
+		return nil, fmt.Errorf("Error IoT Hub GetFirmwareVersion: no key 'version' found")
+	}
+	return versionsMap, nil
 }

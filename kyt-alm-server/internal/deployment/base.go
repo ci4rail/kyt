@@ -24,7 +24,7 @@ import (
 	"regexp"
 	"strings"
 
-	iothub "github.com/ci4rail/kyt/kyt-server-common/iothub_wrapper"
+	iothub "github.com/ci4rail/kyt/kyt-server-common/iothubwrapper"
 	"github.com/ci4rail/kyt/kyt-server-common/version"
 )
 

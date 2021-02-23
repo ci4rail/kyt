@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/ci4rail/kyt/kyt-alm-server/internal/deployment/manifest"
-	iothub "github.com/ci4rail/kyt/kyt-server-common/iothub_wrapper"
+	iothub "github.com/ci4rail/kyt/kyt-server-common/iothubwrapper"
 )
 
 // CreateOrUpdateFromCustomerDeployment creates a new deployment and deletes the old one if it was

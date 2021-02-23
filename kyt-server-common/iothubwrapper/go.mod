@@ -1,4 +1,4 @@
-module iothub_wrapper
+module iothubwrapper
 
 go 1.15
 
