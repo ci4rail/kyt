@@ -76,7 +76,7 @@ func CreateOrUpdateBaseDeployment() (bool, error) {
 				return false, err
 			}
 		}
-		log.Printf("Current base deployment already present. Nothing to update.\n")
+		log.Printf("Successfully updated base deployment to version: %s.\n", currentDeployment)
 		// Return (true, nil) only if a new deployment has been written
 		return true, nil
 	}

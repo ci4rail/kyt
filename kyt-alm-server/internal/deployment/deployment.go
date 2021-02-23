@@ -82,9 +82,7 @@ func (d *Deployment) DeleteDeployment() (bool, error) {
 		return false, err
 	}
 	cmdArgs := fmt.Sprintf("%s iot edge deployment delete --hub-name %s --deployment-id %s --login '%s'", azExecutable, d.hubName, d.name, d.connectionString)
-	fmt.Println("sh", "-c", cmdArgs)
 	cmd := exec.Command("sh", "-c", cmdArgs)
-
 	err = cmd.Start()
 	if err != nil {
 		return false, err
