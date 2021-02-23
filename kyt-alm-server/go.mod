@@ -1,6 +1,6 @@
 module github.com/ci4rail/kyt/kyt-alm-server
 
-go 1.15
+go 1.16
 
 require (
 	github.com/amenzhinsky/iothub v0.6.2
