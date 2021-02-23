@@ -23,6 +23,7 @@ import (
 
 	sw "github.com/ci4rail/kyt/kyt-alm-server/api"
 	common "github.com/ci4rail/kyt/kyt-alm-server/internal/common"
+	"github.com/ci4rail/kyt/kyt-alm-server/internal/deployment"
 	"github.com/spf13/cobra"
 )
 
@@ -37,8 +38,11 @@ var rootCmd = &cobra.Command{
 	KYT consists of application lifecycle management (alm), device lifecycle management (dlm) and application data services (ads).
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		_, err := deployment.CreateOrUpdateBaseDeployment()
+		if err != nil {
+			log.Println(err)
+		}
 
-		log.Printf("Run args %s\n", args)
 		router := sw.NewRouter()
 
 		log.Fatal(router.Run(serverAddr))

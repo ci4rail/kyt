@@ -17,11 +17,12 @@ limitations under the License.
 package deployment
 
 import (
+	//nolint:errcheck
 	_ "embed"
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/ci4rail/kyt/kyt-alm-server/internal/version"
 	iothub "github.com/ci4rail/kyt/kyt-server-common/iothub_wrapper"
@@ -43,35 +44,51 @@ func CreateOrUpdateBaseDeployment() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	// Get old base deployments
-	baseDeploymentsToBeDeleted := getBaseDeployments(deployments)
-	// The new deployment needs to be created first to start the update process
-	_, err = createBaseDeployment(baseDeploymentManifest)
-	if err != nil {
-		return false, err
+	// First check if the current deployment is already present in backend service
+	currentDeployment := fmt.Sprintf("%s_%s", baseDeploymentName, version.Version)
+	log.Printf("Current base deployment: %s\n", currentDeployment)
+	currentDeploymentFound := false
+	for _, d := range deployments {
+		if d == currentDeployment {
+			currentDeploymentFound = true
+		}
 	}
-	// Delete old base deployments to finish the update process
-	for _, deleteName := range baseDeploymentsToBeDeleted {
-		// create new dummy deployment with specific name to be deleted
-		deleteDeployment, err := NewDeployment("{}", deleteName, "", false, "0")
+	// Create new and delete old base deployments
+	if !currentDeploymentFound {
+		// Get old base deployments
+		baseDeploymentsToBeDeleted := getBaseDeployments(deployments)
+		// The new deployment needs to be created first to start the update process
+		log.Printf("Create new base deployment: %s\n", currentDeployment)
+		_, err = createBaseDeployment(baseDeploymentManifest)
 		if err != nil {
 			return false, err
 		}
-		_, err = deleteDeployment.DeleteDeployment()
-		if err != nil {
-			return false, err
+		// Delete old base deployments to finish the update process
+		for _, deleteName := range baseDeploymentsToBeDeleted {
+			log.Printf("Deleting old base deployment: %s\n", deleteName)
+			// create new dummy deployment with specific name to be deleted
+			deleteDeployment, err := NewDeployment("{}", deleteName, "", false, "0")
+			if err != nil {
+				return false, err
+			}
+			_, err = deleteDeployment.DeleteDeployment()
+			if err != nil {
+				return false, err
+			}
 		}
+		log.Printf("Current base deployment already present. Nothing to update.\n")
+		// Return (true, nil) only if a new deployment has been written
+		return true, nil
 	}
-	return true, nil
+	// Return (false, nil) only if the current base deployment is already in backend service
+	log.Printf("Current base deployment already present. Nothing to update.\n")
+	return false, nil
 }
 
 // createFromCustomerDeployment creates and applies from a customer deployment
 func createBaseDeployment(manifest string) (bool, error) {
-	now := fmt.Sprintf("%d", time.Now().Unix())
-	deploymentName := fmt.Sprintf("%s_%s", baseDeploymentName, version.Version)
-	// Currently the target condition is fixed to the tenant's ID
 	targetCondition := "tags.alm=true"
-	d, err := NewDeployment(manifest, deploymentName, targetCondition, false, now)
+	d, err := NewDeployment(manifest, baseDeploymentName, targetCondition, false, version.Version)
 	if err != nil {
 		return false, err
 	}

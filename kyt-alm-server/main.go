@@ -41,5 +41,6 @@ func main() {
 			log.Fatalf("Error: environment variable %s missing", envIotHubConnectionsString)
 		}
 	}
+
 	cmd.Execute()
 }

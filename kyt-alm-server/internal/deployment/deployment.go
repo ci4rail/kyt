@@ -33,13 +33,15 @@ const (
 	baseDeploymentName = "base_deployment"
 )
 
-type DeploymentInterface interface {
+// Interface used for unit testing
+type Interface interface {
 	applyDeployment() (bool, error)
 	ListDeployments(string) ([]string, error)
 	getLatestCustomerDeployment(string, string, string, string) (string, error)
 	createManifestFile() (*os.File, error)
 }
 
+// Deployment is the struct that contains all relevant data for a deployment
 type Deployment struct {
 	name             string
 	connectionString string
@@ -131,9 +133,9 @@ func (d *Deployment) applyDeployment() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	nameWithTimestamp := fmt.Sprintf("%s_%s", d.name, d.version)
+	nameWithVersion := fmt.Sprintf("%s_%s", d.name, d.version)
 	priority := strconv.Itoa(defaultPriority)
-	cmdArgs := fmt.Sprintf("%s iot edge deployment create --hub-name %s --content %s --priority %s --target-condition \"%s\" --deployment-id %s --login '%s'", azExecutable, d.hubName, manifestFile.Name(), priority, d.targetCondition, nameWithTimestamp, d.connectionString)
+	cmdArgs := fmt.Sprintf("%s iot edge deployment create --hub-name %s --content %s --priority %s --target-condition \"%s\" --deployment-id %s --login '%s'", azExecutable, d.hubName, manifestFile.Name(), priority, d.targetCondition, nameWithVersion, d.connectionString)
 	if d.layered {
 		cmdArgs += " --layered"
 	}
