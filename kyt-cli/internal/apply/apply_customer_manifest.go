@@ -29,7 +29,7 @@ import (
 
 // CustomerManifest -
 func CustomerManifest(c openapi.CustomerManifest) {
-	apiClient, ctx := api.NewAlmAPIWithToken(viper.GetString("almServerURL"), viper.GetString("alm_token"))
+	apiClient, ctx := api.NewAlmAPIWithToken(viper.GetString("alm_server_url"), viper.GetString("alm_token"))
 	resp, err := apiClient.DeploymentApi.ApplyPut(ctx).CustomerManifest(c).Execute()
 	// 401 mean 'Unauthorized'. Let's try to refresh the token once.
 	if resp.StatusCode == 401 {
@@ -38,7 +38,7 @@ func CustomerManifest(c openapi.CustomerManifest) {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		apiClient, ctx := api.NewAlmAPIWithToken(viper.GetString("almServerURL"), viper.GetString("alm_token"))
+		apiClient, ctx := api.NewAlmAPIWithToken(viper.GetString("alm_server_url"), viper.GetString("alm_token"))
 		resp, err = apiClient.DeploymentApi.ApplyPut(ctx).CustomerManifest(c).Execute()
 		if resp.StatusCode == 401 {
 			e.Er("Unable to refresh access token. Please run `login` command again.\n")
@@ -55,25 +55,3 @@ func CustomerManifest(c openapi.CustomerManifest) {
 		e.Er(fmt.Sprintf("Error calling DeploymentApi.ApplyPut: %v\n", err))
 	}
 }
-
-// func apply_file() {
-// 	apiClient, ctx := api.NewAlmAPIWithToken(viper.GetString("almServerURL"), viper.GetString("alm_token"))
-// 	runtimes, resp, err := apiClient.AlmApi.
-// 		RuntimesGet(ctx).Execute()
-// 	// 401 mean 'Unauthorized'. Let's try to refresh the token once.
-// 	if resp.StatusCode == 401 {
-// 		err := token.RefreshToken("alm")
-// 		if err != nil {
-// 			fmt.Println(err)
-// 			os.Exit(1)
-// 		}
-// 		apiClient, ctx := api.NewAlmAPIWithToken(viper.GetString("almServerURL"), viper.GetString("alm_token"))
-// 		runtimes, _, err = apiClient.AlmApi.RuntimesGet(ctx).Execute()
-// 		if err.Error() != "" {
-// 			e.Er(fmt.Sprintf("Error calling AlmApi.RuntimesGet: %v\n", err))
-// 		}
-// 	} else if err.Error() != "" {
-// 		e.Er(fmt.Sprintf("Error calling AlmApi.RuntimesGet: %v\n", err))
-// 	}
-// 	return runtimes, nil
-// }

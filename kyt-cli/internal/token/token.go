@@ -30,7 +30,6 @@ import (
 	configuration "github.com/ci4rail/kyt/kyt-cli/internal/configuration"
 	e "github.com/ci4rail/kyt/kyt-cli/internal/errors"
 	"github.com/dgrijalva/jwt-go"
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 )
 
@@ -250,12 +249,7 @@ func WriteTokensToConfig(token, refreshToken string, ressource string) {
 	viper.Set(ressource+"_token", token)
 	viper.Set(ressource+"_refresh_token", refreshToken)
 
-	home, err := homedir.Dir()
-	if err != nil {
-		e.Er(err)
-	}
-	err = viper.WriteConfigAs(fmt.Sprintf("%s/%s.%s", home, common.KytCliConfigFile, common.KytCliConfigFileType))
-	if err != nil {
+	if err := viper.WriteConfigAs(common.KytConfigPath); err != nil {
 		e.Er(err)
 	}
 }

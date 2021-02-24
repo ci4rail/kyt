@@ -47,7 +47,7 @@ func FetchRuntimes(list []string) []openapi.Runtime {
 }
 
 func fetchRuntimesAll() []openapi.Runtime {
-	apiClient, ctx := api.NewAlmAPIWithToken(viper.GetString("almServerURL"), viper.GetString("alm_token"))
+	apiClient, ctx := api.NewAlmAPIWithToken(viper.GetString("alm_server_url"), viper.GetString("alm_token"))
 	runtimes, resp, err := apiClient.RuntimesApi.RuntimesGet(ctx).Execute()
 	// 401 mean 'Unauthorized'. Let's try to refresh the token once.
 	if resp.StatusCode == 401 {
@@ -56,7 +56,7 @@ func fetchRuntimesAll() []openapi.Runtime {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		apiClient, ctx := api.NewAlmAPIWithToken(viper.GetString("almServerURL"), viper.GetString("alm_token"))
+		apiClient, ctx := api.NewAlmAPIWithToken(viper.GetString("alm_server_url"), viper.GetString("alm_token"))
 		runtimes, _, err = apiClient.RuntimesApi.RuntimesGet(ctx).Execute()
 		if err.Error() != "" {
 			e.Er(fmt.Sprintf("Error calling AlmApi.RuntimesGet: %v\n", err))
@@ -68,7 +68,7 @@ func fetchRuntimesAll() []openapi.Runtime {
 }
 
 func fetchRuntimesByID(runtimeID string) (openapi.Runtime, error) {
-	apiClient, ctx := api.NewAlmAPIWithToken(viper.GetString("almServerURL"), viper.GetString("alm_token"))
+	apiClient, ctx := api.NewAlmAPIWithToken(viper.GetString("alm_server_url"), viper.GetString("alm_token"))
 	runtime, resp, err := apiClient.RuntimesApi.RuntimesRidGet(ctx, runtimeID).Execute()
 	// 401 mean 'Unauthorized'. Let's try to refresh the token once.
 	if resp.StatusCode == 401 {
@@ -77,7 +77,7 @@ func fetchRuntimesByID(runtimeID string) (openapi.Runtime, error) {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		apiClient, ctx := api.NewAlmAPIWithToken(viper.GetString("almServerURL"), viper.GetString("alm_token"))
+		apiClient, ctx := api.NewAlmAPIWithToken(viper.GetString("alm_server_url"), viper.GetString("alm_token"))
 		runtime, resp, err = apiClient.RuntimesApi.RuntimesRidGet(ctx, runtimeID).Execute()
 		if resp.StatusCode == 404 {
 			return openapi.Runtime{}, fmt.Errorf("No runtime found with runtimeID: %s", runtimeID)

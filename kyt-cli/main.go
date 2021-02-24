@@ -15,7 +15,9 @@ limitations under the License.
 */
 package main
 
-import "github.com/ci4rail/kyt/kyt-cli/cmd"
+import (
+	"github.com/ci4rail/kyt/kyt-cli/cmd"
+)
 
 func main() {
 	cmd.Execute()
