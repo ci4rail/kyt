@@ -20,6 +20,7 @@ package common
 var (
 	Username             string
 	Password             string
+	KytConfigPath        string
 	KytCliConfigFile     = ".kyt-cli"
 	KytCliConfigFileType = "yaml"
 )

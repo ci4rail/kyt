@@ -19,6 +19,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	common "github.com/ci4rail/kyt/kyt-cli/internal/common"
 	configuration "github.com/ci4rail/kyt/kyt-cli/internal/configuration"
@@ -76,23 +77,28 @@ func initConfig() {
 	viper.SetConfigType(common.KytCliConfigFileType)
 	if cfgFile != "" {
 		// Use config file from the flag.
+		abs, err := filepath.Abs(cfgFile)
+		if err != nil {
+			e.Er(err)
+		}
+		common.KytConfigPath = abs
 		viper.SetConfigFile(cfgFile)
+		if err := checkAndCreateConfig(cfgFile); err != nil {
+			e.Er(err)
+		}
 	} else {
 		// Find home directory.
 		home, err := homedir.Dir()
 		if err != nil {
 			e.Er(err)
 		}
-
 		// Search config in home directory with name ".kyt-cli" (without extension).
 		viper.AddConfigPath(home)
 		viper.SetConfigName(common.KytCliConfigFile)
-		configFile := fmt.Sprintf("%s/%s.%s", home, common.KytCliConfigFile, common.KytCliConfigFileType)
-		if _, err := os.Stat(configFile); os.IsNotExist(err) {
-			err = viper.WriteConfigAs(configFile)
-			if err != nil {
-				e.Er(err)
-			}
+		cfgFile := fmt.Sprintf("%s/%s.%s", home, common.KytCliConfigFile, common.KytCliConfigFileType)
+		common.KytConfigPath = cfgFile
+		if err := checkAndCreateConfig(cfgFile); err != nil {
+			e.Er(err)
 		}
 	}
 
@@ -101,4 +107,14 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err != nil {
 		e.Er(err)
 	}
+}
+
+func checkAndCreateConfig(path string) error {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		err = viper.WriteConfigAs(path)
+		if err != nil {
+			e.Er(err)
+		}
+	}
+	return nil
 }
