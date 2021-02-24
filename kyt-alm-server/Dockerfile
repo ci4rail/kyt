@@ -1,4 +1,4 @@
-FROM golang:1.15.6 AS build
+FROM golang:1.16 AS build
 WORKDIR /go/src/github.com/ci4rail/
 COPY . /go/src/github.com/ci4rail/kyt
 ENV CGO_ENABLED=0

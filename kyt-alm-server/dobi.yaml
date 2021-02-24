@@ -28,7 +28,7 @@ job=build-kyt-alm-server:
     - bin/kyt-alm-server
   user: "{user.uid}:{user.gid}"
   env:
-    - VERSION={env.GitVersion_InformationalVersion}
+    - VERSION={env.GitVersion_Sha}
     - BIN_DIR=/install
     - GOCACHE=/tmp/cache
   annotations:
@@ -43,6 +43,6 @@ image=image-kyt-alm-server:
   tags:
     - "{env.GitVersion_InformationalVersion}"
   args:
-    VERSION: "{env.GitVersion_InformationalVersion}"
+    VERSION: "{env.GitVersion_Sha}"
   annotations:
     description: "-> build kyt-alm-server docker image"

@@ -22,7 +22,7 @@ import (
 	"net/http"
 	"strings"
 
-	iothub "github.com/ci4rail/kyt/kyt-server-common/iothub_wrapper"
+	iothub "github.com/ci4rail/kyt/kyt-server-common/iothubwrapper"
 	t "github.com/ci4rail/kyt/kyt-server-common/token"
 	"github.com/gin-gonic/gin"
 	"github.com/golangci/golangci-lint/pkg/sliceutil"

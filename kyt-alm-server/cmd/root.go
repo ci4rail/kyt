@@ -23,10 +23,14 @@ import (
 
 	sw "github.com/ci4rail/kyt/kyt-alm-server/api"
 	common "github.com/ci4rail/kyt/kyt-alm-server/internal/common"
+	"github.com/ci4rail/kyt/kyt-alm-server/internal/deployment"
 	"github.com/spf13/cobra"
 )
 
-var serverAddr string
+var (
+	serverAddr             string
+	noCreateBaseDeployment bool
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -37,8 +41,15 @@ var rootCmd = &cobra.Command{
 	KYT consists of application lifecycle management (alm), device lifecycle management (dlm) and application data services (ads).
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		if !noCreateBaseDeployment {
+			_, err := deployment.CreateOrUpdateBaseDeployment()
+			if err != nil {
+				log.Println(err)
+			}
+		} else {
+			log.Println("Called with option 'no-create'. Skipping base deployment check and creation.")
+		}
 
-		log.Printf("Run args %s\n", args)
 		router := sw.NewRouter()
 
 		log.Fatal(router.Run(serverAddr))
@@ -56,11 +67,7 @@ func Execute() {
 }
 
 func init() {
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
 	rootCmd.PersistentFlags().StringVar(&serverAddr, "addr", fmt.Sprintf(":%d", common.KytPort), "address and port the server shall listen to")
+	rootCmd.PersistentFlags().BoolVarP(&noCreateBaseDeployment, "no-create", "n", false, "Disables writing of base deployments to backend service")
 
 }

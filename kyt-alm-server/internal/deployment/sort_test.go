@@ -14,33 +14,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package deployment
 
 import (
-	"log"
-	"os"
+	"sort"
+	"testing"
 
-	"github.com/ci4rail/kyt/kyt-alm-server/cmd"
+	"github.com/stretchr/testify/assert"
 )
 
-const (
-	envIotHubConnectionsString = "IOTHUB_SERVICE_CONNECTION_STRING"
-)
-
-func main() {
-	versionArgFound := false
-	for _, v := range os.Args {
-		if v == "version" || v == "help" || v == "--help" || v == "-h" {
-			versionArgFound = true
-		}
+func TestSortByTimestamp(t *testing.T) {
+	assert := assert.New(t)
+	list := []string{
+		"tenant_application_1",
+		"tenant_application_5",
+		"tenant_application_3",
+		"tenant_application_4",
+		"tenant_application_2",
 	}
-	if !versionArgFound {
-		_, ok := os.LookupEnv(envIotHubConnectionsString)
-
-		if !ok {
-			log.Fatalf("Error: environment variable %s missing", envIotHubConnectionsString)
-		}
-	}
-
-	cmd.Execute()
+	sort.Sort(ByTimestamp(list))
+	assert.Equal(list[0], "tenant_application_5")
+	assert.Equal(list[1], "tenant_application_4")
+	assert.Equal(list[2], "tenant_application_3")
+	assert.Equal(list[3], "tenant_application_2")
+	assert.Equal(list[4], "tenant_application_1")
 }

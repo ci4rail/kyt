@@ -19,17 +19,16 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/ci4rail/kyt/kyt-server-common/version"
 	"github.com/spf13/cobra"
 )
-
-var version = "dev"
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print version information and quit.",
 	Long:  `This command displays version information for the kyt-alm-server.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("kyt-alm-server %s\n", version)
+		fmt.Printf("kyt-alm-server %s\n", version.Version)
 	},
 }
 

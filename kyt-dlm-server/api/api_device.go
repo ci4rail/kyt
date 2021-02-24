@@ -22,7 +22,7 @@ import (
 	"net/http"
 	"strings"
 
-	iothub "github.com/ci4rail/kyt/kyt-server-common/iothub_wrapper"
+	iothub "github.com/ci4rail/kyt/kyt-server-common/iothubwrapper"
 	t "github.com/ci4rail/kyt/kyt-server-common/token"
 	"github.com/gin-gonic/gin"
 	"github.com/golangci/golangci-lint/pkg/sliceutil"
@@ -43,7 +43,7 @@ func DevicesDidGet(c *gin.Context) {
 		return
 	}
 	if !sliceutil.Contains(claims, "DevicesDidGet.read") {
-		err = fmt.Errorf("Error: not allowed.")
+		err = fmt.Errorf("Error: not allowed")
 		c.JSON(http.StatusForbidden, gin.H{"error": err})
 		return
 	}
@@ -118,7 +118,7 @@ func DevicesGet(c *gin.Context) {
 		return
 	}
 	if !sliceutil.Contains(claims, "DevicesGet.read") {
-		err = fmt.Errorf("Error: not allowed.")
+		err = fmt.Errorf("Error: not allowed")
 		c.JSON(http.StatusForbidden, gin.H{"error": err})
 		return
 	}

@@ -10,7 +10,7 @@ resources:
     type: docker-image
     source:
       repository: golang
-      tag: 1.15.6-buster
+      tag: 1.16-buster
 
   - name: image-openapi-generator
     type: docker-image
@@ -124,7 +124,7 @@ jobs:
                     cp -r openapi/openapialm ${ROOT}/source/kyt-cli
                     cd ${ROOT}/source/kyt-cli
                     make test
-                    VERSION=$(cat ${ROOT}/gitversion/plain/InformationalVersion) make
+                    VERSION=$(cat ${ROOT}/gitversion/plain/Sha) make
                     cp ../bin/kyt ../bin/kyt.exe ${ROOT}/install
           - task: generate-build-args-for-kyt-server-images
             image: image-golang
@@ -140,7 +140,7 @@ jobs:
                   - -ec
                   - |
                     ROOT=$(pwd)
-                    echo {\"VERSION\":\"$(cat gitversion/plain/InformationalVersion)\"} > kyt-server-build-args/build-args
+                    echo {\"VERSION\":\"$(cat gitversion/plain/Sha)\"} > kyt-server-build-args/build-args
 
       - in_parallel:
           - put: image-kyt-dlm-server
@@ -159,9 +159,9 @@ jobs:
               tag_file: gitversion/plain/InformationalVersion
               build_args_file: kyt-server-build-args/build-args
 
-          - put: gh-release
-            params:
-              name: gitversion/plain/InformationalVersion
-              tag: gitversion/plain/InformationalVersion
-              globs:
-                - install/*
+      - put: gh-release
+        params:
+          name: gitversion/plain/InformationalVersion
+          tag: gitversion/plain/InformationalVersion
+          globs:
+            - install/*

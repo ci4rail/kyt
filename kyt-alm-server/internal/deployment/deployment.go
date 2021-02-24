@@ -21,28 +21,26 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"regexp"
-	"sort"
-	"strconv"
 	"strings"
 	"syscall"
-	"time"
 
-	"github.com/ci4rail/kyt/kyt-alm-server/internal/deployment/manifest"
-	iothub "github.com/ci4rail/kyt/kyt-server-common/iothub_wrapper"
+	iothub "github.com/ci4rail/kyt/kyt-server-common/iothubwrapper"
 )
 
 const (
-	defaultPriority = 1
+	customerDeploymentPriorityOffset = 100
+	baseDeploymentName               = "base_deployment"
 )
 
-type DeploymentInterface interface {
+// Interface used for unit testing
+type Interface interface {
 	applyDeployment() (bool, error)
 	ListDeployments(string) ([]string, error)
-	getLatestDeployment(string, string, string, string) (string, error)
+	getLatestCustomerDeployment(string, string, string, string) (string, error)
 	createManifestFile() (*os.File, error)
 }
 
+// Deployment is the struct that contains all relevant data for a deployment
 type Deployment struct {
 	name             string
 	connectionString string
@@ -50,11 +48,12 @@ type Deployment struct {
 	hubName          string
 	priority         int
 	targetCondition  string
-	now              string
+	layered          bool
+	version          string
 }
 
 // NewDeployment is used to define a new deployment
-func NewDeployment(manifest string, name string, targetCondition string, now int64) (*Deployment, error) {
+func NewDeployment(manifest string, name string, targetCondition string, layered bool, version string, priority int) (*Deployment, error) {
 	c, err := iothub.MapTenantToIOTHubSAS("")
 	if err != nil {
 		return nil, err
@@ -63,52 +62,21 @@ func NewDeployment(manifest string, name string, targetCondition string, now int
 	if err != nil {
 		return nil, err
 	}
-	return &Deployment{
+	d := &Deployment{
 		name:             strings.ToLower(name),
 		connectionString: c,
 		manifest:         manifest,
 		hubName:          h,
-		priority:         defaultPriority,
+		priority:         priority,
 		targetCondition:  targetCondition,
-		now:              fmt.Sprintf("%d", now),
-	}, nil
-}
-
-// CreateOrUpdateFromCustomerDeployment creates a new deployment and deletes the old one if it was
-// already present.
-func CreateOrUpdateFromCustomerDeployment(tenantId string, c *manifest.CustomerManifest) (bool, error) {
-	cs, err := iothub.ReadConnectionStringFromEnv()
-	if err != nil {
-		return false, err
+		layered:          layered,
+		version:          version,
 	}
-	// Get all deployments fron backend service
-	deployments, err := ListDeployments(cs)
-	if err != nil {
-		return false, err
+	// Layered deployments are customer deployments. Customer deployments have priority offset.
+	if d.layered {
+		d.priority += customerDeploymentPriorityOffset
 	}
-	// Get latest deployment for specific tenantId
-	latestToBeDeletedOnSuccess, err := getLatestDeployment(deployments, tenantId, c.Application)
-	if err != nil {
-		fmt.Println(err)
-	}
-	// The new deployment needs to be created first to start the update process
-	_, err = createFromCustomerDeployment(tenantId, c)
-	if err != nil {
-		return false, err
-	}
-	// Delete old deployment with the same name to finish the update process
-	if len(latestToBeDeletedOnSuccess) > 0 {
-		// create new dummy deployment with specific name to be deleted
-		deleteDeployment, err := NewDeployment("{}", latestToBeDeletedOnSuccess, "", 0)
-		if err != nil {
-			return false, err
-		}
-		_, err = deleteDeployment.DeleteDeployment()
-		if err != nil {
-			return false, err
-		}
-	}
-	return true, nil
+	return d, nil
 }
 
 // DeleteDeployment deletes a specified deployment to the backend service
@@ -118,9 +86,7 @@ func (d *Deployment) DeleteDeployment() (bool, error) {
 		return false, err
 	}
 	cmdArgs := fmt.Sprintf("%s iot edge deployment delete --hub-name %s --deployment-id %s --login '%s'", azExecutable, d.hubName, d.name, d.connectionString)
-	fmt.Println("sh", "-c", cmdArgs)
 	cmd := exec.Command("sh", "-c", cmdArgs)
-
 	err = cmd.Start()
 	if err != nil {
 		return false, err
@@ -157,48 +123,6 @@ func ListDeployments(connectionString string) ([]string, error) {
 	return result, nil
 }
 
-// createFromCustomerDeployment creates and applies from a customer deployment
-func createFromCustomerDeployment(tenantId string, c *manifest.CustomerManifest) (bool, error) {
-	now := time.Now().Unix()
-	layered, err := manifest.CreateLayeredManifest(c, tenantId)
-	if err != nil {
-		return false, err
-	}
-	deploymentName := fmt.Sprintf("%s_%s", tenantId, c.Application)
-	// Currently the target condition is fixed to the tenant's ID
-	targetCondition := fmt.Sprintf("tags.alm=true AND tags.tenantId='%s'", tenantId)
-	d, err := NewDeployment(layered, deploymentName, targetCondition, now)
-	if err != nil {
-		return false, err
-	}
-	ok, err := d.applyDeployment()
-	if err != nil {
-		return false, err
-	}
-	return ok, nil
-}
-
-// getLatestDeployment gets the last deployment from tenandId with application
-func getLatestDeployment(deployments []string, tenantId string, application string) (string, error) {
-	appName := fmt.Sprintf("%s_%s", tenantId, application)
-	tenantDeployments := []string{}
-	for _, d := range deployments {
-		if strings.Contains(d, appName) {
-			if deploymentNameValid(d) {
-				tenantDeployments = append(tenantDeployments, d)
-			}
-		}
-	}
-	sorted := make([]string, len(tenantDeployments))
-	copy(sorted, tenantDeployments)
-	sort.Sort(ByTimestamp(sorted))
-
-	if len(sorted) > 0 {
-		return sorted[0], nil
-	}
-	return "", fmt.Errorf("Info: no latest deployment found")
-}
-
 // applyDeployment writes the deployment to the backend service
 func (d *Deployment) applyDeployment() (bool, error) {
 	manifestFile, err := d.createManifestFile()
@@ -211,10 +135,11 @@ func (d *Deployment) applyDeployment() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	nameWithTimestamp := fmt.Sprintf("%s_%s", d.name, d.now)
-	priority := strconv.Itoa(defaultPriority)
-	cmdArgs := fmt.Sprintf("%s iot edge deployment create --hub-name %s --content %s --priority %s --layered --target-condition \"%s\" --deployment-id %s --login '%s'", azExecutable, d.hubName, manifestFile.Name(), priority, d.targetCondition, nameWithTimestamp, d.connectionString)
-	fmt.Println("sh", "-c", cmdArgs)
+	nameWithVersion := fmt.Sprintf("%s_%s", d.name, d.version)
+	cmdArgs := fmt.Sprintf("%s iot edge deployment create --hub-name %s --content %s --priority %d --target-condition \"%s\" --deployment-id %s --login '%s'", azExecutable, d.hubName, manifestFile.Name(), d.priority, d.targetCondition, nameWithVersion, d.connectionString)
+	if d.layered {
+		cmdArgs += " --layered"
+	}
 	cmd := exec.Command("sh", "-c", cmdArgs)
 
 	err = cmd.Start()
@@ -234,15 +159,6 @@ func (d *Deployment) applyDeployment() (bool, error) {
 	return true, nil
 }
 
-// deploymentNameValid checks if the deployment name has the right pattern
-func deploymentNameValid(name string) bool {
-	re := regexp.MustCompile(`^[a-z0-9-]+_[a-z0-9-]+_[0-9]+$`)
-	if ok := re.MatchString(name); ok {
-		return true
-	}
-	return false
-}
-
 //createManifestFile writes the manifest string to a temp file
 func (d *Deployment) createManifestFile() (*os.File, error) {
 	tmpfile, err := ioutil.TempFile("", "manifest")
@@ -256,22 +172,4 @@ func (d *Deployment) createManifestFile() (*os.File, error) {
 		return nil, err
 	}
 	return tmpfile, nil
-}
-
-// getTimestampFromDeployment returns the timestamp from the deployment name
-func getTimestampFromDeployment(deployment string) (int, error) {
-	// This regex pattern finds any numbers with leading `_` in a string.
-	// e.g. tenant.application.321553 results in -> `_321553`
-	re := regexp.MustCompile(`([_][0-9]+)$`)
-	if ok := re.MatchString(deployment); ok {
-		matches := re.FindAllString(deployment, -1)
-		trimmed := strings.Replace(matches[0], "_", "", -1)
-		timestamp, err := strconv.Atoi(trimmed)
-		if err != nil {
-			return 0, err
-		}
-		return timestamp, nil
-	} else {
-		return 0, fmt.Errorf("Error: no timestamp found")
-	}
 }
