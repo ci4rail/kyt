@@ -17,6 +17,9 @@ limitations under the License.
 package cmd
 
 import (
+	"fmt"
+	"os"
+
 	common "github.com/ci4rail/kyt/kyt-cli/internal/common"
 	configuration "github.com/ci4rail/kyt/kyt-cli/internal/configuration"
 	e "github.com/ci4rail/kyt/kyt-cli/internal/errors"
@@ -84,9 +87,12 @@ func initConfig() {
 		// Search config in home directory with name ".kyt-cli" (without extension).
 		viper.AddConfigPath(home)
 		viper.SetConfigName(common.KytCliConfigFile)
-		err = viper.WriteConfigAs(home + "/" + common.KytCliConfigFile + "." + common.KytCliConfigFileType)
-		if err != nil {
-			e.Er(err)
+		configFile := fmt.Sprintf("%s/%s.%s", home, common.KytCliConfigFile, common.KytCliConfigFileType)
+		if _, err := os.Stat(configFile); os.IsNotExist(err) {
+			err = viper.WriteConfigAs(configFile)
+			if err != nil {
+				e.Er(err)
+			}
 		}
 	}
 
