@@ -59,7 +59,14 @@ const (
                         "startupOrder": {{ $element.StartupOrder }}
                     }{{ if lt $i (minus1 $n) }},{{ end }}
                     {{ end }}
-                }
+				},
+				"$edgeHub": {
+					"properties.desired.routes.upstream": {
+						"priority": 0,
+						"route": "FROM /messages/* INTO $upstream",
+						"timeToLiveSecs": 7200
+					}
+				}
             }
         }
     }`
