@@ -2,7 +2,6 @@
     "modulesContent": {
         "$edgeAgent": {
             "properties.desired": {
-                "modules": {},
                 "runtime": {
                     "settings": {
                         "minDockerVersion": "v1.25"
@@ -22,6 +21,17 @@
                         "settings": {
                             "image": "mcr.microsoft.com/azureiotedge-hub:1.0",
                             "createOptions": "{\"HostConfig\":{\"PortBindings\":{\"8883/tcp\":[{\"HostPort\":\"8883\"}],\"5671/tcp\":[{\"HostPort\":\"5671\"}],\"443/tcp\":[{\"HostPort\":\"443\"}]}}}"
+                        },
+                        "type": "docker",
+                        "status": "running",
+                        "restartPolicy": "always"
+                    }
+                },
+                "modules": {
+                    "nats": {
+                        "settings": {
+                            "image": "nats:2.1.9-alpine",
+                            "createOptions": "{}"
                         },
                         "type": "docker",
                         "status": "running",
