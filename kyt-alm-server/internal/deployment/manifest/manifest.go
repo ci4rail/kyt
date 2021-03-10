@@ -42,10 +42,10 @@ const (
     {
         "content": {
             "modulesContent": {
+            {{ $tenant := .Tenant }}
+            {{ $application := .Application }}
+            {{ $n := len .Modules }}
                 "$edgeAgent": {
-					{{ $tenant := .Tenant }}
-					{{ $application := .Application }}
-                    {{ $n := len .Modules }}
                     {{ range $i, $element := .Modules }}
                     "properties.desired.modules.{{$tenant}}_{{$application}}_{{$element.Name}}": {
                         "settings": {
@@ -59,14 +59,21 @@ const (
                         "startupOrder": {{ $element.StartupOrder }}
                     }{{ if lt $i (minus1 $n) }},{{ end }}
                     {{ end }}
-				},
-				"$edgeHub": {
-					"properties.desired.routes.upstream": {
-						"priority": 0,
-						"route": "FROM /messages/* INTO $upstream",
-						"timeToLiveSecs": 7200
-					}
-				}
+                },
+                "$edgeHub": {
+                    "properties.desired.routes.upstream": {
+                        "priority": 0,
+                        "route": "FROM /messages/* INTO $upstream",
+                        "timeToLiveSecs": 7200
+                    }
+                },
+                {{ range $i, $element := .Modules }}
+                "{{$tenant}}_{{$application}}_{{$element.Name}}": {
+                    "properties.desired": {
+                        "tenantId": "{{$tenant}}"
+                    }
+                }{{ if lt $i (minus1 $n) }},{{ end }}
+                {{ end }}
             }
         }
     }`
