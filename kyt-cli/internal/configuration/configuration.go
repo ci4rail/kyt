@@ -20,29 +20,36 @@ import "fmt"
 
 const (
 	// DefaultDlmServer Production URL to kyt-dlm-server
-	DefaultDlmServer = "https://testing.dlm.ci4rail.com/v1"
+	DefaultDlmServer = "https://testing.dlm.edgefarm.io/v1"
 	// DefaultAlmServer Production URL to kyt-alm-server
-	DefaultAlmServer = "https://testing.alm.ci4rail.com/v1"
+	DefaultAlmServer = "https://testing.alm.edgefarm.io/v1"
 )
 
 const (
 	// TokenEndpoint Token request URL
-	TokenEndpoint = "https://ci4raildev.b2clogin.com/ci4raildev.onmicrosoft.com/B2C_1_native1/oauth2/v2.0/token"
+	TokenEndpoint = "https://edgefarm-dev.eu.auth0.com/oauth/token"
 	// ClientID kyt-cli client id
-	ClientID = "a287703c-f831-4a82-8d79-f0173d5fb9b9"
+	ClientID = "S0uKZJ00Mj4gRNdj1uA889lvc5Vnh0QI"
+)
+
+const (
+	// DlmScope is the name of the scope for dlm apis
+	DlmScope = "dlm"
+	// AlmScope is the name of the scope for alm apis
+	AlmScope = "alm"
 )
 
 // GetConstScopes returns the scopes for the requested ressource that are configured for the application. At least one scope is needed for a successfull login.
 // If no scopes are defined, there will be no token assigned and returns with error code 400.
 func GetConstScopes(ressource string) ([]string, error) {
-	if ressource == "dlm" {
-		return []string{"https://ci4raildev.onmicrosoft.com/dlm/DevicesGet.read",
-			"https://ci4raildev.onmicrosoft.com/dlm/DevicesDidGet.read"}, nil
+	if ressource == DlmScope {
+		return []string{DlmScope + "/DevicesGet.read",
+			DlmScope + "/DevicesDidGet.read"}, nil
 
-	} else if ressource == "alm" {
-		return []string{"https://ci4raildev.onmicrosoft.com/alm/RuntimesGet.read",
-			"https://ci4raildev.onmicrosoft.com/alm/RuntimesRidGet.read",
-			"https://ci4raildev.onmicrosoft.com/alm/Apply.write"}, nil
+	} else if ressource == AlmScope {
+		return []string{AlmScope + "/RuntimesGet.read",
+			AlmScope + "/RuntimesRidGet.read",
+			AlmScope + "/Apply.write"}, nil
 	} else {
 		return nil, fmt.Errorf("scopes for invalid ressource requested")
 	}

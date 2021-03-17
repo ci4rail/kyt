@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	common "github.com/ci4rail/kyt/kyt-cli/internal/common"
+	configuration "github.com/ci4rail/kyt/kyt-cli/internal/configuration"
 	e "github.com/ci4rail/kyt/kyt-cli/internal/errors"
 	t "github.com/ci4rail/kyt/kyt-cli/internal/token"
 	"github.com/manifoldco/promptui"
@@ -59,31 +60,25 @@ func login(cmd *cobra.Command, args []string) {
 		e.Er(err)
 	}
 
-	claims, err := t.GetAccessToken("dlm")
+	// get DLM access token
+	claims, err := t.GetTokens(configuration.DlmScope)
 	if err != nil {
 		e.Er(err)
 	}
-	_, err = t.GetAccessToken("alm")
+	// get ALM access token
+	_, err = t.GetTokens(configuration.AlmScope)
 	if err != nil {
 		e.Er(err)
 	}
 
 	fmt.Println("Login Succeeded")
-	givenName := ""
-	if givenNameClaims, ok := claims["given_name"]; ok {
-		if str, ok := givenNameClaims.(string); ok {
-			givenName = str
+	name := ""
+	if nameClaim, ok := claims["name"]; ok {
+		if str, ok := nameClaim.(string); ok {
+			name = str
 		}
 	}
 
-	familyName := ""
-	if familyNameClaims, ok := claims["family_name"]; ok {
-		if str, ok := familyNameClaims.(string); ok {
-			familyName = str
-		}
-	}
-
-	name := fmt.Sprintf("%s %s", givenName, familyName)
 	if len(name) > 0 {
 		fmt.Printf("Logged in as: %s\n", name)
 	}
