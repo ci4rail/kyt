@@ -16,9 +16,26 @@ limitations under the License.
 
 package api
 
+import (
+	"encoding/json"
+	"net/http"
+)
+
 // Runtime struct containing supported runtime information
 type Runtime struct {
 	ID      string `json:"id"`
 	Name    string `json:"name,omitempty"`
 	Network string `json:"network,omitempty"`
+}
+
+func responseJSON(message interface{}, w http.ResponseWriter, statusCode int) {
+	jsonResponse, err := json.Marshal(message)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	w.Write(jsonResponse)
 }

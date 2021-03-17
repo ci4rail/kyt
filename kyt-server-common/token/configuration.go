@@ -17,7 +17,5 @@ limitations under the License.
 package token
 
 const (
-	userFlow        = "b2c_1_native1"
-	azureB2CTenant  = "ci4raildev"
-	azureB2CKeysURI = "https://" + azureB2CTenant + ".b2clogin.com/" + azureB2CTenant + ".onmicrosoft.com/" + userFlow + "/discovery/v2.0/keys"
+	jsonWebKeySet = "https://edgefarm-dev.eu.auth0.com/.well-known/jwks.json"
 )

@@ -19,11 +19,13 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
 	sw "github.com/ci4rail/kyt/kyt-alm-server/api"
 	common "github.com/ci4rail/kyt/kyt-alm-server/internal/common"
 	"github.com/ci4rail/kyt/kyt-alm-server/internal/deployment"
+	"github.com/rs/cors"
 	"github.com/spf13/cobra"
 )
 
@@ -50,10 +52,23 @@ var rootCmd = &cobra.Command{
 			log.Println("Called with option 'no-create'. Skipping base deployment check and creation.")
 		}
 
-		router := sw.NewRouter()
+		c := cors.New(cors.Options{
+			AllowedOrigins:   []string{"http://localhost:8080"},
+			AllowCredentials: true,
+			AllowedHeaders:   []string{"Authorization"},
+		})
 
-		log.Fatal(router.Run(serverAddr))
-
+		router, err := sw.NewRouter()
+		if err != nil {
+			log.Fatal(err)
+		}
+		handler := c.Handler(router)
+		http.Handle("/", router)
+		addr := fmt.Sprintf("localhost:%d", common.KytPort)
+		err = http.ListenAndServe(addr, handler)
+		if err != nil {
+			log.Fatal(err)
+		}
 	},
 }
 
