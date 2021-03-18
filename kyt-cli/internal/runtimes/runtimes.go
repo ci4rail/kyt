@@ -50,6 +50,9 @@ func FetchRuntimes(list []string) []openapi.Runtime {
 func fetchRuntimesAll() []openapi.Runtime {
 	apiClient, ctx := api.NewAlmAPIWithToken(viper.GetString("alm_server_url"), viper.GetString("alm_token"))
 	runtimes, resp, err := apiClient.RuntimesApi.RuntimesGet(ctx).Execute()
+	if resp == nil && len(err.Error()) > 0 {
+		e.Er("ALM Server unreachable\n")
+	}
 	// 401 mean 'Unauthorized'. Let's try to refresh the token once.
 	if resp.StatusCode == 401 {
 		err := token.RefreshToken(configuration.AlmScope)
@@ -71,6 +74,9 @@ func fetchRuntimesAll() []openapi.Runtime {
 func fetchRuntimesByID(runtimeID string) (openapi.Runtime, error) {
 	apiClient, ctx := api.NewAlmAPIWithToken(viper.GetString("alm_server_url"), viper.GetString("alm_token"))
 	runtime, resp, err := apiClient.RuntimesApi.RuntimesRidGet(ctx, runtimeID).Execute()
+	if resp == nil && len(err.Error()) > 0 {
+		e.Er("ALM Server unreachable\n")
+	}
 	// 401 mean 'Unauthorized'. Let's try to refresh the token once.
 	if resp.StatusCode == 401 {
 		err := token.RefreshToken(configuration.AlmScope)
