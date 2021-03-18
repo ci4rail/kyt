@@ -21,13 +21,27 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	d "github.com/ci4rail/kyt/kyt-alm-server/internal/deployment"
 	m "github.com/ci4rail/kyt/kyt-alm-server/internal/deployment/manifest"
+	token "github.com/ci4rail/kyt/kyt-server-common/token"
 )
 
-// ApplyPut -
+// ApplyPut applies a customer manifest to the tenants devices
 func ApplyPut(w http.ResponseWriter, r *http.Request) {
+	authHeaderParts := strings.Split(r.Header.Get("Authorization"), " ")
+	tokenRead := authHeaderParts[1]
+
+	hasScope := token.CheckScope("alm/Apply.write", tokenRead)
+
+	tenants := token.GetTenants(tokenRead)
+
+	if !hasScope {
+		responseJSON("Error: insufficient scope.", w, http.StatusForbidden)
+		return
+	}
+
 	jsonData, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		err = fmt.Errorf("Error: cannot read payload")
@@ -41,9 +55,16 @@ func ApplyPut(w http.ResponseWriter, r *http.Request) {
 		responseJSON(fmt.Sprintf("error: %s", err), w, http.StatusInternalServerError)
 		return
 	}
-	_, err = d.CreateOrUpdateFromCustomerDeployment("TODO_TenantID", &manifest)
-	if err != nil {
-		responseJSON(fmt.Sprintf("error: %s", err), w, http.StatusInternalServerError)
+	errStr := ""
+	for _, tenant := range tenants {
+		_, err = d.CreateOrUpdateFromCustomerDeployment(tenant, &manifest)
+		if err != nil {
+			errStr += fmt.Sprintf("%s: %s\n", tenant, err)
+			continue
+		}
+	}
+	if len(errStr) > 0 {
+		responseJSON(fmt.Sprintf("error: failed applying deployment for:\n%s", errStr), w, http.StatusInternalServerError)
 		return
 	}
 	responseJSON("OK", w, http.StatusOK)

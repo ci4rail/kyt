@@ -7,7 +7,6 @@ require (
 	github.com/ci4rail/kyt/kyt-server-common/iothubwrapper v0.0.0-00010101000000-000000000000
 	github.com/ci4rail/kyt/kyt-server-common/token v0.0.0-00010101000000-000000000000
 	github.com/ci4rail/kyt/kyt-server-common/version v0.0.0-00010101000000-000000000000
-	github.com/codegangsta/negroni v1.0.0
 	github.com/google/go-cmp v0.5.4 // indirect
 	github.com/gorilla/mux v1.7.4
 	github.com/kr/text v0.2.0 // indirect

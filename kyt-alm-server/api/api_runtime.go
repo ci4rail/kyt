@@ -24,70 +24,72 @@ import (
 
 	iothub "github.com/ci4rail/kyt/kyt-server-common/iothubwrapper"
 	token "github.com/ci4rail/kyt/kyt-server-common/token"
+	"github.com/gorilla/mux"
 )
 
-// // RuntimesRidGet -
-// func RuntimesRidGet(c *gin.Context) {
-// 	token, err := t.ReadToken(c.Request)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
-// 		return
-// 	}
-// 	tokenValid, claims, err := t.ValidateToken(token)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		c.JSON(http.StatusUnauthorized, gin.H{"error": err})
-// 		return
-// 	}
-// 	if !sliceutil.Contains(claims, "RuntimesGet.read") {
-// 		err = fmt.Errorf("Error: not allowed")
-// 		c.JSON(http.StatusForbidden, gin.H{"error": err})
-// 		return
-// 	}
-// 	var tenantID string
-// 	if tenantID = t.TenantIDFromToken(token); tenantID == "" {
-// 		err = fmt.Errorf("Error: reading user ID `oid` from token")
-// 		c.JSON(http.StatusForbidden, gin.H{"error": err})
-// 		return
-// 	}
-// 	// If token is not valid it means that either it has expired or the signature cannot be validated.
-// 	// In both cases return `Unauthorized`.
-// 	if !tokenValid {
-// 		c.JSON(http.StatusUnauthorized, gin.H{"error": err})
-// 		return
-// 	}
+// RuntimesRidGet lists specific filtered devices for a list of tenants
+func RuntimesRidGet(w http.ResponseWriter, r *http.Request) {
+	authHeaderParts := strings.Split(r.Header.Get("Authorization"), " ")
+	tokenRead := authHeaderParts[1]
 
-// 	iotHubConnectionString, err := iothub.MapTenantToIOTHubSAS("")
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
+	hasScope := token.CheckScope("alm/RuntimesGet.read", tokenRead)
 
-// 	client, err := iothub.NewIOTHubServiceClient(iotHubConnectionString)
+	tenants := token.GetTenants(tokenRead)
 
-// 	if err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-// 		return
-// 	}
-// 	runtimeIDFilter := c.Param("rid")
-// 	deviceID, err := client.ListRuntimeByID(tenantID, runtimeIDFilter)
-// 	if err != nil {
-// 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-// 		return
-// 	}
-// 	connection, err := client.GetConnectionState(tenantID, runtimeIDFilter)
-// 	if err != nil {
-// 		c.JSON(http.StatusNotFound, gin.H{"error": err})
-// 		return
-// 	}
+	if !hasScope {
+		responseJSON("Error: insufficient scope.", w, http.StatusForbidden)
+		return
+	}
 
-// 	c.JSON(http.StatusOK, &Runtime{
-// 		ID:      *deviceID,
-// 		Network: connection,
-// 	})
-// }
+	iotHubConnectionString, err := iothub.MapTenantToIOTHubSAS("")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-// RuntimesGet - List devices for a tenant
+	client, err := iothub.NewIOTHubServiceClient(iotHubConnectionString)
+
+	if err != nil {
+		responseJSON(fmt.Sprintf("error: %s", err), w, http.StatusInternalServerError)
+		return
+	}
+	params := mux.Vars(r)
+	runtimeIDFilter := params["rid"]
+
+	var deviceID string = ""
+	deviceFound := false
+	// check if the device is owed by any of the given tenants
+	for _, t := range tenants {
+		d, err := client.ListRuntimeByID(t, runtimeIDFilter)
+		// move to next tenant in the list and try this tenant
+		if err != nil {
+			continue
+		}
+		// device found
+		if d != nil {
+			deviceID = *d
+			deviceFound = true
+			break
+		}
+	}
+	if !deviceFound {
+		responseJSON(fmt.Sprintf("error: %s", err), w, http.StatusNotFound)
+		return
+	}
+
+	connection, err := client.GetConnectionState(deviceID)
+	if err != nil {
+		responseJSON(fmt.Sprintf("error: %s", err), w, http.StatusInternalServerError)
+		return
+	}
+
+	runtime := &Runtime{
+		ID:      deviceID,
+		Network: connection,
+	}
+	responseJSON(runtime, w, http.StatusOK)
+}
+
+// RuntimesGet lists all devices for a list of tenants
 func RuntimesGet(w http.ResponseWriter, r *http.Request) {
 	authHeaderParts := strings.Split(r.Header.Get("Authorization"), " ")
 	tokenRead := authHeaderParts[1]
@@ -97,8 +99,7 @@ func RuntimesGet(w http.ResponseWriter, r *http.Request) {
 	tenants := token.GetTenants(tokenRead)
 
 	if !hasScope {
-		message := "Insufficient scope."
-		responseJSON(message, w, http.StatusForbidden)
+		responseJSON("Error: insufficient scope.", w, http.StatusForbidden)
 		return
 	}
 
@@ -115,6 +116,7 @@ func RuntimesGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var deviceIDs []string
+	// get devices for owned by all given tenants
 	for _, t := range tenants {
 		d, err := client.ListRuntimeIDs(t)
 		if err != nil {
