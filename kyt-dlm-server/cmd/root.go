@@ -19,10 +19,12 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
 	sw "github.com/ci4rail/kyt/kyt-dlm-server/api"
 	common "github.com/ci4rail/kyt/kyt-dlm-server/internal/common"
+	"github.com/rs/cors"
 	"github.com/spf13/cobra"
 )
 
@@ -38,11 +40,21 @@ var rootCmd = &cobra.Command{
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		log.Printf("Run args %s\n", args)
-		router := sw.NewRouter()
+		c := cors.New(cors.Options{
+			AllowCredentials: true,
+			AllowedHeaders:   []string{"Authorization"},
+		})
 
-		log.Fatal(router.Run(serverAddr))
-
+		router, err := sw.NewRouter()
+		if err != nil {
+			log.Fatal(err)
+		}
+		handler := c.Handler(router)
+		http.Handle("/", router)
+		err = http.ListenAndServe(serverAddr, handler)
+		if err != nil {
+			log.Fatal(err)
+		}
 	},
 }
 
@@ -61,6 +73,6 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&serverAddr, "addr", fmt.Sprintf(":%d", common.KytPort), "address and port the server shall listen to")
+	rootCmd.PersistentFlags().StringVar(&serverAddr, "addr", fmt.Sprintf(":%d", common.ServicePort), "address and port the server shall listen to")
 
 }

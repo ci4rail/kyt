@@ -53,7 +53,6 @@ var rootCmd = &cobra.Command{
 		}
 
 		c := cors.New(cors.Options{
-			AllowedOrigins:   []string{"http://localhost:8080"},
 			AllowCredentials: true,
 			AllowedHeaders:   []string{"Authorization"},
 		})
@@ -64,8 +63,7 @@ var rootCmd = &cobra.Command{
 		}
 		handler := c.Handler(router)
 		http.Handle("/", router)
-		addr := fmt.Sprintf("localhost:%d", common.KytPort)
-		err = http.ListenAndServe(addr, handler)
+		err = http.ListenAndServe(serverAddr, handler)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -82,7 +80,7 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&serverAddr, "addr", fmt.Sprintf(":%d", common.KytPort), "address and port the server shall listen to")
+	rootCmd.PersistentFlags().StringVar(&serverAddr, "addr", fmt.Sprintf(":%d", common.ServicePort), "address and port the server shall listen to")
 	rootCmd.PersistentFlags().BoolVarP(&noCreateBaseDeployment, "no-create", "n", false, "Disables writing of base deployments to backend service")
 
 }

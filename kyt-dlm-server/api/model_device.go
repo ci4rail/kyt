@@ -16,10 +16,27 @@ limitations under the License.
 
 package api
 
+import (
+	"encoding/json"
+	"net/http"
+)
+
 // Device struct containing supported device information
 type Device struct {
 	ID              string `json:"id"`
 	Name            string `json:"name,omitempty"`
 	Network         string `json:"network,omitempty"`
 	FirmwareVersion string `json:"firmware_version,omitempty"`
+}
+
+func responseJSON(message interface{}, w http.ResponseWriter, statusCode int) {
+	jsonResponse, err := json.Marshal(message)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	w.Write(jsonResponse)
 }

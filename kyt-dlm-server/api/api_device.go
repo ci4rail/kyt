@@ -23,40 +23,21 @@ import (
 	"strings"
 
 	iothub "github.com/ci4rail/kyt/kyt-server-common/iothubwrapper"
-	t "github.com/ci4rail/kyt/kyt-server-common/token"
-	"github.com/gin-gonic/gin"
-	"github.com/golangci/golangci-lint/pkg/sliceutil"
+	token "github.com/ci4rail/kyt/kyt-server-common/token"
+	"github.com/gorilla/mux"
 )
 
-// DevicesDidGet -
-func DevicesDidGet(c *gin.Context) {
-	token, err := t.ReadToken(c.Request)
-	if err != nil {
-		fmt.Println(err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
-		return
-	}
-	tokenValid, claims, err := t.ValidateToken(token)
-	if err != nil {
-		fmt.Println(err)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err})
-		return
-	}
-	if !sliceutil.Contains(claims, "DevicesDidGet.read") {
-		err = fmt.Errorf("Error: not allowed")
-		c.JSON(http.StatusForbidden, gin.H{"error": err})
-		return
-	}
-	var tenantID string
-	if tenantID = t.TenantIDFromToken(token); tenantID == "" {
-		err = fmt.Errorf("Error: reading user ID `oid` from token")
-		c.JSON(http.StatusForbidden, gin.H{"error": err})
-		return
-	}
-	// If token is not valid it means that either it has expired or the signature cannot be validated.
-	// In both cases return `Unauthorized`.
-	if !tokenValid {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err})
+// DevicesDidGet gets a specific device for given tenants
+func DevicesDidGet(w http.ResponseWriter, r *http.Request) {
+	authHeaderParts := strings.Split(r.Header.Get("Authorization"), " ")
+	tokenRead := authHeaderParts[1]
+
+	hasScope := token.CheckScope("dlm/DevicesDidGet.read", tokenRead)
+
+	tenants := token.GetTenants(tokenRead)
+
+	if !hasScope {
+		responseJSON("Error: insufficient scope.", w, http.StatusForbidden)
 		return
 	}
 
@@ -66,23 +47,40 @@ func DevicesDidGet(c *gin.Context) {
 	}
 
 	client, err := iothub.NewIOTHubServiceClient(iotHubConnectionString)
+	if err != nil {
+		responseJSON(fmt.Sprintf("error: %s", err), w, http.StatusInternalServerError)
+		return
+	}
 
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	params := mux.Vars(r)
+	deviceIDFilter := params["did"]
+
+	var deviceID string = ""
+	deviceFound := false
+	// check if the device is owed by any of the given tenants
+	for _, t := range tenants {
+		d, err := client.ListDeviceByID(t, deviceIDFilter)
+		// move to next tenant in the list and try this tenant
+		if err != nil {
+			continue
+		}
+		// device found
+		if d != nil {
+			deviceID = *d
+			deviceFound = true
+			break
+		}
+	}
+	if !deviceFound {
+		responseJSON(fmt.Sprintf("error: %s", err), w, http.StatusNotFound)
 		return
 	}
-	deviceIDFilter := c.Param("did")
-	deviceID, err := client.ListDeviceByID(tenantID, deviceIDFilter)
+	connection, err := client.GetConnectionState(deviceIDFilter)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		responseJSON(fmt.Sprintf("error: %s", err), w, http.StatusInternalServerError)
 		return
 	}
-	connection, err := client.GetConnectionState(tenantID, deviceIDFilter)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err})
-		return
-	}
-	versions, err := client.GetVersions(tenantID, deviceIDFilter)
+	versions, err := client.GetVersions(deviceIDFilter)
 	if err != nil {
 		fmt.Printf("Info: device didn't repoart a version yet: %s\n", deviceIDFilter)
 	}
@@ -92,74 +90,56 @@ func DevicesDidGet(c *gin.Context) {
 		firmwareVersion = f
 	}
 
-	c.JSON(http.StatusOK, &Device{
-		ID:              *deviceID,
+	responseJSON(&Device{
+		ID:              deviceID,
 		Network:         connection,
 		FirmwareVersion: firmwareVersion,
-	})
+	}, w, http.StatusOK)
 }
 
-// DevicesGet - List devices for a tenant
-func DevicesGet(c *gin.Context) {
-	token, err := t.ReadToken(c.Request)
-	if err != nil {
-		fmt.Println(err)
-		if strings.Contains(err.Error(), "expired") {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+// DevicesGet list devices for given tenants
+func DevicesGet(w http.ResponseWriter, r *http.Request) {
+	authHeaderParts := strings.Split(r.Header.Get("Authorization"), " ")
+	tokenRead := authHeaderParts[1]
+
+	hasScope := token.CheckScope("dlm/DevicesGet.read", tokenRead)
+
+	tenants := token.GetTenants(tokenRead)
+
+	if !hasScope {
+		responseJSON("Error: insufficient scope.", w, http.StatusForbidden)
 		return
 	}
-	tokenValid, claims, err := t.ValidateToken(token)
-	if err != nil {
-		fmt.Println(err)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err})
-		return
-	}
-	if !sliceutil.Contains(claims, "DevicesGet.read") {
-		err = fmt.Errorf("Error: not allowed")
-		c.JSON(http.StatusForbidden, gin.H{"error": err})
-		return
-	}
-	var tenantID string
-	if tenantID = t.TenantIDFromToken(token); tenantID == "" {
-		err = fmt.Errorf("Error: reading user ID `oid` from token")
-		c.JSON(http.StatusForbidden, gin.H{"error": err})
-		return
-	}
-	// If token is not valid it means that either it has expired or the signature cannot be validated.
-	// In both cases return `Unauthorized`.
-	if !tokenValid {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err})
-		return
-	}
+
 	iotHubConnectionString, err := iothub.MapTenantToIOTHubSAS("")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	client, err := iothub.NewIOTHubServiceClient(iotHubConnectionString)
-
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		responseJSON(fmt.Sprintf("error: %s", err), w, http.StatusInternalServerError)
 		return
 	}
 
-	deviceIDs, err := client.ListDeviceIDs(tenantID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	var deviceList []Device
-	for _, deviceID := range *deviceIDs {
-		connection, err := client.GetConnectionState(tenantID, deviceID)
+	var deviceIDs []string
+	// get devices for owned by all given tenants
+	for _, t := range tenants {
+		d, err := client.ListDeviceIDs(t)
 		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			responseJSON(fmt.Sprintf("error: %s", err), w, http.StatusInternalServerError)
 			return
 		}
-		versions, err := client.GetVersions(tenantID, deviceID)
+		deviceIDs = append(deviceIDs, *d...)
+	}
+	var deviceList []Device
+	for _, deviceID := range deviceIDs {
+		connection, err := client.GetConnectionState(deviceID)
+		if err != nil {
+			responseJSON(fmt.Sprintf("error: %s", err), w, http.StatusInternalServerError)
+			return
+		}
+		versions, err := client.GetVersions(deviceID)
 		if err != nil {
 			fmt.Printf("Info: device didn't repoart a version yet: %s\n", deviceID)
 		}
@@ -174,6 +154,5 @@ func DevicesGet(c *gin.Context) {
 			FirmwareVersion: firmwareVersion,
 		})
 	}
-
-	c.JSON(http.StatusOK, deviceList)
+	responseJSON(deviceList, w, http.StatusOK)
 }
