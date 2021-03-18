@@ -28,8 +28,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Device'
-        '400':
-          description: Invalid ID supplied
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
       security:
         - bearerAuth: []
   '/devices/{did}':
@@ -39,8 +43,13 @@ paths:
       tags:
         - device
       responses:
-        200:
+        '200':
+          description: Ok
           $ref: "#/components/responses/Device"
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
       security:
         - bearerAuth: []
 components:
