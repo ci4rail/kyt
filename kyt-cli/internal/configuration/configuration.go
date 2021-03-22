@@ -29,7 +29,7 @@ const (
 	// TokenEndpoint Token request URL
 	TokenEndpoint = "https://edgefarm-dev.eu.auth0.com/oauth/token"
 	// ClientID kyt-cli client id
-	ClientID = "S0uKZJ00Mj4gRNdj1uA889lvc5Vnh0QI"
+	ClientID = "FTc7m81Z4awKUcLziMhVINCg50xreDmp"
 )
 
 const (
