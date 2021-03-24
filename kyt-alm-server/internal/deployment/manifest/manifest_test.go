@@ -22,6 +22,10 @@ func TestCreateLayeredManifest(t *testing.T) {
 				RestartPolicy:   "policy1",
 				Status:          "status1",
 				StartupOrder:    1,
+				Envs: map[string]string{
+					"ENV1": "value1",
+					"ENV2": "value2",
+				},
 			},
 			{
 				Name:            "module2",
@@ -43,7 +47,6 @@ func TestCreateLayeredManifest(t *testing.T) {
 	if err := json.Unmarshal([]byte(layeredManifest), &objs); err != nil {
 		panic(err)
 	}
-	fmt.Println(objs)
 	content := objs["content"].(map[string]interface{})
 	modulesContent := content["modulesContent"].(map[string]interface{})
 	edgeAgent := modulesContent["$edgeAgent"].(map[string]interface{})
@@ -57,6 +60,11 @@ func TestCreateLayeredManifest(t *testing.T) {
 	settings1 := module1["settings"].(map[string]interface{})
 	assert.Equal(settings1["image"], "image1")
 	assert.Equal(settings1["createOptions"], "{createOptions1}")
+	env1 := module1["env"].(map[string]interface{})
+	env1env1 := env1["ENV1"].(map[string]interface{})
+	env1env2 := env1["ENV2"].(map[string]interface{})
+	assert.Equal(env1env1["value"], "value1")
+	assert.Equal(env1env2["value"], "value2")
 
 	module2 := edgeAgent["properties.desired.modules.mytenantid_myapplication_module2"].(map[string]interface{})
 	assert.Equal(module2["type"], "docker")
