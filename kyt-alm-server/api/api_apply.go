@@ -21,63 +21,51 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	d "github.com/ci4rail/kyt/kyt-alm-server/internal/deployment"
 	m "github.com/ci4rail/kyt/kyt-alm-server/internal/deployment/manifest"
-	t "github.com/ci4rail/kyt/kyt-server-common/token"
-	"github.com/gin-gonic/gin"
-	"github.com/golangci/golangci-lint/pkg/sliceutil"
+	token "github.com/ci4rail/kyt/kyt-server-common/token"
 )
 
-// ApplyPut -
-func ApplyPut(c *gin.Context) {
-	token, err := t.ReadToken(c.Request)
-	if err != nil {
-		fmt.Println(err)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err})
-		return
-	}
-	tokenValid, claims, err := t.ValidateToken(token)
-	if err != nil {
-		fmt.Println(err)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err})
-		return
-	}
-	if !sliceutil.Contains(claims, "Apply.write") {
-		err = fmt.Errorf("Error: not allowed")
-		c.JSON(http.StatusForbidden, gin.H{"error": err})
-		return
-	}
-	var tenantID string
-	if tenantID = t.TenantIDFromToken(token); tenantID == "" {
-		err = fmt.Errorf("Error: reading user ID `oid` from token")
-		c.JSON(http.StatusForbidden, gin.H{"error": err})
-		return
-	}
-	// If token is not valid it means that either it has expired or the signature cannot be validated.
-	// In both cases return `Unauthorized`.
-	if !tokenValid {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err})
+// ApplyPut applies a customer manifest to the tenants devices
+func ApplyPut(w http.ResponseWriter, r *http.Request) {
+	authHeaderParts := strings.Split(r.Header.Get("Authorization"), " ")
+	tokenRead := authHeaderParts[1]
+
+	hasScope := token.CheckScope("alm/Apply.write", tokenRead)
+
+	tenants := token.GetTenants(tokenRead)
+
+	if !hasScope {
+		responseJSON("Error: insufficient scope.", w, http.StatusForbidden)
 		return
 	}
 
-	jsonData, err := ioutil.ReadAll(c.Request.Body)
+	jsonData, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		err = fmt.Errorf("Error: cannot read payload")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		responseJSON(fmt.Sprintf("error: %s", err), w, http.StatusInternalServerError)
 		return
 	}
 	manifest := m.CustomerManifest{}
 	err = json.Unmarshal(jsonData, &manifest)
 	if err != nil {
 		err = fmt.Errorf("Error: cannot read customer manifest")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		responseJSON(fmt.Sprintf("error: %s", err), w, http.StatusInternalServerError)
 		return
 	}
-	_, err = d.CreateOrUpdateFromCustomerDeployment(tenantID, &manifest)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+	errStr := ""
+	for _, tenant := range tenants {
+		_, err = d.CreateOrUpdateFromCustomerDeployment(tenant, &manifest)
+		if err != nil {
+			errStr += fmt.Sprintf("%s: %s\n", tenant, err)
+			continue
+		}
+	}
+	if len(errStr) > 0 {
+		responseJSON(fmt.Sprintf("error: failed applying deployment for:\n%s", errStr), w, http.StatusInternalServerError)
 		return
 	}
-	c.JSON(http.StatusOK, true)
+	responseJSON("OK", w, http.StatusOK)
 }

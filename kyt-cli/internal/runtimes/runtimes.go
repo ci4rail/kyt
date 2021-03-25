@@ -21,6 +21,7 @@ import (
 	"os"
 
 	api "github.com/ci4rail/kyt/kyt-cli/internal/api"
+	"github.com/ci4rail/kyt/kyt-cli/internal/configuration"
 	e "github.com/ci4rail/kyt/kyt-cli/internal/errors"
 	"github.com/ci4rail/kyt/kyt-cli/internal/token"
 	openapi "github.com/ci4rail/kyt/kyt-cli/openapialm"
@@ -49,9 +50,12 @@ func FetchRuntimes(list []string) []openapi.Runtime {
 func fetchRuntimesAll() []openapi.Runtime {
 	apiClient, ctx := api.NewAlmAPIWithToken(viper.GetString("alm_server_url"), viper.GetString("alm_token"))
 	runtimes, resp, err := apiClient.RuntimesApi.RuntimesGet(ctx).Execute()
+	if resp == nil && len(err.Error()) > 0 {
+		e.Er("ALM Server unreachable\n")
+	}
 	// 401 mean 'Unauthorized'. Let's try to refresh the token once.
 	if resp.StatusCode == 401 {
-		err := token.RefreshToken("alm")
+		err := token.RefreshToken(configuration.AlmScope)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -70,9 +74,12 @@ func fetchRuntimesAll() []openapi.Runtime {
 func fetchRuntimesByID(runtimeID string) (openapi.Runtime, error) {
 	apiClient, ctx := api.NewAlmAPIWithToken(viper.GetString("alm_server_url"), viper.GetString("alm_token"))
 	runtime, resp, err := apiClient.RuntimesApi.RuntimesRidGet(ctx, runtimeID).Execute()
+	if resp == nil && len(err.Error()) > 0 {
+		e.Er("ALM Server unreachable\n")
+	}
 	// 401 mean 'Unauthorized'. Let's try to refresh the token once.
 	if resp.StatusCode == 401 {
-		err := token.RefreshToken("alm")
+		err := token.RefreshToken(configuration.AlmScope)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

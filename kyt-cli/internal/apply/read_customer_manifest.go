@@ -27,11 +27,7 @@ import (
 
 // ReadCustomerManifest -
 func ReadCustomerManifest(filename string) *openapi.CustomerManifest {
-
-	c := openapi.NewCustomerManifestWithDefaults()
-	c = readYaml(filename)
-
-	return c
+	return readYaml(filename)
 }
 
 func readYaml(filename string) *openapi.CustomerManifest {

@@ -43,7 +43,7 @@ type accessTokenResponse struct {
 }
 
 func getScopes(ressource string) (string, error) {
-	scopes := "offline_access "
+	scopes := "offline_access openid profile "
 	constScopes, err := configuration.GetConstScopes(ressource)
 	if err != nil {
 		return "", err
@@ -61,6 +61,7 @@ func CreateAccessTokenRequest(host string, cid string, uid string, upw string, r
 	data.Add("username", uid)
 	data.Add("password", upw)
 	data.Add("client_id", cid)
+	data.Add("audience", ressource)
 	scopes, err := getScopes(ressource)
 	if err != nil {
 		return nil, err
@@ -71,7 +72,6 @@ func CreateAccessTokenRequest(host string, cid string, uid string, upw string, r
 		return nil, err
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.SetBasicAuth(cid, "")
 	return req, nil
 }
 
@@ -106,7 +106,6 @@ func SendAccessTokenRequest(req *http.Request) ([]byte, error) {
 	defer res.Body.Close()
 
 	body, err := ioutil.ReadAll(res.Body)
-
 	if err != nil {
 		return nil, err
 	}
@@ -116,9 +115,8 @@ func SendAccessTokenRequest(req *http.Request) ([]byte, error) {
 	}
 
 	if res.StatusCode != 200 {
-		fmt.Fprintf(os.Stderr, "Error response from token endpoint (HTTP Status %d):\n", res.StatusCode)
 		fmt.Fprintln(os.Stderr, string(body))
-		return nil, err
+		return nil, fmt.Errorf("Error response from token endpoint (HTTP Status %d): %s", res.StatusCode, res.Status)
 	}
 
 	return body, nil
@@ -159,7 +157,7 @@ func GetTokenClaims(tokenString string) (jwt.MapClaims, error) {
 }
 
 // ExtractToken extracts the access token and the refresh token from the http response body
-func ExtractToken(body []byte) (string, string, error) {
+func ExtractToken(body []byte) (string, string, string, error) {
 	// This intermediate step is needed, because `expires_in` is one time returned string and
 	// the other time as int from:
 	// `grant_type` == `password` and `token_refresh`
@@ -177,7 +175,7 @@ func ExtractToken(body []byte) (string, string, error) {
 		fmt.Fprintf(os.Stderr, "Unable to parse response: \"")
 		fmt.Fprintf(os.Stderr, "%s", err)
 		fmt.Fprintf(os.Stderr, "\"\n")
-		return "", "", err
+		return "", "", "", err
 	}
 	atr := &accessTokenResponse{
 		Type:         raw.Type,
@@ -200,7 +198,7 @@ func ExtractToken(body []byte) (string, string, error) {
 		atr.ExpiresIn = i
 	}
 
-	return atr.AccessToken, atr.RefreshToken, nil
+	return atr.AccessToken, atr.RefreshToken, atr.IDToken, nil
 }
 
 // RefreshToken handles all stuff that is needed for refreshing the access token
@@ -213,7 +211,7 @@ func RefreshToken(ressource string) error {
 	if err != nil {
 		e.Er(err)
 	}
-	token, refreshToken, err := ExtractToken(resp)
+	token, refreshToken, _, err := ExtractToken(resp)
 	if err != nil {
 		e.Er(err)
 	}
@@ -221,8 +219,8 @@ func RefreshToken(ressource string) error {
 	return nil
 }
 
-// GetAccessToken handles all stuff that is needed for getting an access token
-func GetAccessToken(ressource string) (jwt.MapClaims, error) {
+// GetTokens handles all stuff that is needed for getting an access token
+func GetTokens(ressource string) (jwt.MapClaims, error) {
 	req, err := CreateAccessTokenRequest(configuration.TokenEndpoint, configuration.ClientID, common.Username, common.Password, ressource)
 	if err != nil {
 		e.Er(err)
@@ -231,11 +229,11 @@ func GetAccessToken(ressource string) (jwt.MapClaims, error) {
 	if err != nil {
 		e.Er(err)
 	}
-	token, refreshToken, err := ExtractToken(resp)
+	token, refreshToken, idToken, err := ExtractToken(resp)
 	if err != nil {
 		e.Er(err)
 	}
-	claims, err := GetTokenClaims(token)
+	claims, err := GetTokenClaims(idToken)
 	if err != nil {
 		e.Er(err)
 	}

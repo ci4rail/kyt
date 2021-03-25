@@ -47,7 +47,7 @@ func NewIOTHubServiceClient(connectionString string) (*IOTHubServiceClient, erro
 
 // GetConnectionState gets the connection state from the Device Twin on IoT Hub
 // returns bool: 0 -> disconnected, 1 -> connected
-func (c *IOTHubServiceClient) GetConnectionState(tenantID string, deviceID string) (string, error) {
+func (c *IOTHubServiceClient) GetConnectionState(deviceID string) (string, error) {
 	ctx := context.Background()
 	twin, err := c.iotClient.GetDeviceTwin(ctx, deviceID)
 	if err != nil {

@@ -17,6 +17,6 @@ limitations under the License.
 package common
 
 const (
-	// KytPort dlm api server listens to this port
-	KytPort = 8080
+	// ServicePort api server listens to this port
+	ServicePort = 8080
 )

@@ -21,6 +21,7 @@ import (
 	"os"
 
 	api "github.com/ci4rail/kyt/kyt-cli/internal/api"
+	"github.com/ci4rail/kyt/kyt-cli/internal/configuration"
 	e "github.com/ci4rail/kyt/kyt-cli/internal/errors"
 	token "github.com/ci4rail/kyt/kyt-cli/internal/token"
 	openapi "github.com/ci4rail/kyt/kyt-cli/openapidlm"
@@ -49,9 +50,12 @@ func FetchDevices(list []string) []openapi.Device {
 func fetchDevicesAll() []openapi.Device {
 	apiClient, ctx := api.NewDlmAPIWithToken(viper.GetString("dlm_server_url"), viper.GetString("dlm_token"))
 	devices, resp, err := apiClient.DeviceApi.DevicesGet(ctx).Execute()
+	if resp == nil && len(err.Error()) > 0 {
+		e.Er("DLM Server unreachable\n")
+	}
 	// 401 mean 'Unauthorized'. Let's try to refresh the token once.
 	if resp.StatusCode == 401 {
-		err := token.RefreshToken("dlm")
+		err := token.RefreshToken(configuration.DlmScope)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -74,9 +78,12 @@ func fetchDevicesAll() []openapi.Device {
 func fetchDevicesByID(deviceID string) (openapi.Device, error) {
 	apiClient, ctx := api.NewDlmAPIWithToken(viper.GetString("dlm_server_url"), viper.GetString("dlm_token"))
 	device, resp, err := apiClient.DeviceApi.DevicesDidGet(ctx, deviceID).Execute()
+	if resp == nil && len(err.Error()) > 0 {
+		e.Er("DLM Server unreachable\n")
+	}
 	// 401 mean 'Unauthorized'. Let's try to refresh the token once.
 	if resp.StatusCode == 401 {
-		err := token.RefreshToken("dlm")
+		err := token.RefreshToken(configuration.DlmScope)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

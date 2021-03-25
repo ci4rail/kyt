@@ -27,8 +27,7 @@ import (
 func NewAlmAPIWithToken(serverURL string, token string) (*api.APIClient, context.Context) {
 	configuration := api.NewConfiguration()
 
-	configuration.AddDefaultHeader("Authorization", token)
-	configuration.AddDefaultHeader("Content-Type", "Content-Type")
+	configuration.AddDefaultHeader("authorization", "Bearer "+token)
 	if serverURL != "" {
 		configuration.Servers[0].URL = serverURL
 	}

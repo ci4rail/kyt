@@ -20,7 +20,7 @@ paths:
       summary: List runtimes for a tenant
       description: Returns a list of runtimes
       responses:
-        "200":
+        '200':
           description: Ok
           content:
             application/json:
@@ -28,8 +28,12 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Runtime"
-        "400":
-          description: Invalid ID supplied
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
       security:
         - bearerAuth: []
   "/runtimes/{rid}":
@@ -39,8 +43,12 @@ paths:
       tags:
         - runtimes
       responses:
-        200:
+        '200':
           $ref: "#/components/responses/Runtime"
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
       security:
         - bearerAuth: []
   "/apply/":
@@ -54,13 +62,11 @@ paths:
             schema:
               $ref: "#/components/schemas/CustomerManifest"
       responses:
-        "200":
+        '200':
           description: OK
-        "401":
-          description: Unauthorized
-        "403":
+        '403':
           description: Forbidden
-        "500":
+        '500':
           description: Internal Error
       security:
         - bearerAuth: []

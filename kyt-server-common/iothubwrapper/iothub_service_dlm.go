@@ -88,7 +88,7 @@ func (c *IOTHubServiceClient) deviceBelongsToTenant(deviceID, tenantID string) (
 }
 
 // GetVersions gets the device versiones stored in IoT Hub device twin
-func (c *IOTHubServiceClient) GetVersions(tenantID string, deviceID string) (map[string]string, error) {
+func (c *IOTHubServiceClient) GetVersions(deviceID string) (map[string]string, error) {
 	versionsMap := make(map[string]string)
 	ctx := context.Background()
 	twin, err := c.iotClient.GetDeviceTwin(ctx, deviceID)
