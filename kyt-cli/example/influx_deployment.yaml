@@ -8,6 +8,9 @@ modules:
     restartPolicy: always
     status: running
     startupOrder: 1
+    envs:
+      ENV1: influx1
+      ENV2: influx2
   - name: nginx
     image: nginx:1.19.6
     createOptions: '{\"HostConfig\":{\"PortBindings\":{\"80/tcp\":[{\"HostPort\":\"12010\"}]}}}'
@@ -15,3 +18,5 @@ modules:
     restartPolicy: always
     status: running
     startupOrder: 1
+    envs:
+      ENV1: nginx1

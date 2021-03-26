@@ -157,6 +157,13 @@ components:
           minimum: 100
           maximum: 199
           default: 100
+        envs:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            ENV1: VALUE
+            ENV2: VALUE
 
   securitySchemes:
     bearerAuth:
