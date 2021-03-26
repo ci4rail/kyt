@@ -52,7 +52,7 @@ const (
 			"$edgeAgent": {
 				{{ range $i, $element := .Modules }}
 				{{ $envsLen := len $element.Envs }}
-				"properties.desired.modules.{{$tenant}}_{{$application}}_{{$element.Name}}": {
+				"properties.desired.modules.{{$application}}_{{$element.Name}}": {
 					{{ if $element.Envs }}
 					"env": {
 						{{ $counter:=0 }}
@@ -83,7 +83,7 @@ const (
 			},
 			{{ range $i, $element := .Modules }}
 
-			"{{$tenant}}_{{$application}}_{{$element.Name}}": {
+			"{{$application}}_{{$element.Name}}": {
 				"properties.desired": {
 					"tenantId": "{{$tenant}}"
 				}
