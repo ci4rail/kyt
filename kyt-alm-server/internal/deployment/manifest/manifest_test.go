@@ -50,7 +50,7 @@ func TestCreateLayeredManifest(t *testing.T) {
 	content := objs["content"].(map[string]interface{})
 	modulesContent := content["modulesContent"].(map[string]interface{})
 	edgeAgent := modulesContent["$edgeAgent"].(map[string]interface{})
-	module1 := edgeAgent["properties.desired.modules.mytenantid_myapplication_module1"].(map[string]interface{})
+	module1 := edgeAgent["properties.desired.modules.myapplication_module1"].(map[string]interface{})
 	assert.Equal(module1["type"], "docker")
 	assert.Equal(module1["status"], "status1")
 	assert.Equal(module1["restartPolicy"], "policy1")
@@ -66,7 +66,7 @@ func TestCreateLayeredManifest(t *testing.T) {
 	assert.Equal(env1env1["value"], "value1")
 	assert.Equal(env1env2["value"], "value2")
 
-	module2 := edgeAgent["properties.desired.modules.mytenantid_myapplication_module2"].(map[string]interface{})
+	module2 := edgeAgent["properties.desired.modules.myapplication_module2"].(map[string]interface{})
 	assert.Equal(module2["type"], "docker")
 	assert.Equal(module2["status"], "status2")
 	assert.Equal(module2["restartPolicy"], "policy2")
