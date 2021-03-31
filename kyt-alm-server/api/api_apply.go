@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/barkimedes/go-deepcopy"
 	d "github.com/ci4rail/kyt/kyt-alm-server/internal/deployment"
 	m "github.com/ci4rail/kyt/kyt-alm-server/internal/deployment/manifest"
 	token "github.com/ci4rail/kyt/kyt-server-common/token"
@@ -48,20 +49,23 @@ func ApplyPut(w http.ResponseWriter, r *http.Request) {
 		responseJSON(fmt.Sprintf("error: %s", err), w, http.StatusInternalServerError)
 		return
 	}
-
+	manifest, err := unmarshalCustomerManifest(jsonData)
+	if err != nil {
+		err = fmt.Errorf("Error: cannot read customer manifest")
+		responseJSON(fmt.Sprintf("error: %s", err), w, http.StatusInternalServerError)
+		return
+	}
 	errStr := ""
 	for _, tenant := range tenants {
-		// Unmarshalling for every tenant currently is a workaround for a strange bug
-		// that has not been identified yet. The bug modifies `manifest` somewhere within
-		// function `CreateOrUpdateFromCustomerDeployment` even `manifest` gets passed by value.
-		manifest, err := unmarshalCustomerManifest(jsonData)
+		// Create a copy because `manifest` gets modified. This is needed because the
+		// underlying functions modify slices within `manifest`.
+		manifestCopy, err := deepcopy.Anything(manifest)
 		if err != nil {
-			err = fmt.Errorf("Error: cannot read customer manifest")
-			responseJSON(fmt.Sprintf("error: %s", err), w, http.StatusInternalServerError)
-			return
+			errStr += fmt.Sprintf("%s: %s\n", tenant, err)
+			continue
 		}
 		fmt.Printf("Writing deployment for tenant: %s\n", tenant)
-		err = d.CreateOrUpdateFromCustomerDeployment(tenant, manifest)
+		err = d.CreateOrUpdateFromCustomerDeployment(tenant, manifestCopy.(m.CustomerManifest))
 		if err != nil {
 			errStr += fmt.Sprintf("%s: %s\n", tenant, err)
 			continue

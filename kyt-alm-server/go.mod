@@ -3,6 +3,7 @@ module github.com/ci4rail/kyt/kyt-alm-server
 go 1.16
 
 require (
+	github.com/barkimedes/go-deepcopy v0.0.0-20200817023428-a044a1957ca4
 	github.com/ci4rail/kyt/kyt-server-common/iothubwrapper v0.0.0-00010101000000-000000000000
 	github.com/ci4rail/kyt/kyt-server-common/token v0.0.0-00010101000000-000000000000
 	github.com/ci4rail/kyt/kyt-server-common/version v0.0.0-00010101000000-000000000000
