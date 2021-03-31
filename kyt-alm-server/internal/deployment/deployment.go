@@ -19,11 +19,13 @@ package deployment
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
 	"syscall"
 
+	"github.com/ci4rail/kyt/kyt-alm-server/internal/common"
 	iothub "github.com/ci4rail/kyt/kyt-server-common/iothubwrapper"
 )
 
@@ -125,36 +127,40 @@ func ListDeployments(connectionString string) ([]string, error) {
 
 // applyDeployment writes the deployment to the backend service
 func (d *Deployment) applyDeployment() (bool, error) {
-	manifestFile, err := d.createManifestFile()
-	if err != nil {
-		return false, err
-	}
-	defer os.Remove(manifestFile.Name())
-
-	azExecutable, err := exec.LookPath("az")
-	if err != nil {
-		return false, err
-	}
-	nameWithVersion := fmt.Sprintf("%s_%s", d.name, d.version)
-	cmdArgs := fmt.Sprintf("%s iot edge deployment create --hub-name %s --content %s --priority %d --target-condition \"%s\" --deployment-id %s --login '%s'", azExecutable, d.hubName, manifestFile.Name(), d.priority, d.targetCondition, nameWithVersion, d.connectionString)
-	if d.layered {
-		cmdArgs += " --layered"
-	}
-	cmd := exec.Command("sh", "-c", cmdArgs)
-
-	err = cmd.Start()
-	if err != nil {
-		return false, err
-	}
-	if err := cmd.Wait(); err != nil {
-		if exiterr, ok := err.(*exec.ExitError); ok {
-			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
-				err = fmt.Errorf("Exit Status: %d", status.ExitStatus())
-				return false, err
-			}
-		} else {
+	if !common.DryRun {
+		manifestFile, err := d.createManifestFile()
+		if err != nil {
 			return false, err
 		}
+		defer os.Remove(manifestFile.Name())
+
+		azExecutable, err := exec.LookPath("az")
+		if err != nil {
+			return false, err
+		}
+		nameWithVersion := fmt.Sprintf("%s_%s", d.name, d.version)
+		cmdArgs := fmt.Sprintf("%s iot edge deployment create --hub-name %s --content %s --priority %d --target-condition \"%s\" --deployment-id %s --login '%s'", azExecutable, d.hubName, manifestFile.Name(), d.priority, d.targetCondition, nameWithVersion, d.connectionString)
+		if d.layered {
+			cmdArgs += " --layered"
+		}
+		cmd := exec.Command("sh", "-c", cmdArgs)
+
+		err = cmd.Start()
+		if err != nil {
+			return false, err
+		}
+		if err := cmd.Wait(); err != nil {
+			if exiterr, ok := err.(*exec.ExitError); ok {
+				if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
+					err = fmt.Errorf("Exit Status: %d", status.ExitStatus())
+					return false, err
+				}
+			} else {
+				return false, err
+			}
+		}
+	} else {
+		log.Printf("Dry run: not applying deployment: %s", d.name)
 	}
 	return true, nil
 }

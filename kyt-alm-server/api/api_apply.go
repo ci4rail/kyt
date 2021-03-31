@@ -48,16 +48,20 @@ func ApplyPut(w http.ResponseWriter, r *http.Request) {
 		responseJSON(fmt.Sprintf("error: %s", err), w, http.StatusInternalServerError)
 		return
 	}
-	manifest := m.CustomerManifest{}
-	err = json.Unmarshal(jsonData, &manifest)
-	if err != nil {
-		err = fmt.Errorf("Error: cannot read customer manifest")
-		responseJSON(fmt.Sprintf("error: %s", err), w, http.StatusInternalServerError)
-		return
-	}
+
 	errStr := ""
 	for _, tenant := range tenants {
-		_, err = d.CreateOrUpdateFromCustomerDeployment(tenant, &manifest)
+		// Unmarshalling for every tenant currently is a workaround for a strange bug
+		// that has not been identified yet. The bug modifies `manifest` somewhere within
+		// function `CreateOrUpdateFromCustomerDeployment` even `manifest` gets passed by value.
+		manifest, err := unmarshalCustomerManifest(jsonData)
+		if err != nil {
+			err = fmt.Errorf("Error: cannot read customer manifest")
+			responseJSON(fmt.Sprintf("error: %s", err), w, http.StatusInternalServerError)
+			return
+		}
+		fmt.Printf("Writing deployment for tenant: %s\n", tenant)
+		err = d.CreateOrUpdateFromCustomerDeployment(tenant, manifest)
 		if err != nil {
 			errStr += fmt.Sprintf("%s: %s\n", tenant, err)
 			continue
@@ -68,4 +72,13 @@ func ApplyPut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	responseJSON("OK", w, http.StatusOK)
+}
+
+func unmarshalCustomerManifest(jsonData []byte) (m.CustomerManifest, error) {
+	manifest := m.CustomerManifest{}
+	err := json.Unmarshal(jsonData, &manifest)
+	if err != nil {
+		return manifest, err
+	}
+	return manifest, nil
 }

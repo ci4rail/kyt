@@ -20,3 +20,8 @@ const (
 	// ServicePort api server listens to this port
 	ServicePort = 8080
 )
+
+var (
+	// DryRun disables writing deployments.
+	DryRun bool
+)
