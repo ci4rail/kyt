@@ -17,7 +17,7 @@ func TestCreateLayeredManifest(t *testing.T) {
 			{
 				Name:            "module1",
 				Image:           "image1",
-				CreateOptions:   "{createOptions1}",
+				CreateOptions:   "{}",
 				ImagePullPolicy: "image_pull_1",
 				RestartPolicy:   "policy1",
 				Status:          "status1",
@@ -30,7 +30,7 @@ func TestCreateLayeredManifest(t *testing.T) {
 			{
 				Name:            "module2",
 				Image:           "image2",
-				CreateOptions:   "{createOptions2}",
+				CreateOptions:   "{}",
 				ImagePullPolicy: "image_pull_2",
 				RestartPolicy:   "policy2",
 				Status:          "status2",
@@ -38,7 +38,7 @@ func TestCreateLayeredManifest(t *testing.T) {
 			},
 		},
 	}
-	layeredManifest, err := CreateLayeredManifest(&c, "mytenantid")
+	layeredManifest, err := CreateLayeredManifest(c, "mytenantid")
 
 	assert.Nil(err)
 	fmt.Println(layeredManifest)
@@ -59,7 +59,7 @@ func TestCreateLayeredManifest(t *testing.T) {
 	assert.Equal(module1["imagePullPolicy"], "image_pull_1")
 	settings1 := module1["settings"].(map[string]interface{})
 	assert.Equal(settings1["image"], "image1")
-	assert.Equal(settings1["createOptions"], "{createOptions1}")
+	assert.Contains(settings1["createOptions"], fmt.Sprintf("host.docker.internal:%s", dockerHostIP))
 	env1 := module1["env"].(map[string]interface{})
 	env1env1 := env1["ENV1"].(map[string]interface{})
 	env1env2 := env1["ENV2"].(map[string]interface{})
@@ -75,5 +75,37 @@ func TestCreateLayeredManifest(t *testing.T) {
 	assert.Equal(module2["imagePullPolicy"], "image_pull_2")
 	settings2 := module2["settings"].(map[string]interface{})
 	assert.Equal(settings2["image"], "image2")
-	assert.Equal(settings2["createOptions"], "{createOptions2}")
+	assert.Contains(settings1["createOptions"], fmt.Sprintf("host.docker.internal:%s", dockerHostIP))
+}
+
+func TestAppendToCreateOptions(t *testing.T) {
+	assert := assert.New(t)
+	CreateOptions := "{\"Tty\":true,\"HostConfig\":{\"PortBindings\":{\"22/tcp\":[{\"HostPort\":\"11022\"}]}}}"
+	str, err := appendExtraHosts(CreateOptions)
+	assert.Nil(err)
+	fmt.Println(str)
+	assert.Contains(str, "ExtraHosts")
+	assert.Contains(str, "PortBindings")
+	assert.Contains(str, fmt.Sprintf("host.docker.internal:%s", dockerHostIP))
+}
+
+func TestAppendToCreateOptionsExtraHostExisting(t *testing.T) {
+	assert := assert.New(t)
+	CreateOptions := "{\"HostConfig\":{\"ExtraHosts\":[\"myfancyhost:unicorn\"]}}"
+	str, err := appendExtraHosts(CreateOptions)
+	assert.Nil(err)
+	fmt.Println(str)
+	assert.Contains(str, "ExtraHosts")
+	assert.Contains(str, "myfancyhost:unicorn")
+	assert.Contains(str, fmt.Sprintf("host.docker.internal:%s", dockerHostIP))
+}
+
+func TestAppendToCreateOptionsNoHostConfig(t *testing.T) {
+	assert := assert.New(t)
+	CreateOptions := "{}"
+	str, err := appendExtraHosts(CreateOptions)
+	assert.Nil(err)
+	fmt.Println(str)
+	assert.Contains(str, "ExtraHosts")
+	assert.Contains(str, fmt.Sprintf("host.docker.internal:%s", dockerHostIP))
 }

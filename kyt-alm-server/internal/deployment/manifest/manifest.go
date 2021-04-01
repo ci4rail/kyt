@@ -2,9 +2,17 @@ package manifest
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"text/template"
+
+	pretty "github.com/tidwall/pretty"
+)
+
+const (
+	dockerHostIP       = "172.17.0.1"
+	dockerHostHostname = "host.docker.internal"
 )
 
 // CustomerManifest describes the format the customer defines modules
@@ -94,8 +102,63 @@ const (
 }`
 )
 
+func appendExtraHosts(createOptions string) (string, error) {
+	jsonMap := make(map[string]interface{})
+	modOptions := strings.ReplaceAll(createOptions, "\\\"", "\"")
+	err := json.Unmarshal([]byte(modOptions), &jsonMap)
+	if err != nil {
+		return "", err
+	}
+
+	if _, ok := jsonMap["HostConfig"]; !ok {
+		jsonMap["HostConfig"] = map[string]interface{}{}
+	}
+
+	hc := jsonMap["HostConfig"].(map[string]interface{})
+
+	if _, ok := hc["ExtraHosts"]; !ok {
+		hc["ExtraHosts"] = []string{}
+	}
+
+	jeh, err := json.Marshal(hc["ExtraHosts"])
+	if err != nil {
+		return "", err
+	}
+	var eh []string
+	err = json.Unmarshal(jeh, &eh)
+	if err != nil {
+		return "", err
+	}
+	eh = append(eh,
+		fmt.Sprintf("%s:%s", dockerHostHostname, dockerHostIP),
+	)
+
+	hc["ExtraHosts"] = eh
+	jsonString, err := json.Marshal(jsonMap)
+	if err != nil {
+		return "", err
+	}
+	ret := strings.ReplaceAll(string(jsonString), "\"", "\\\"")
+	return ret, nil
+}
+
+func (c *CustomerManifest) appendExtraHostsToManifest() error {
+	var err error
+	for i := range c.Modules {
+		c.Modules[i].CreateOptions, err = appendExtraHosts(c.Modules[i].CreateOptions)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // CreateLayeredManifest creates a new LayeredManifest from a CustomerManifest
-func CreateLayeredManifest(c *CustomerManifest, tenantID string) (string, error) {
+func CreateLayeredManifest(c CustomerManifest, tenantID string) (string, error) {
+	err := c.appendExtraHostsToManifest()
+	if err != nil {
+		return "", err
+	}
 	ct := &customerManifestWithTenant{
 		Application: strings.ToLower(c.Application),
 		Modules:     c.Modules,
@@ -107,7 +170,7 @@ func CreateLayeredManifest(c *CustomerManifest, tenantID string) (string, error)
 	}
 	var result bytes.Buffer
 	err = t.Execute(&result, ct)
-	fmt.Println(result.String())
+	fmt.Println(string(pretty.Pretty(result.Bytes())))
 	if err != nil {
 		return "", err
 	}

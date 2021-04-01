@@ -43,13 +43,13 @@ var rootCmd = &cobra.Command{
 	KYT consists of application lifecycle management (alm), device lifecycle management (dlm) and application data services (ads).
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		if !noCreateBaseDeployment {
+		if !noCreateBaseDeployment || common.DryRun {
 			_, err := deployment.CreateOrUpdateBaseDeployment()
 			if err != nil {
 				log.Println(err)
 			}
 		} else {
-			log.Println("Called with option 'no-create'. Skipping base deployment check and creation.")
+			log.Println("Called with option 'no-create' or 'dry-run'. Skipping base deployment check and creation.")
 		}
 
 		c := cors.New(cors.Options{
@@ -82,5 +82,6 @@ func Execute() {
 func init() {
 	rootCmd.PersistentFlags().StringVar(&serverAddr, "addr", fmt.Sprintf(":%d", common.ServicePort), "address and port the server shall listen to")
 	rootCmd.PersistentFlags().BoolVarP(&noCreateBaseDeployment, "no-create", "n", false, "Disables writing of base deployments to backend service")
+	rootCmd.PersistentFlags().BoolVarP(&common.DryRun, "dry-run", "d", false, "Disables writing deployments to backend service. Just log the deployments tha would be written.")
 
 }

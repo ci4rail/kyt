@@ -30,15 +30,15 @@ import (
 
 // CreateOrUpdateFromCustomerDeployment creates a new deployment and deletes the old one if it was
 // already present.
-func CreateOrUpdateFromCustomerDeployment(tenantID string, c *manifest.CustomerManifest) (bool, error) {
+func CreateOrUpdateFromCustomerDeployment(tenantID string, c manifest.CustomerManifest) error {
 	cs, err := iothub.ReadConnectionStringFromEnv()
 	if err != nil {
-		return false, err
+		return err
 	}
 	// Get all deployments fron backend service
 	deployments, err := ListDeployments(cs)
 	if err != nil {
-		return false, err
+		return err
 	}
 	// Get latest deployment for specific tenantID
 	latestToBeDeletedOnSuccess, err := getLatestCustomerDeployment(deployments, tenantID, c.Application)
@@ -48,25 +48,25 @@ func CreateOrUpdateFromCustomerDeployment(tenantID string, c *manifest.CustomerM
 	// The new deployment needs to be created first to start the update process
 	_, err = createFromCustomerDeployment(tenantID, c)
 	if err != nil {
-		return false, err
+		return err
 	}
 	// Delete old deployment with the same name to finish the update process
 	if len(latestToBeDeletedOnSuccess) > 0 {
 		// create new dummy deployment with specific name to be deleted
 		deleteDeployment, err := NewDeployment("{}", latestToBeDeletedOnSuccess, "", true, "0", 0)
 		if err != nil {
-			return false, err
+			return err
 		}
 		_, err = deleteDeployment.DeleteDeployment()
 		if err != nil {
-			return false, err
+			return err
 		}
 	}
-	return true, nil
+	return nil
 }
 
 // createFromCustomerDeployment creates and applies from a customer deployment
-func createFromCustomerDeployment(tenantID string, c *manifest.CustomerManifest) (bool, error) {
+func createFromCustomerDeployment(tenantID string, c manifest.CustomerManifest) (bool, error) {
 	now := fmt.Sprintf("%d", time.Now().Unix())
 	layered, err := manifest.CreateLayeredManifest(c, tenantID)
 	if err != nil {

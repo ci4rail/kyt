@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/barkimedes/go-deepcopy"
 	d "github.com/ci4rail/kyt/kyt-alm-server/internal/deployment"
 	m "github.com/ci4rail/kyt/kyt-alm-server/internal/deployment/manifest"
 	token "github.com/ci4rail/kyt/kyt-server-common/token"
@@ -48,8 +49,7 @@ func ApplyPut(w http.ResponseWriter, r *http.Request) {
 		responseJSON(fmt.Sprintf("error: %s", err), w, http.StatusInternalServerError)
 		return
 	}
-	manifest := m.CustomerManifest{}
-	err = json.Unmarshal(jsonData, &manifest)
+	manifest, err := unmarshalCustomerManifest(jsonData)
 	if err != nil {
 		err = fmt.Errorf("Error: cannot read customer manifest")
 		responseJSON(fmt.Sprintf("error: %s", err), w, http.StatusInternalServerError)
@@ -57,7 +57,15 @@ func ApplyPut(w http.ResponseWriter, r *http.Request) {
 	}
 	errStr := ""
 	for _, tenant := range tenants {
-		_, err = d.CreateOrUpdateFromCustomerDeployment(tenant, &manifest)
+		// Create a copy because `manifest` gets modified. This is needed because the
+		// underlying functions modify slices within `manifest`.
+		manifestCopy, err := deepcopy.Anything(manifest)
+		if err != nil {
+			errStr += fmt.Sprintf("%s: %s\n", tenant, err)
+			continue
+		}
+		fmt.Printf("Writing deployment for tenant: %s\n", tenant)
+		err = d.CreateOrUpdateFromCustomerDeployment(tenant, manifestCopy.(m.CustomerManifest))
 		if err != nil {
 			errStr += fmt.Sprintf("%s: %s\n", tenant, err)
 			continue
@@ -68,4 +76,13 @@ func ApplyPut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	responseJSON("OK", w, http.StatusOK)
+}
+
+func unmarshalCustomerManifest(jsonData []byte) (m.CustomerManifest, error) {
+	manifest := m.CustomerManifest{}
+	err := json.Unmarshal(jsonData, &manifest)
+	if err != nil {
+		return manifest, err
+	}
+	return manifest, nil
 }
